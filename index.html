@@ -1,3 +1,7 @@
+Here is the complete, full index.html file from start to finish with all 19
+features and logic fully integrated in one file, ready to copy and paste
+directly into your repository.
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,6 +43,7 @@
       --danger-dark: #b91c1c;
       --danger-gradient: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
 
+      --warning: #f59e0b;
       --dark: #0f172a;
       --surface: #ffffff;
       --surface-alt: #f8fafc;
@@ -178,7 +183,6 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
     /* Sub Navigation */
@@ -253,17 +257,6 @@
       border: 1px solid rgba(255, 255, 255, 0.15);
       position: relative;
       overflow: hidden;
-    }
-
-    .hero-entry-banner::after {
-      content: "";
-      position: absolute;
-      top: -50%;
-      right: -20%;
-      width: 300px;
-      height: 300px;
-      background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, transparent 70%);
-      pointer-events: none;
     }
 
     .hero-header {
@@ -357,17 +350,26 @@
     .worker-cta .cta-icon-wrap { background: var(--worker-gradient); }
     .employer-cta .cta-icon-wrap { background: var(--employer-gradient); }
 
-    .cta-info h3 {
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: #ffffff;
+    .cta-info h3 { font-size: 1.25rem; font-weight: 800; color: #ffffff; }
+    .cta-info p { font-size: 0.85rem; color: #e2e8f0; margin-top: 2px; }
+
+    /* Active Lock Banner */
+    .active-booking-lock-banner {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border: 2px solid #059669;
+      border-radius: var(--radius-md);
+      padding: 18px 22px;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 8px 20px rgba(5, 150, 105, 0.15);
+      color: #065f46;
     }
 
-    .cta-info p {
-      font-size: 0.85rem;
-      color: #e2e8f0;
-      margin-top: 2px;
-    }
+    .active-booking-lock-banner i { font-size: 2.2rem; color: #059669; }
+    .active-booking-lock-banner h4 { font-size: 1.15rem; font-weight: 800; margin-bottom: 3px; }
+    .active-booking-lock-banner p { font-size: 0.88rem; color: #047857; }
 
     /* 3D Buttons */
     .btn {
@@ -478,6 +480,15 @@
       box-shadow: 0 1px 0 #cbd5e1, 0 2px 4px rgba(0,0,0,0.05);
     }
 
+    .btn-disabled {
+      background: #e2e8f0 !important;
+      color: #94a3b8 !important;
+      border: 1px solid #cbd5e1 !important;
+      box-shadow: none !important;
+      cursor: not-allowed !important;
+      transform: none !important;
+    }
+
     .btn-google-3d {
       background: #ffffff;
       color: #1f2937;
@@ -490,18 +501,27 @@
       justify-content: center;
       gap: 12px;
     }
-    .btn-google-3d:hover {
-      background: #f9fafb;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 0 #9ca3af, 0 12px 20px rgba(0, 0, 0, 0.12);
-    }
-    .btn-google-3d:active {
-      transform: translateY(3px);
-      box-shadow: 0 1px 0 #9ca3af, 0 2px 4px rgba(0, 0, 0, 0.06);
-    }
 
     .full-width { width: 100%; }
-    .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+    .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; }
+
+    .btn-report-flag {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-report-flag:hover {
+      color: #ef4444;
+      background: #fee2e2;
+    }
 
     /* Section Headers */
     .section-header {
@@ -520,10 +540,7 @@
       letter-spacing: -0.5px;
     }
 
-    .section-desc {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-    }
+    .section-desc { font-size: 0.9rem; color: var(--text-muted); }
 
     /* Filter & Search Bar */
     .filter-card {
@@ -587,15 +604,27 @@
       overflow: hidden;
     }
 
+    .card.active-booked-card {
+      border: 2.5px solid #059669;
+      box-shadow: 0 12px 30px rgba(5, 150, 105, 0.2);
+    }
+
     .card:hover {
       transform: translateY(-4px);
       box-shadow: var(--shadow-3d-card-hover);
     }
 
-    .card-badge {
+    .card-top-badges {
       position: absolute;
       top: 16px;
       right: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    .card-badge {
       padding: 5px 12px;
       border-radius: var(--radius-full);
       font-size: 0.74rem;
@@ -603,21 +632,34 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
 
     .badge-open { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
     .badge-filled { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .badge-completed { background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; }
     .badge-approved { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
     .badge-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
     .badge-rejected { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
     .badge-hidden { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+
+    .badge-slots-high { background: #ecfdf5; color: #065f46; border: 1.5px solid #34d399; font-weight: 800; }
+    .badge-slots-low { background: #fff7ed; color: #c2410c; border: 1.5px solid #fb923c; font-weight: 800; animation: pulseAlert 2s infinite; }
+    .badge-slots-none { background: #fef2f2; color: #991b1b; border: 1.5px solid #f87171; font-weight: 800; }
+
+    @keyframes pulseAlert {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.75; }
+    }
 
     .card-title {
       font-size: 1.2rem;
       font-weight: 800;
       color: var(--dark);
       margin-bottom: 6px;
-      padding-right: 70px;
+      padding-right: 110px;
     }
 
     .card-subtext {
@@ -645,11 +687,7 @@
       color: #334155;
     }
 
-    .card-details-list li i {
-      width: 20px;
-      color: var(--primary);
-      text-align: center;
-    }
+    .card-details-list li i { width: 20px; color: var(--primary); text-align: center; }
 
     .highlight-pay {
       background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
@@ -661,7 +699,6 @@
       font-size: 1rem;
       display: inline-block;
       margin: 8px 0;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
     }
 
     .distance-pill {
@@ -705,13 +742,85 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     }
 
+    .star-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 800;
+      color: #d97706;
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+    }
+
+    .star-badge i { color: #f59e0b; }
+
     .card-footer-actions {
       margin-top: 16px;
       padding-top: 16px;
       border-top: 1px solid var(--border);
       display: flex;
-      gap: 10px;
+      flex-direction: column;
+      gap: 8px;
     }
+
+    .cancellation-policy-note {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      line-height: 1.3;
+    }
+
+    /* Star Rating Selector */
+    .star-rating-picker {
+      display: flex;
+      gap: 10px;
+      font-size: 2rem;
+      color: #cbd5e1;
+      cursor: pointer;
+      justify-content: center;
+      margin: 16px 0;
+    }
+
+    .star-rating-picker i { transition: var(--transition); }
+    .star-rating-picker i.selected,
+    .star-rating-picker i:hover,
+    .star-rating-picker i.hover {
+      color: #f59e0b;
+      transform: scale(1.15);
+    }
+
+    /* Permanent Confirmation Summary */
+    .confirm-summary-box {
+      background: #f8fafc;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin: 14px 0;
+    }
+
+    .confirm-summary-box table { width: 100%; font-size: 0.9rem; }
+    .confirm-summary-box td { padding: 6px 0; }
+    .confirm-summary-box td:first-child { color: var(--text-muted); width: 40%; font-weight: 600; }
+
+    .permanent-warning-callout {
+      background: #fff1f2;
+      border: 2px solid #f43f5e;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      color: #9f1239;
+      font-size: 0.88rem;
+      margin-top: 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .permanent-warning-callout i { font-size: 1.4rem; color: #e11d48; margin-top: 2px; }
 
     /* File Upload Zone */
     .file-upload-box {
@@ -725,41 +834,13 @@
       position: relative;
     }
 
-    .file-upload-box:hover {
-      background: #eef2ff;
-      border-color: var(--primary);
-      transform: translateY(-1px);
-    }
+    .file-upload-box:hover { background: #eef2ff; border-color: var(--primary); }
+    .upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--primary); }
+    .upload-placeholder i { font-size: 2rem; }
+    .upload-placeholder span { font-size: 0.88rem; font-weight: 700; }
+    .upload-placeholder small { font-size: 0.75rem; color: var(--text-muted); }
 
-    .upload-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      color: var(--primary);
-    }
-
-    .upload-placeholder i {
-      font-size: 2rem;
-    }
-
-    .upload-placeholder span {
-      font-size: 0.88rem;
-      font-weight: 700;
-    }
-
-    .upload-placeholder small {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .preview-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-    }
-
+    .preview-container { display: flex; flex-direction: column; align-items: center; gap: 10px; }
     .preview-container img {
       width: 100px;
       height: 100px;
@@ -778,10 +859,121 @@
       font-weight: 700;
       color: var(--text-main);
       cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
     }
 
-    /* User Dashboard */
+    /* Friends Booking UI */
+    .friend-row {
+      background: #f8fafc;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .friend-row-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .btn-remove-friend {
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      border-radius: var(--radius-full);
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+
+    .friends-summary-bar {
+      background: #eff6ff;
+      border-left: 4px solid var(--primary);
+      padding: 10px 14px;
+      border-radius: 4px;
+      font-size: 0.86rem;
+      color: #1e3a8a;
+      margin: 12px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .applicant-group-card {
+      background: #ffffff;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    .applicant-main-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .applicant-friends-sublist {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .friend-chip {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* History Cards */
+    .history-card {
+      background: #ffffff;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .history-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .history-rating-box {
+      background: #fffbeb;
+      border: 1px solid #fef3c7;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+    }
+
+    /* User Dashboard Layout */
     .dashboard-grid {
       display: grid;
       grid-template-columns: 1fr 2fr;
@@ -848,7 +1040,7 @@
       margin-top: 16px;
     }
 
-    /* Chat View */
+    /* Chat Layout */
     .chat-layout {
       display: grid;
       grid-template-columns: 320px 1fr;
@@ -992,7 +1184,7 @@
       font-size: 0.95rem;
     }
 
-    /* Admin Tables */
+    /* Admin Panel Styling */
     .admin-tab-group {
       display: flex;
       gap: 12px;
@@ -1036,7 +1228,7 @@
     .data-table th { background: #f8fafc; color: var(--text-muted); font-weight: 800; text-transform: uppercase; font-size: 0.78rem; }
     .admin-action-btn-group { display: flex; gap: 6px; }
 
-    /* ================= SMOOTH & LOCKED MODAL ARCHITECTURE ================= */
+    /* Modal Architecture */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -1053,10 +1245,7 @@
       overscroll-behavior: contain;
     }
 
-    .modal-backdrop.show {
-      opacity: 1;
-      visibility: visible;
-    }
+    .modal-backdrop.show { opacity: 1; visibility: visible; }
 
     .modal-card {
       background: var(--surface);
@@ -1122,14 +1311,8 @@
       flex-shrink: 0;
     }
     
-    .auth-modal-clean {
-      text-align: center;
-      padding: 30px 24px;
-    }
-
-    .google-auth-hero {
-      margin-bottom: 24px;
-    }
+    .auth-modal-clean { text-align: center; padding: 30px 24px; }
+    .google-auth-hero { margin-bottom: 24px; }
 
     .auth-lock-icon {
       width: 60px;
@@ -1145,22 +1328,8 @@
       box-shadow: 0 6px 16px rgba(79, 70, 229, 0.2);
     }
 
-    .google-auth-hero h4 {
-      font-size: 1.35rem;
-      font-weight: 800;
-      color: var(--dark);
-      margin-bottom: 6px;
-    }
-
-    .auth-security-note {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
+    .google-auth-hero h4 { font-size: 1.35rem; font-weight: 800; color: var(--dark); margin-bottom: 6px; }
+    .auth-security-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 6px; }
 
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
@@ -1168,7 +1337,7 @@
     .form-group { display: flex; flex-direction: column; gap: 5px; }
     .form-group.full-width { grid-column: 1 / -1; }
     .form-group label { font-size: 0.85rem; font-weight: 700; color: #334155; }
-    .form-group input { 
+    .form-group input, .form-group textarea { 
       padding: 10px 14px; 
       border: 1.5px solid var(--border); 
       border-radius: var(--radius-sm); 
@@ -1176,7 +1345,7 @@
       outline: none;
       transition: var(--transition);
     }
-    .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
+    .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
     .required { color: var(--danger); }
     .alert-info { background: #eff6ff; border-left: 4px solid var(--primary); padding: 14px; font-size: 0.88rem; color: #1e3a8a; border-radius: 6px; margin-bottom: 18px; }
 
@@ -1240,6 +1409,7 @@
     .toast.success { border-left: 6px solid var(--success); }
     .toast.error { border-left: 6px solid var(--danger); }
     .toast.info { border-left: 6px solid var(--primary); }
+    .toast.warning { border-left: 6px solid var(--warning); }
   </style>
 </head>
 <body>
@@ -1293,8 +1463,8 @@
 
       <!-- ================= 1. WORK POSTS VIEW ================= -->
       <section id="jobs-view" class="view-panel active">
+        <div id="active-booking-notice-container"></div>
 
-        <!-- Prominent Hero 2-Way Entry Points -->
         <div class="hero-entry-banner" id="hero-entry-banner">
           <div class="hero-header">
             <span class="hero-badge"><i class="fa-solid fa-bolt"></i> Instant Event Staffing</span>
@@ -1307,7 +1477,7 @@
                 <div class="cta-icon-wrap"><i class="fa-solid fa-person-walking-luggage"></i></div>
                 <div class="cta-info">
                   <h3>Join as a Boy</h3>
-                  <p>Get event shifts, set your rate & get hired</p>
+                  <p>Get event shifts, book for you & friends, set your rate</p>
                 </div>
               </div>
               <button class="btn btn-worker-3d full-width"><i class="fa-solid fa-user-plus"></i> Join as a Boy</button>
@@ -1340,7 +1510,7 @@
           </div>
           <div class="geo-sort-info" id="worker-distance-context" style="display: none;">
             <i class="fa-solid fa-location-crosshairs"></i>
-            <span>Sorted by nearest to your profile location.</span>
+            <span>Sorted nearest-first from your saved profile location link.</span>
           </div>
         </div>
 
@@ -1425,6 +1595,9 @@
           <button class="admin-nav-btn" onclick="switchAdminTab('employers-tab')">
             <i class="fa-solid fa-building-user"></i> Employers Queue
           </button>
+          <button class="admin-nav-btn" onclick="switchAdminTab('reports-tab')">
+            <i class="fa-solid fa-triangle-exclamation"></i> Reports Queue
+          </button>
           <button class="admin-nav-btn" onclick="switchAdminTab('logs-tab')">
             <i class="fa-solid fa-list-check"></i> Platform Audit Log
           </button>
@@ -1439,6 +1612,7 @@
                   <th>Contact / Age</th>
                   <th>Location (Maps)</th>
                   <th>Rate</th>
+                  <th>Rating</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -1465,6 +1639,24 @@
           </div>
         </div>
 
+        <div id="admin-reports-tab" class="admin-tab-panel">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date & Time</th>
+                  <th>Reporter</th>
+                  <th>Reported Profile</th>
+                  <th>Reason / Message</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-reports-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
         <div id="admin-logs-tab" class="admin-tab-panel">
           <div class="table-responsive">
             <table class="data-table">
@@ -1486,7 +1678,50 @@
 
     <!-- ================= MODALS ================= -->
 
-    <!-- Clean Google Auth Modal -->
+    <!-- 1. Booking Modal (Friends Booking) -->
+    <div id="booking-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'booking-modal')">
+      <div class="modal-card form-modal-card" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3 id="booking-modal-title">Confirm Shift Booking</h3>
+          <button class="close-btn" onclick="hideModal('booking-modal')">&times;</button>
+        </div>
+        <form id="booking-form" onsubmit="handleConfirmBookingSubmit(event)">
+          <div class="modal-body">
+            <div id="booking-modal-job-summary" style="margin-bottom: 16px;"></div>
+
+            <div class="friends-summary-bar">
+              <span><strong>Primary Booker:</strong> You (1 slot)</span>
+              <span id="booking-slots-indicator">Remaining Slots: 0</span>
+            </div>
+
+            <div style="margin: 14px 0;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label style="font-weight:700; font-size:0.9rem; color:var(--text-main);">
+                  <i class="fa-solid fa-user-group"></i> Book for Friends (Optional)
+                </label>
+                <button type="button" class="btn btn-outline btn-sm" id="btn-add-friend" onclick="handleAddFriendRow()">
+                  <i class="fa-solid fa-plus"></i> Add a Friend
+                </button>
+              </div>
+              <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom: 12px;">
+                Each friend added reserves an extra slot under your group booking. Name and phone number are mandatory.
+              </p>
+              <div id="booking-friends-container"></div>
+            </div>
+
+            <div class="alert-info" style="font-size:0.82rem; margin-top:14px;">
+              <i class="fa-solid fa-circle-info"></i> <strong>Cancellation Policy:</strong> You can cancel this booking up to 4 hours before the event start time.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="hideModal('booking-modal')">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btn-confirm-booking-submit">Confirm Booking (1 Slot)</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 2. Clean Google Auth Modal -->
     <div id="auth-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'auth-modal')">
       <div class="modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -1497,7 +1732,7 @@
           <div class="google-auth-hero">
             <div class="auth-lock-icon"><i class="fa-solid fa-shield-halved"></i></div>
             <h4>Welcome to CaterMatch</h4>
-            <p class="text-muted">Sign in with your Google account to access bookings, messaging, and event management.</p>
+            <p class="text-muted">Sign in with your Google account to access bookings, reviews, and event coordination.</p>
           </div>
 
           <button class="btn btn-google-3d full-width" onclick="handleGoogleSignInButtonClick()">
@@ -1512,7 +1747,7 @@
       </div>
     </div>
 
-    <!-- Role Selection Modal -->
+    <!-- 3. Role Selection Modal -->
     <div id="role-selection-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'role-selection-modal')">
       <div class="modal-card role-choice-card" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -1528,7 +1763,7 @@
             <div class="role-selection-box" onclick="selectInitialRole('worker')">
               <div class="role-icon">🧑‍🍳</div>
               <h4>Register as Worker</h4>
-              <p>Find catering shifts, set your per-event rates, get hired, and chat directly with employers.</p>
+              <p>Find catering shifts, book slots for yourself and friends, and chat directly with employers.</p>
               <button class="btn btn-worker-3d full-width">Continue as Worker</button>
             </div>
             <div class="role-selection-box" onclick="selectInitialRole('employer')">
@@ -1542,7 +1777,7 @@
       </div>
     </div>
 
-    <!-- Worker Registration / Edit Modal (Timings Field Removed) -->
+    <!-- 4. Worker Registration / Edit Modal -->
     <div id="worker-reg-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'worker-reg-modal')">
       <div class="modal-card form-modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -1551,8 +1786,6 @@
         </div>
         <form id="worker-reg-form" onsubmit="handleWorkerRegistrationSubmit(event)">
           <div class="modal-body form-grid">
-            
-            <!-- File Upload Input with Live Preview -->
             <div class="form-group full-width">
               <label>Worker Profile Photo <span class="required">*</span></label>
               <div class="file-upload-box" onclick="document.getElementById('worker-file-input').click()">
@@ -1605,7 +1838,7 @@
       </div>
     </div>
 
-    <!-- Employer Registration Modal -->
+    <!-- 5. Employer Registration / Edit Modal -->
     <div id="employer-reg-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'employer-reg-modal')">
       <div class="modal-card form-modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -1614,7 +1847,6 @@
         </div>
         <form id="employer-reg-form" onsubmit="handleEmployerRegistrationSubmit(event)">
           <div class="modal-body form-grid">
-            
             <div class="form-group full-width">
               <label>Company / Organizer Photo <span class="required">*</span></label>
               <div class="file-upload-box" onclick="document.getElementById('emp-file-input').click()">
@@ -1657,20 +1889,20 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline" onclick="closeEmployerRegModal()">Cancel</button>
-            <button type="submit" class="btn btn-employer-3d">Submit Profile</button>
+            <button type="submit" class="btn btn-employer-3d" id="emp-submit-btn">Submit Profile</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Create Work Post Modal -->
+    <!-- 6. Create Work Post Modal (Form Step) -->
     <div id="work-post-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'work-post-modal')">
       <div class="modal-card form-modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
           <h3>Post New Catering Work Slot</h3>
           <button class="close-btn" onclick="closeWorkPostModal()">&times;</button>
         </div>
-        <form id="work-post-form" onsubmit="handleCreateWorkPostSubmit(event)">
+        <form id="work-post-form" onsubmit="handleOpenWorkPostConfirm(event)">
           <div class="modal-body form-grid">
             <div class="form-group full-width">
               <label>Work / Event Name <span class="required">*</span></label>
@@ -1707,13 +1939,111 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline" onclick="closeWorkPostModal()">Cancel</button>
-            <button type="submit" class="btn btn-primary">Publish Work Post</button>
+            <button type="submit" class="btn btn-primary">Review & Continue</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Applicants Modal -->
+    <!-- 7. Work Post Mandatory Permanent Confirmation Screen -->
+    <div id="work-post-confirm-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'work-post-confirm-modal')">
+      <div class="modal-card form-modal-card" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Confirm Work Post Publication</h3>
+          <button class="close-btn" onclick="hideModal('work-post-confirm-modal')">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:0.92rem; color:var(--text-main);">
+            Please review the shift details below carefully before publishing:
+          </p>
+
+          <div class="confirm-summary-box" id="confirm-post-summary-content"></div>
+
+          <div class="permanent-warning-callout">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <div>
+              <strong>Strict Platform Rule:</strong>
+              <p style="margin-top:2px;">
+                Once published, this work post <strong>CANNOT be edited or cancelled</strong> under any circumstance. Workers book slots relying on your post. Please confirm all details are 100% correct.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="hideModal('work-post-confirm-modal'); showModal('work-post-modal');">
+            <i class="fa-solid fa-arrow-left"></i> Edit Details
+          </button>
+          <button type="button" class="btn btn-success" onclick="executeFinalPublishWorkPost()">
+            <i class="fa-solid fa-check-circle"></i> Yes, Publish Permanently
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. Worker Rating & Review Modal -->
+    <div id="rate-worker-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'rate-worker-modal')">
+      <div class="modal-card" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3 id="rate-worker-modal-title">Rate Worker</h3>
+          <button class="close-btn" onclick="hideModal('rate-worker-modal')">&times;</button>
+        </div>
+        <form id="rate-worker-form" onsubmit="handleSubmitWorkerRating(event)">
+          <div class="modal-body" style="text-align: center;">
+            <img id="rate-worker-avatar" src="" style="width:70px; height:70px; border-radius:50%; object-fit:cover; margin-bottom:8px;" />
+            <h4 id="rate-worker-name" style="font-size:1.15rem; font-weight:800; color:var(--dark);">Worker Name</h4>
+            <p id="rate-worker-job-context" style="font-size:0.82rem; color:var(--text-muted);"></p>
+
+            <div class="star-rating-picker" id="star-picker">
+              <i class="fa-solid fa-star selected" data-value="1" onclick="selectRatingStar(1)"></i>
+              <i class="fa-solid fa-star selected" data-value="2" onclick="selectRatingStar(2)"></i>
+              <i class="fa-solid fa-star selected" data-value="3" onclick="selectRatingStar(3)"></i>
+              <i class="fa-solid fa-star selected" data-value="4" onclick="selectRatingStar(4)"></i>
+              <i class="fa-solid fa-star selected" data-value="5" onclick="selectRatingStar(5)"></i>
+            </div>
+            <input type="hidden" id="selected-star-value" value="5" />
+
+            <div class="form-group full-width" style="text-align:left; margin-top:14px;">
+              <label>Short Review / Feedback (Optional)</label>
+              <textarea id="rate-worker-comment" rows="3" placeholder="e.g. Excellent service, punctual, well-groomed, professional behavior."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="hideModal('rate-worker-modal')">Cancel</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-star"></i> Submit Review</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 9. Report / Flag User Modal -->
+    <div id="report-user-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'report-user-modal')">
+      <div class="modal-card" onclick="event.stopPropagation()">
+        <div class="modal-header text-danger">
+          <h3><i class="fa-solid fa-flag"></i> Report Profile</h3>
+          <button class="close-btn" onclick="hideModal('report-user-modal')">&times;</button>
+        </div>
+        <form id="report-user-form" onsubmit="handleSubmitReport(event)">
+          <div class="modal-body">
+            <p style="font-size:0.88rem; color:var(--text-main); margin-bottom:12px;">
+              Reporting profile: <strong id="report-target-name">User</strong> (<span id="report-target-type">Type</span>)
+            </p>
+            <div class="form-group full-width">
+              <label>Reason for reporting <span class="required">*</span></label>
+              <textarea id="report-reason-input" rows="4" placeholder="Please describe the issue (e.g. fake profile, inappropriate behavior, fraudulent listing)..." required></textarea>
+            </div>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-top:8px;">
+              Reports are sent directly to Platform Administrators for audit and review.
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="hideModal('report-user-modal')">Cancel</button>
+            <button type="submit" class="btn btn-danger">Submit Report</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 10. Applicants Modal -->
     <div id="applicants-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'applicants-modal')">
       <div class="modal-card large-modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -1726,7 +2056,7 @@
       </div>
     </div>
 
-    <!-- Account Self-Deletion Modal -->
+    <!-- 11. Account Self-Deletion Modal -->
     <div id="delete-account-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'delete-account-modal')">
       <div class="modal-card" onclick="event.stopPropagation()">
         <div class="modal-header text-danger">
@@ -1735,7 +2065,7 @@
         </div>
         <div class="modal-body">
           <p><strong>Warning:</strong> This self-service action is strictly irreversible.</p>
-          <p>All your profile details, listings/applications, messages, and photos will be permanently deleted.</p>
+          <p>All your profile details, historical records, bookings, and messages will be permanently removed.</p>
           <div class="form-group" style="margin-top: 15px;">
             <label>Type <strong>DELETE</strong> to confirm:</label>
             <input type="text" id="delete-confirm-input" placeholder="DELETE" />
@@ -1752,10 +2082,14 @@
 
   <!-- ================= APPLICATION LOGIC (JAVASCRIPT) ================= -->
   <script>
-    // Initial Mock Repository
     const INITIAL_STATE = {
       currentUser: null,
       pendingAuthTargetRole: null,
+      activeBookingJobId: null,
+      pendingWorkPostDraft: null,
+      activeRatingContext: null,
+      activeReportTarget: null,
+
       workers: [
         {
           id: 'worker_1',
@@ -1768,7 +2102,17 @@
           coords: { lat: 19.1136, lng: 72.8697 },
           rate: '₹850 / shift',
           status: 'approved',
-          appliedJobs: ['job_1']
+          appliedJobs: ['job_1'],
+          ratings: [
+            {
+              jobId: 'job_comp_1',
+              employerId: 'emp_1',
+              employerName: 'Royal Feast Caterers',
+              stars: 5,
+              comment: 'Exceptional punctuality, courteous demeanor, and spotless formal uniform.',
+              date: '2026-08-20'
+            }
+          ]
         },
         {
           id: 'worker_2',
@@ -1781,9 +2125,11 @@
           coords: { lat: 19.0178, lng: 72.8478 },
           rate: '₹900 / shift',
           status: 'approved',
-          appliedJobs: []
+          appliedJobs: [],
+          ratings: []
         }
       ],
+
       employers: [
         {
           id: 'emp_1',
@@ -1797,6 +2143,7 @@
           status: 'approved'
         }
       ],
+
       jobs: [
         {
           id: 'job_1',
@@ -1812,7 +2159,14 @@
           coords: { lat: 19.1031, lng: 72.8732 },
           status: 'open',
           applicants: [
-            { workerId: 'worker_1', status: 'accepted', appliedAt: '2026-09-01 10:30 AM' }
+            {
+              workerId: 'worker_1',
+              status: 'accepted',
+              appliedAt: '2026-09-01 10:30 AM',
+              friends: [
+                { name: 'Karan Mehra', phone: '+91 98222 33445' }
+              ]
+            }
           ]
         },
         {
@@ -1829,18 +2183,56 @@
           coords: { lat: 19.1551, lng: 72.8550 },
           status: 'open',
           applicants: []
+        },
+        {
+          id: 'job_comp_1',
+          employerId: 'emp_1',
+          employerName: 'Royal Feast Caterers',
+          title: 'Luxury Birthday Banquet Buffet',
+          boysNeeded: 4,
+          date: '2026-08-20',
+          time: '05:00 PM – 11:00 PM',
+          perHeadAmount: 900,
+          venueName: 'St. Regis Grand Hall, Lower Parel',
+          mapsLink: 'https://maps.google.com/?q=18.9986,72.8205',
+          coords: { lat: 18.9986, lng: 72.8205 },
+          status: 'completed',
+          applicants: [
+            {
+              workerId: 'worker_1',
+              status: 'accepted',
+              appliedAt: '2026-08-15 10:00 AM',
+              friends: []
+            }
+          ]
         }
       ],
+
       chats: [
         {
           id: 'chat_emp1_worker1',
           participants: ['emp_1', 'worker_1'],
           messages: [
             { senderId: 'emp_1', text: 'Hello Rahul, are you available for Oct 15 wedding reception?', timestamp: '10:30 AM' },
-            { senderId: 'worker_1', text: 'Yes Sir, I am available and have black uniform ready.', timestamp: '10:32 AM' }
+            { senderId: 'worker_1', text: 'Yes Sir, Karan and I are available and have black uniforms ready.', timestamp: '10:32 AM' }
           ]
         }
       ],
+
+      reports: [
+        {
+          id: 'rep_1',
+          reporterId: 'emp_1',
+          reporterName: 'Royal Feast Caterers',
+          reportedUserId: 'worker_2',
+          reportedUserName: 'Vikas Kumar',
+          reportedUserType: 'worker',
+          message: 'Worker arrived without required uniform on past event trial.',
+          timestamp: '2026-08-25 04:00 PM',
+          status: 'open'
+        }
+      ],
+
       auditLogs: [
         { id: 'log_1', eventType: 'System Started', userInvolved: 'System', timestamp: 'Initial Load', details: 'CaterMatch platform initialized.' }
       ]
@@ -1849,9 +2241,11 @@
     let appState = loadState();
     let activeChatThreadId = null;
     let currentWorkerEditId = null;
+    let currentEmployerEditId = null;
+    let bookingFriendList = [];
 
     function loadState() {
-      const saved = localStorage.getItem('catermatch_db');
+      const saved = localStorage.getItem('catermatch_db_v6');
       if (saved) {
         try { return JSON.parse(saved); } catch (e) { console.error(e); }
       }
@@ -1859,7 +2253,7 @@
     }
 
     function saveState() {
-      localStorage.setItem('catermatch_db', JSON.stringify(appState));
+      localStorage.setItem('catermatch_db_v6', JSON.stringify(appState));
     }
 
     function logPlatformActivity(eventType, userInvolved, details) {
@@ -1884,7 +2278,6 @@
       setTimeout(() => toast.remove(), 3500);
     }
 
-    // Modal Manager with Body Scroll Lock
     function showModal(id) {
       const el = document.getElementById(id);
       if (el) {
@@ -1907,7 +2300,1143 @@
       }
     }
 
-    // Device Image Upload with Preview
+    function parseCoordinatesFromMapsUrl(url) {
+      if (!url || typeof url !== 'string') return { lat: 19.0760, lng: 72.8777 };
+      const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
+      const queryMatch = url.match(/[?&](?:q|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (queryMatch) return { lat: parseFloat(queryMatch[1]), lng: parseFloat(queryMatch[2]) };
+      return { lat: 19.0760, lng: 72.8777 };
+    }
+
+    function calculateHaversineDistanceKm(coords1, coords2) {
+      if (!coords1 || !coords2) return 0;
+      const toRad = (val) => (val * Math.PI) / 180;
+      const R = 6371;
+      const dLat = toRad(coords2.lat - coords1.lat);
+      const dLng = toRad(coords2.lng - coords1.lng);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(coords1.lat)) * Math.cos(toRad(coords2.lat)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return (R * c).toFixed(1);
+    }
+
+    function getWorkerRatingSummary(worker) {
+      if (!worker || !worker.ratings || worker.ratings.length === 0) {
+        return null;
+      }
+      const sum = worker.ratings.reduce((acc, r) => acc + r.stars, 0);
+      const avg = (sum / worker.ratings.length).toFixed(1);
+      return { avg, count: worker.ratings.length };
+    }
+
+    function getJobFilledSlotsCount(job) {
+      if (!job || !job.applicants) return 0;
+      return job.applicants.reduce((sum, app) => {
+        if (app.status === 'accepted') {
+          const friendCount = (app.friends && Array.isArray(app.friends)) ? app.friends.length : 0;
+          return sum + 1 + friendCount;
+        }
+        return sum;
+      }, 0);
+    }
+
+    function getJobRemainingSlotsCount(job) {
+      const filled = getJobFilledSlotsCount(job);
+      return Math.max(0, job.boysNeeded - filled);
+    }
+
+    function getWorkerActiveBooking(workerId) {
+      if (!workerId) return null;
+      return appState.jobs.find(job => 
+        job.status !== 'completed' &&
+        job.applicants && 
+        job.applicants.some(app => app.workerId === workerId && app.status === 'accepted')
+      );
+    }
+
+    function evaluateCancellationEligibility(job) {
+      if (!job || !job.date) return { canCancel: true, hoursRemaining: 999 };
+      try {
+        let startTimeStr = '00:00';
+        if (job.time) {
+          startTimeStr = job.time.split('–')[0].split('-')[0].trim();
+        }
+        const match = startTimeStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+        let hours = 0;
+        let minutes = 0;
+        if (match) {
+          hours = parseInt(match[1], 10);
+          minutes = parseInt(match[2], 10);
+          const mer = match[3] ? match[3].toUpperCase() : null;
+          if (mer === 'PM' && hours < 12) hours += 12;
+          if (mer === 'AM' && hours === 12) hours = 0;
+        }
+
+        const [year, month, day] = job.date.split('-').map(num => parseInt(num, 10));
+        const eventStartDateTime = new Date(year, month - 1, day, hours, minutes);
+        const now = new Date();
+
+        const diffMs = eventStartDateTime.getTime() - now.getTime();
+        const hoursRemaining = diffMs / (1000 * 60 * 60);
+
+        return {
+          canCancel: hoursRemaining >= 4,
+          hoursRemaining: hoursRemaining.toFixed(1)
+        };
+      } catch (err) {
+        return { canCancel: true, hoursRemaining: 999 };
+      }
+    }
+
+    function navigateTo(viewId) {
+      document.querySelectorAll('.view-panel').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+      const targetView = document.getElementById(viewId);
+      if (targetView) targetView.classList.add('active');
+
+      const activeBtn = document.querySelector(`.tab-btn[data-target="${viewId}"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      if (viewId === 'jobs-view') renderJobs();
+      if (viewId === 'directory-view') renderWorkersDirectory();
+      if (viewId === 'dashboard-view') renderDashboard();
+      if (viewId === 'chat-view') renderChatList();
+      if (viewId === 'admin-view') renderAdminTables();
+    }
+
+    function startWorkerDirectFlow() {
+      if (appState.currentUser) {
+        if (appState.currentUser.role === 'worker') {
+          navigateTo('dashboard-view');
+        } else {
+          showToast('You are currently signed in as an Employer.', 'info');
+        }
+        return;
+      }
+      appState.pendingAuthTargetRole = 'worker';
+      showModal('auth-modal');
+    }
+
+    function startEmployerDirectFlow() {
+      if (appState.currentUser) {
+        if (appState.currentUser.role === 'employer') {
+          if (appState.currentUser.data.status === 'approved') {
+            document.getElementById('post-form-name').value = appState.currentUser.data.name;
+            showModal('work-post-modal');
+          } else {
+            showToast('Your Employer account is pending admin approval.', 'error');
+            navigateTo('dashboard-view');
+          }
+        } else {
+          showToast('You are currently signed in as a Worker.', 'info');
+        }
+        return;
+      }
+      appState.pendingAuthTargetRole = 'employer';
+      showModal('auth-modal');
+    }
+
+    function renderJobs() {
+      const container = document.getElementById('jobs-list');
+      const search = (document.getElementById('job-search-input')?.value || '').toLowerCase();
+      const contextEl = document.getElementById('worker-distance-context');
+      const noticeContainer = document.getElementById('active-booking-notice-container');
+
+      const isWorker = appState.currentUser && appState.currentUser.role === 'worker';
+      const activeBookedJob = isWorker ? getWorkerActiveBooking(appState.currentUser.data.id) : null;
+
+      if (isWorker && activeBookedJob) {
+        if (noticeContainer) {
+          noticeContainer.innerHTML = `
+            <div class="active-booking-lock-banner">
+              <i class="fa-solid fa-lock"></i>
+              <div>
+                <h4>You Have an Active Shift Booking</h4>
+                <p>You are currently locked into <strong>${activeBookedJob.title}</strong>. Other open work posts are hidden until this shift is completed or cancelled (4-hour policy applies).</p>
+              </div>
+            </div>
+          `;
+        }
+        if (contextEl) contextEl.style.display = 'none';
+        container.innerHTML = renderJobCardHtml(activeBookedJob, true);
+        return;
+      }
+
+      if (noticeContainer) noticeContainer.innerHTML = '';
+
+      let list = appState.jobs.filter(j => j.status !== 'completed');
+
+      if (isWorker && appState.currentUser.data.coords) {
+        if (contextEl) contextEl.style.display = 'flex';
+        list.sort((a, b) => {
+          const distA = parseFloat(calculateHaversineDistanceKm(appState.currentUser.data.coords, a.coords));
+          const distB = parseFloat(calculateHaversineDistanceKm(appState.currentUser.data.coords, b.coords));
+          return distA - distB;
+        });
+      } else {
+        if (contextEl) contextEl.style.display = 'none';
+      }
+
+      if (search) {
+        list = list.filter(j => j.title.toLowerCase().includes(search) || j.venueName.toLowerCase().includes(search));
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">No available work posts at the moment.</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(job => renderJobCardHtml(job, false)).join('');
+    }
+
+    function renderJobCardHtml(job, isActiveBookingForWorker) {
+      const isWorker = appState.currentUser && appState.currentUser.role === 'worker';
+      const remainingSlots = getJobRemainingSlotsCount(job);
+      const filledSlots = getJobFilledSlotsCount(job);
+
+      let slotBadgeClass = 'badge-slots-high';
+      let slotBadgeText = `${remainingSlots} Slots Left`;
+      if (remainingSlots === 0) {
+        slotBadgeClass = 'badge-slots-none';
+        slotBadgeText = 'Slots Full';
+      } else if (remainingSlots <= 2) {
+        slotBadgeClass = 'badge-slots-low';
+        slotBadgeText = `Only ${remainingSlots} Left!`;
+      }
+
+      let distanceBadge = '';
+      if (isWorker && appState.currentUser.data.coords) {
+        const dist = calculateHaversineDistanceKm(appState.currentUser.data.coords, job.coords);
+        distanceBadge = `<span class="distance-pill"><i class="fa-solid fa-location-arrow"></i> ${dist} km away</span>`;
+      }
+
+      const hasApplied = isWorker && job.applicants.some(a => a.workerId === appState.currentUser.data.id && a.status === 'accepted');
+
+      let actionSection = '';
+      if (!appState.currentUser) {
+        actionSection = `<button class="btn btn-outline full-width" onclick="openAuthModal()"><i class="fa-solid fa-lock"></i> Sign in to Apply</button>`;
+      } else if (isWorker) {
+        if (appState.currentUser.data.status !== 'approved') {
+          actionSection = `<button class="btn btn-outline full-width btn-disabled" disabled><i class="fa-solid fa-clock"></i> Approval Pending</button>`;
+        } else if (hasApplied) {
+          const cancelEvaluation = evaluateCancellationEligibility(job);
+          let cancelBtn = cancelEvaluation.canCancel
+            ? `<button class="btn btn-danger full-width" onclick="cancelWorkerBooking('${job.id}')"><i class="fa-solid fa-ban"></i> Cancel Booking</button>`
+            : `<button class="btn btn-disabled full-width" title="Locked within 4 hours" onclick="showToast('Cancellation locked within 4 hours of event start.', 'error')"><i class="fa-solid fa-lock"></i> Cancellation Locked (< 4h)</button>`;
+
+          actionSection = `
+            <div style="background:#ecfdf5; border:1px solid #a7f3d0; padding:10px; border-radius:var(--radius-sm); text-align:center; margin-bottom:6px;">
+              <strong style="color:#065f46;"><i class="fa-solid fa-circle-check"></i> Booked Active Shift</strong>
+            </div>
+            ${cancelBtn}
+            <div class="cancellation-policy-note">
+              <i class="fa-solid fa-clock-rotate-left"></i> Slots can only be cancelled at least 4 hours before event start.
+            </div>
+          `;
+        } else if (remainingSlots === 0) {
+          actionSection = `<button class="btn btn-disabled full-width" disabled><i class="fa-solid fa-circle-xmark"></i> Slot Full</button>`;
+        } else {
+          actionSection = `<button class="btn btn-primary full-width" onclick="openBookingModal('${job.id}')"><i class="fa-solid fa-hand-pointer"></i> Book / Apply Slot</button>`;
+        }
+      }
+
+      return `
+        <div class="card ${isActiveBookingForWorker ? 'active-booked-card' : ''}">
+          <div class="card-top-badges">
+            <span class="card-badge ${slotBadgeClass}"><i class="fa-solid fa-users"></i> ${slotBadgeText}</span>
+            <span class="card-badge ${job.status === 'open' ? 'badge-open' : (job.status === 'completed' ? 'badge-completed' : 'badge-filled')}">${job.status}</span>
+          </div>
+          <div>
+            <h3 class="card-title">${job.title}</h3>
+            <p class="card-subtext">
+              Posted by <strong>${job.employerName}</strong> ${distanceBadge}
+              ${appState.currentUser ? `<button class="btn-report-flag" onclick="openReportModal('${job.employerId}', 'employer', '${job.employerName}')" title="Report Employer"><i class="fa-solid fa-flag"></i></button>` : ''}
+            </p>
+            <div class="highlight-pay">₹${job.perHeadAmount} / per head</div>
+            <ul class="card-details-list">
+              <li><i class="fa-solid fa-user-check"></i> Boys Needed: <strong>${job.boysNeeded}</strong> (Accepted: ${filledSlots})</li>
+              <li><i class="fa-solid fa-layer-group"></i> <strong>Remaining Slots: ${remainingSlots}</strong></li>
+              <li><i class="fa-solid fa-calendar-days"></i> ${job.date} | ${job.time}</li>
+              <li><i class="fa-solid fa-map-pin"></i> ${job.venueName}</li>
+              <li><i class="fa-solid fa-location-dot"></i> <a href="${job.mapsLink}" target="_blank" rel="noopener" class="maps-link-btn">📍 View Location</a></li>
+            </ul>
+          </div>
+          <div class="card-footer-actions">${actionSection}</div>
+        </div>
+      `;
+    }
+
+    function renderWorkersDirectory() {
+      const container = document.getElementById('worker-directory-list');
+      const search = (document.getElementById('worker-search-input')?.value || '').toLowerCase();
+      let list = appState.workers.filter(w => w.status === 'approved');
+
+      if (search) {
+        list = list.filter(w => w.name.toLowerCase().includes(search) || w.locationText.toLowerCase().includes(search) || w.rate.toLowerCase().includes(search));
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">No verified workers available.</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(w => {
+        let actionBtn = '';
+        if (!appState.currentUser) {
+          actionBtn = `<button class="btn btn-outline full-width" onclick="openAuthModal()"><i class="fa-solid fa-comments"></i> Sign in to Chat</button>`;
+        } else {
+          actionBtn = `<button class="btn btn-primary full-width" onclick="startChatWithWorker('${w.id}')"><i class="fa-solid fa-comment-dots"></i> Message Worker</button>`;
+        }
+
+        const ratingInfo = getWorkerRatingSummary(w);
+        const ratingHtml = ratingInfo 
+          ? `<span class="star-badge"><i class="fa-solid fa-star"></i> ${ratingInfo.avg} (${ratingInfo.count} reviews)</span>`
+          : `<span class="star-badge" style="color:var(--text-muted); background:#f1f5f9; border-color:#e2e8f0;"><i class="fa-regular fa-star"></i> New Crew</span>`;
+
+        return `
+          <div class="card">
+            <div class="worker-card-header">
+              <img src="${w.photo}" alt="${w.name}" class="worker-avatar" />
+              <div class="worker-meta" style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                  <h3 style="font-size: 1.15rem; font-weight:800;">${w.name}</h3>
+                  ${appState.currentUser ? `<button class="btn-report-flag" onclick="openReportModal('${w.id}', 'worker', '${w.name}')" title="Report Profile"><i class="fa-solid fa-flag"></i></button>` : ''}
+                </div>
+                <div style="margin: 4px 0;">${ratingHtml}</div>
+                <p style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-cake-candles"></i> Age: ${w.age} yrs</p>
+              </div>
+            </div>
+            <div class="highlight-pay">${w.rate}</div>
+            <ul class="card-details-list">
+              <li><i class="fa-solid fa-location-dot"></i> ${w.locationText}</li>
+              <li><i class="fa-solid fa-map-location-dot"></i> <a href="${w.mapsLink}" target="_blank" rel="noopener" class="maps-link-btn">📍 View Location</a></li>
+            </ul>
+            <div class="card-footer-actions">${actionBtn}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDashboard() {
+      const container = document.getElementById('dashboard-content');
+      if (!appState.currentUser) {
+        container.innerHTML = `<div style="text-align: center; padding: 40px;"><p>Please sign in to view dashboard.</p><button class="btn btn-primary" onclick="openAuthModal()" style="margin-top:10px;">Sign In</button></div>`;
+        return;
+      }
+
+      if (appState.currentUser.role === 'admin') {
+        container.innerHTML = `<div style="text-align:center; padding: 30px;"><h3>You are signed in as Administrator.</h3><p style="margin-top:8px;">Access the admin panel tab to oversee platform activity.</p></div>`;
+        return;
+      }
+
+      const u = appState.currentUser.data;
+      const isWorker = appState.currentUser.role === 'worker';
+
+      let bannerClass = 'badge-pending';
+      let bannerText = '⏳ Account Under Admin Review — visible once approved.';
+      let rejectionActionBtn = '';
+
+      if (u.status === 'approved') {
+        bannerClass = 'badge-approved';
+        bannerText = isWorker ? '✅ Profile Verified & Visible in Directory' : '✅ Verified Employer — You can publish work.';
+      } else if (u.status === 'rejected') {
+        bannerClass = 'badge-rejected';
+        bannerText = '❌ Profile Rejected by Admin. You may edit and resubmit for re-evaluation.';
+        rejectionActionBtn = isWorker
+          ? `<button class="btn btn-warning full-width" onclick="openWorkerEditModal()"><i class="fa-solid fa-rotate-left"></i> Edit & Resubmit Profile</button>`
+          : `<button class="btn btn-warning full-width" onclick="openEmployerEditModal()"><i class="fa-solid fa-rotate-left"></i> Edit & Resubmit Profile</button>`;
+      }
+
+      let mainActivityHtml = '';
+      let historySectionHtml = '';
+
+      if (isWorker) {
+        const activeJobs = appState.jobs.filter(j => j.status !== 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted'));
+        const completedJobs = appState.jobs.filter(j => j.status === 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted'));
+
+        const ratingSummary = getWorkerRatingSummary(u);
+        const ratingDisplay = ratingSummary
+          ? `<div style="margin: 8px 0;"><span class="star-badge" style="font-size:0.9rem; padding:4px 12px;"><i class="fa-solid fa-star"></i> ${ratingSummary.avg} rating (${ratingSummary.count} reviews)</span></div>`
+          : `<div style="margin: 8px 0;"><span class="star-badge" style="background:#f1f5f9; color:var(--text-muted); border-color:#e2e8f0;">No reviews yet</span></div>`;
+
+        mainActivityHtml = `
+          <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card);">
+            <h3 style="font-weight:800;">Your Active Bookings (${activeJobs.length})</h3>
+            <div style="margin-top:16px; display:flex; flex-direction:column; gap:12px;">
+              ${activeJobs.length === 0 ? '<p class="text-muted">No active bookings. Browse work posts to book a shift.</p>' : activeJobs.map(j => {
+                const appEntry = j.applicants.find(a => a.workerId === u.id);
+                const friends = (appEntry && appEntry.friends) ? appEntry.friends : [];
+                const evalCancel = evaluateCancellationEligibility(j);
+
+                let cancelBtn = evalCancel.canCancel
+                  ? `<button class="btn btn-danger btn-sm" onclick="cancelWorkerBooking('${j.id}')"><i class="fa-solid fa-ban"></i> Cancel Booking</button>`
+                  : `<button class="btn btn-disabled btn-sm" title="Locked within 4h" onclick="showToast('Cancellation locked within 4 hours of event.', 'error')"><i class="fa-solid fa-lock"></i> Locked (< 4h)</button>`;
+
+                return `
+                  <div style="padding:16px; border:1.5px solid #a7f3d0; background:#f0fdf4; border-radius:var(--radius-sm); display:flex; flex-direction:column; gap:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+                      <div>
+                        <strong style="font-size:1.05rem; color:#065f46;">${j.title}</strong><br>
+                        <small class="text-muted"><i class="fa-solid fa-calendar"></i> ${j.date} | <i class="fa-solid fa-clock"></i> ${j.time} | ₹${j.perHeadAmount}/head</small>
+                      </div>
+                      ${cancelBtn}
+                    </div>
+                    ${friends.length > 0 ? `
+                      <div style="background:#ffffff; border:1px solid #bbf7d0; padding:8px 12px; border-radius:6px; font-size:0.8rem;">
+                        <strong><i class="fa-solid fa-users"></i> Friends in this group (${friends.length}):</strong>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;">
+                          ${friends.map(f => `<span class="friend-chip">👤 ${f.name} (${f.phone})</span>`).join('')}
+                        </div>
+                      </div>
+                    ` : ''}
+                    <div class="cancellation-policy-note">
+                      <i class="fa-solid fa-clock-rotate-left"></i> Cancellation allowed up to 4h before shift start.
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+
+        historySectionHtml = `
+          <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card); margin-top:20px;">
+            <h3 style="font-weight:800;"><i class="fa-solid fa-clock-rotate-left"></i> Completed Shift History (${completedJobs.length})</h3>
+            <div style="margin-top:14px; display:flex; flex-direction:column; gap:12px;">
+              ${completedJobs.length === 0 ? '<p class="text-muted">No completed jobs yet.</p>' : completedJobs.map(j => {
+                const myRating = (u.ratings || []).find(r => r.jobId === j.id);
+                return `
+                  <div class="history-card">
+                    <div class="history-card-header">
+                      <div>
+                        <strong style="font-size:1.05rem;">${j.title}</strong><br>
+                        <small class="text-muted"><i class="fa-solid fa-building"></i> ${j.employerName} | <i class="fa-solid fa-calendar-check"></i> ${j.date} | <strong>₹${j.perHeadAmount} Earned</strong></small>
+                      </div>
+                      <span class="card-badge badge-completed">Completed</span>
+                    </div>
+                    <div class="history-rating-box">
+                      ${myRating ? `
+                        <div><strong>Employer Rating:</strong> <span class="star-badge"><i class="fa-solid fa-star"></i> ${myRating.stars}.0 / 5.0</span></div>
+                        ${myRating.comment ? `<p style="margin-top:4px; font-style:italic;">"${myRating.comment}"</p>` : ''}
+                      ` : `<span class="text-muted">No rating left by employer yet.</span>`}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+
+      } else {
+        const activePostedJobs = appState.jobs.filter(j => j.employerId === u.id && j.status !== 'completed');
+        const completedPostedJobs = appState.jobs.filter(j => j.employerId === u.id && j.status === 'completed');
+
+        mainActivityHtml = `
+          <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <h3 style="font-weight:800;">Your Active Events (${activePostedJobs.length})</h3>
+              <button class="btn btn-employer-3d btn-sm" onclick="handlePostWorkClick()"><i class="fa-solid fa-plus"></i> Post Event</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              ${activePostedJobs.length === 0 ? '<p class="text-muted">No active events posted yet.</p>' : activePostedJobs.map(j => {
+                const remaining = getJobRemainingSlotsCount(j);
+                const filled = getJobFilledSlotsCount(j);
+                return `
+                  <div style="padding:14px 18px; border:1px solid var(--border); border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                    <div>
+                      <strong style="font-size:1rem;">${j.title}</strong><br>
+                      <small class="text-muted">${j.date} | Needed: ${j.boysNeeded} | Filled: ${filled} | <strong>Remaining: ${remaining}</strong></small>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                      <button class="btn btn-outline btn-sm" onclick="viewJobApplicants('${j.id}')"><i class="fa-solid fa-users"></i> Applicants (${filled})</button>
+                      <button class="btn btn-success btn-sm" onclick="markJobCompleted('${j.id}')"><i class="fa-solid fa-flag-checkered"></i> Mark Completed</button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+
+        historySectionHtml = `
+          <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card); margin-top:20px;">
+            <h3 style="font-weight:800;"><i class="fa-solid fa-clock-rotate-left"></i> Completed Events History (${completedPostedJobs.length})</h3>
+            <div style="margin-top:14px; display:flex; flex-direction:column; gap:12px;">
+              ${completedPostedJobs.length === 0 ? '<p class="text-muted">No completed events yet.</p>' : completedPostedJobs.map(j => {
+                const acceptedApplicants = j.applicants.filter(a => a.status === 'accepted');
+                return `
+                  <div class="history-card">
+                    <div class="history-card-header">
+                      <div>
+                        <strong style="font-size:1.05rem;">${j.title}</strong><br>
+                        <small class="text-muted">${j.date} | ${j.venueName} | Rate: ₹${j.perHeadAmount}/head</small>
+                      </div>
+                      <span class="card-badge badge-completed">Completed</span>
+                    </div>
+                    <div style="margin-top:8px;">
+                      <span style="font-size:0.84rem; font-weight:700; color:var(--dark);">Crew on this Event:</span>
+                      <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+                        ${acceptedApplicants.map(app => {
+                          const worker = appState.workers.find(w => w.id === app.workerId) || { name: 'Worker', id: app.workerId };
+                          const ratingGiven = (worker.ratings || []).find(r => r.jobId === j.id && r.employerId === u.id);
+                          return `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid var(--border); padding:8px 12px; border-radius:6px;">
+                              <div>
+                                <strong>${worker.name}</strong>
+                                ${ratingGiven ? `<span class="star-badge" style="margin-left:8px;"><i class="fa-solid fa-star"></i> Rated ${ratingGiven.stars}★</span>` : ''}
+                              </div>
+                              ${!ratingGiven ? `
+                                <button class="btn btn-primary btn-sm" onclick="openRateWorkerModal('${j.id}', '${worker.id}', '${worker.name}')">
+                                  <i class="fa-solid fa-star"></i> Rate Worker
+                                </button>
+                              ` : `<span class="text-muted" style="font-size:0.78rem;">Feedback Submitted</span>`}
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = `
+        <div class="dashboard-grid">
+          <div class="dash-profile-card">
+            <img src="${u.photo}" alt="${u.name}" class="dash-avatar" />
+            <h3 style="font-size:1.3rem; font-weight:800;">${u.name}</h3>
+            <p class="text-muted">${isWorker ? 'Catering Crew Profile' : 'Event Organizer / Employer'}</p>
+            ${isWorker && getWorkerRatingSummary(u) ? `<div style="margin-top:4px;"><span class="star-badge"><i class="fa-solid fa-star"></i> ${getWorkerRatingSummary(u).avg} (${getWorkerRatingSummary(u).count} reviews)</span></div>` : ''}
+            
+            <div class="dash-status-banner ${bannerClass}">${bannerText}</div>
+            ${rejectionActionBtn}
+
+            <table class="dash-details-table">
+              <tr><td>Phone</td><td><strong>${u.phone}</strong></td></tr>
+              <tr><td>Age</td><td>${u.age} yrs</td></tr>
+              <tr><td>Location</td><td>${u.locationText}</td></tr>
+              ${isWorker ? `<tr><td>Rate</td><td><strong>${u.rate}</strong></td></tr>` : ''}
+              <tr><td>Maps Link</td><td><a href="${u.mapsLink}" target="_blank" class="maps-link-btn">📍 View Map</a></td></tr>
+            </table>
+
+            <div class="dash-actions-panel">
+              ${isWorker 
+                ? `<button class="btn btn-outline full-width" onclick="openWorkerEditModal()"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>`
+                : `<button class="btn btn-outline full-width" onclick="openEmployerEditModal()"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>`
+              }
+              <button class="btn btn-danger full-width" onclick="openDeleteAccountModal()"><i class="fa-solid fa-trash"></i> Delete My Account</button>
+            </div>
+          </div>
+          <div>
+            ${mainActivityHtml}
+            ${historySectionHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    function handleOpenWorkPostConfirm(e) {
+      e.preventDefault();
+      const mapsLink = document.getElementById('post-form-maps-link').value;
+      const coords = parseCoordinatesFromMapsUrl(mapsLink);
+
+      appState.pendingWorkPostDraft = {
+        title: document.getElementById('post-form-title').value,
+        employerName: document.getElementById('post-form-name').value,
+        boysNeeded: parseInt(document.getElementById('post-form-boys').value, 10),
+        date: document.getElementById('post-form-date').value,
+        time: document.getElementById('post-form-time').value,
+        perHeadAmount: parseFloat(document.getElementById('post-form-amount').value),
+        venueName: document.getElementById('post-form-venue').value,
+        mapsLink: mapsLink,
+        coords: coords
+      };
+
+      const draft = appState.pendingWorkPostDraft;
+      document.getElementById('confirm-post-summary-content').innerHTML = `
+        <table>
+          <tr><td>Event Name:</td><td><strong>${draft.title}</strong></td></tr>
+          <tr><td>Organizer Name:</td><td>${draft.employerName}</td></tr>
+          <tr><td>Boys Needed:</td><td><strong>${draft.boysNeeded} crew members</strong></td></tr>
+          <tr><td>Date & Shift:</td><td>${draft.date} | ${draft.time}</td></tr>
+          <tr><td>Rate per Head:</td><td><strong>₹${draft.perHeadAmount}</strong></td></tr>
+          <tr><td>Venue Location:</td><td>${draft.venueName}</td></tr>
+        </table>
+      `;
+
+      hideModal('work-post-modal');
+      showModal('work-post-confirm-modal');
+    }
+
+    function executeFinalPublishWorkPost() {
+      if (!appState.pendingWorkPostDraft || !appState.currentUser) return;
+      const employer = appState.currentUser.data;
+      const draft = appState.pendingWorkPostDraft;
+
+      const newJob = {
+        id: 'job_' + Date.now(),
+        employerId: employer.id,
+        employerName: draft.employerName,
+        title: draft.title,
+        boysNeeded: draft.boysNeeded,
+        date: draft.date,
+        time: draft.time,
+        perHeadAmount: draft.perHeadAmount,
+        venueName: draft.venueName,
+        mapsLink: draft.mapsLink,
+        coords: draft.coords,
+        status: 'open',
+        applicants: []
+      };
+
+      appState.jobs.unshift(newJob);
+      logPlatformActivity('Work Post Published', `${employer.name} (${employer.id})`, `Created permanent job: ${newJob.title}`);
+      saveState();
+
+      appState.pendingWorkPostDraft = null;
+      hideModal('work-post-confirm-modal');
+      document.getElementById('work-post-form').reset();
+      showToast('Work post published permanently!', 'success');
+      navigateTo('jobs-view');
+    }
+
+    function markJobCompleted(jobId) {
+      const job = appState.jobs.find(j => j.id === jobId);
+      if (!job) return;
+
+      if (!confirm(`Confirm completion for "${job.title}"? This moves the shift to Job History and lets you submit feedback reviews for participating workers.`)) {
+        return;
+      }
+
+      job.status = 'completed';
+      logPlatformActivity('Job Completed', `${job.employerName} (${job.employerId})`, `Marked "${job.title}" as completed.`);
+      saveState();
+      showToast('Event marked as completed! You can now rate your workers.', 'success');
+      renderDashboard();
+
+      const firstWorkerApp = job.applicants.find(a => a.status === 'accepted');
+      if (firstWorkerApp) {
+        const workerObj = appState.workers.find(w => w.id === firstWorkerApp.workerId);
+        if (workerObj) {
+          openRateWorkerModal(job.id, workerObj.id, workerObj.name);
+        }
+      }
+    }
+
+    function openRateWorkerModal(jobId, workerId, workerName) {
+      const worker = appState.workers.find(w => w.id === workerId);
+      const job = appState.jobs.find(j => j.id === jobId);
+      if (!worker || !job) return;
+
+      appState.activeRatingContext = { jobId, workerId, workerName };
+      document.getElementById('rate-worker-name').textContent = worker.name;
+      document.getElementById('rate-worker-avatar').src = worker.photo;
+      document.getElementById('rate-worker-job-context').textContent = `Shift: ${job.title} (${job.date})`;
+      document.getElementById('rate-worker-comment').value = '';
+      selectRatingStar(5);
+
+      showModal('rate-worker-modal');
+    }
+
+    function selectRatingStar(count) {
+      document.getElementById('selected-star-value').value = count;
+      const stars = document.querySelectorAll('#star-picker i');
+      stars.forEach((s, idx) => {
+        if (idx < count) {
+          s.classList.add('selected');
+        } else {
+          s.classList.remove('selected');
+        }
+      });
+    }
+
+    function handleSubmitWorkerRating(e) {
+      e.preventDefault();
+      if (!appState.activeRatingContext || !appState.currentUser) return;
+
+      const { jobId, workerId } = appState.activeRatingContext;
+      const stars = parseInt(document.getElementById('selected-star-value').value, 10);
+      const comment = document.getElementById('rate-worker-comment').value.trim();
+
+      const worker = appState.workers.find(w => w.id === workerId);
+      if (!worker) return;
+
+      if (!worker.ratings) worker.ratings = [];
+      worker.ratings = worker.ratings.filter(r => !(r.jobId === jobId && r.employerId === appState.currentUser.data.id));
+
+      worker.ratings.push({
+        jobId,
+        employerId: appState.currentUser.data.id,
+        employerName: appState.currentUser.data.name,
+        stars,
+        comment,
+        date: new Date().toISOString().split('T')[0]
+      });
+
+      logPlatformActivity('Worker Rated', `${appState.currentUser.data.name}`, `Gave ${stars} stars to ${worker.name}`);
+      saveState();
+
+      hideModal('rate-worker-modal');
+      showToast(`Rating submitted for ${worker.name}!`, 'success');
+      renderDashboard();
+    }
+
+    function openReportModal(targetId, targetType, targetName) {
+      if (!appState.currentUser) {
+        showToast('Please sign in to report a profile.', 'error');
+        openAuthModal();
+        return;
+      }
+      appState.activeReportTarget = { targetId, targetType, targetName };
+      document.getElementById('report-target-name').textContent = targetName;
+      document.getElementById('report-target-type').textContent = targetType;
+      document.getElementById('report-reason-input').value = '';
+      showModal('report-user-modal');
+    }
+
+    function handleSubmitReport(e) {
+      e.preventDefault();
+      if (!appState.activeReportTarget || !appState.currentUser) return;
+
+      const reason = document.getElementById('report-reason-input').value.trim();
+      if (!reason) return;
+
+      const reportEntry = {
+        id: 'rep_' + Date.now(),
+        reporterId: appState.currentUser.data.id,
+        reporterName: appState.currentUser.data.name,
+        reportedUserId: appState.activeReportTarget.targetId,
+        reportedUserName: appState.activeReportTarget.targetName,
+        reportedUserType: appState.activeReportTarget.targetType,
+        message: reason,
+        timestamp: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        status: 'open'
+      };
+
+      if (!appState.reports) appState.reports = [];
+      appState.reports.unshift(reportEntry);
+
+      logPlatformActivity('Profile Reported', `${appState.currentUser.data.name}`, `Reported ${reportEntry.reportedUserType} "${reportEntry.reportedUserName}"`);
+      saveState();
+
+      hideModal('report-user-modal');
+      showToast('Report submitted for admin review.', 'info');
+    }
+
+    function markReportReviewed(reportId) {
+      const rep = (appState.reports || []).find(r => r.id === reportId);
+      if (rep) {
+        rep.status = 'reviewed';
+        logPlatformActivity('Report Resolved', 'Admin Officer', `Resolved report ID: ${reportId}`);
+        saveState();
+        renderAdminTables();
+        showToast('Report marked as reviewed.', 'success');
+      }
+    }
+
+    function openEmployerEditModal() {
+      if (!appState.currentUser || appState.currentUser.role !== 'employer') return;
+      const emp = appState.currentUser.data;
+      currentEmployerEditId = emp.id;
+
+      document.getElementById('employer-reg-modal-title').textContent = emp.status === 'rejected' ? 'Edit & Resubmit Employer Profile' : 'Edit Employer Profile';
+      document.getElementById('emp-form-name').value = emp.name;
+      document.getElementById('emp-form-age').value = emp.age;
+      document.getElementById('emp-form-phone').value = emp.phone;
+      document.getElementById('emp-form-photo-data').value = emp.photo;
+      document.getElementById('emp-img-preview').src = emp.photo;
+      document.getElementById('emp-upload-placeholder').style.display = 'none';
+      document.getElementById('emp-preview-container').style.display = 'flex';
+
+      document.getElementById('emp-form-location-text').value = emp.locationText;
+      document.getElementById('emp-form-maps-link').value = emp.mapsLink;
+      document.getElementById('emp-submit-btn').textContent = emp.status === 'rejected' ? 'Resubmit for Review' : 'Save Changes';
+
+      showModal('employer-reg-modal');
+    }
+
+    function handleEmployerRegistrationSubmit(e) {
+      e.preventDefault();
+      const mapsLink = document.getElementById('emp-form-maps-link').value;
+      const coords = parseCoordinatesFromMapsUrl(mapsLink);
+      const photoData = document.getElementById('emp-form-photo-data').value || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&auto=format&fit=crop&q=60';
+
+      if (currentEmployerEditId) {
+        const emp = appState.employers.find(x => x.id === currentEmployerEditId);
+        if (emp) {
+          emp.name = document.getElementById('emp-form-name').value;
+          emp.age = parseInt(document.getElementById('emp-form-age').value, 10);
+          emp.phone = document.getElementById('emp-form-phone').value;
+          emp.photo = photoData;
+          emp.locationText = document.getElementById('emp-form-location-text').value;
+          emp.mapsLink = mapsLink;
+          emp.coords = coords;
+
+          if (emp.status === 'rejected') {
+            emp.status = 'pending';
+            showToast('Profile resubmitted for admin review!', 'success');
+          } else {
+            showToast('Employer profile updated!', 'success');
+          }
+
+          appState.currentUser.data = emp;
+          logPlatformActivity('Employer Profile Updated', `${emp.name} (${emp.id})`, 'Saved updated profile details.');
+        }
+      } else {
+        const newEmployer = {
+          id: 'emp_' + Date.now(),
+          name: document.getElementById('emp-form-name').value,
+          age: parseInt(document.getElementById('emp-form-age').value, 10),
+          phone: document.getElementById('emp-form-phone').value,
+          photo: photoData,
+          locationText: document.getElementById('emp-form-location-text').value,
+          mapsLink: mapsLink,
+          coords: coords,
+          status: 'pending'
+        };
+
+        appState.employers.push(newEmployer);
+        appState.currentUser = { role: 'employer', data: newEmployer };
+        logPlatformActivity('Employer Registered', `${newEmployer.name} (${newEmployer.id})`, 'Submitted registration for approval.');
+        showToast('Registration submitted for admin review.', 'success');
+      }
+
+      saveState();
+      closeEmployerRegModal();
+      updateAuthUI();
+      navigateTo('dashboard-view');
+    }
+
+    function openWorkerEditModal() {
+      if (!appState.currentUser || appState.currentUser.role !== 'worker') return;
+      const w = appState.currentUser.data;
+      currentWorkerEditId = w.id;
+
+      document.getElementById('worker-reg-modal-title').textContent = w.status === 'rejected' ? 'Edit & Resubmit Worker Profile' : 'Edit Worker Profile (Requires Re-Review)';
+      document.getElementById('worker-form-name').value = w.name;
+      document.getElementById('worker-form-age').value = w.age;
+      document.getElementById('worker-form-phone').value = w.phone;
+      document.getElementById('worker-form-photo-data').value = w.photo;
+      document.getElementById('worker-img-preview').src = w.photo;
+      document.getElementById('worker-upload-placeholder').style.display = 'none';
+      document.getElementById('worker-preview-container').style.display = 'flex';
+      
+      document.getElementById('worker-form-rate').value = w.rate;
+      document.getElementById('worker-form-location-text').value = w.locationText;
+      document.getElementById('worker-form-maps-link').value = w.mapsLink;
+      document.getElementById('worker-submit-btn').textContent = w.status === 'rejected' ? 'Resubmit for Review' : 'Save & Submit for Re-Review';
+
+      showModal('worker-reg-modal');
+    }
+
+    function handleWorkerRegistrationSubmit(e) {
+      e.preventDefault();
+      const mapsLink = document.getElementById('worker-form-maps-link').value;
+      const coords = parseCoordinatesFromMapsUrl(mapsLink);
+      const photoData = document.getElementById('worker-form-photo-data').value || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&auto=format&fit=crop&q=60';
+
+      if (currentWorkerEditId) {
+        const worker = appState.workers.find(w => w.id === currentWorkerEditId);
+        if (worker) {
+          worker.name = document.getElementById('worker-form-name').value;
+          worker.age = parseInt(document.getElementById('worker-form-age').value, 10);
+          worker.phone = document.getElementById('worker-form-phone').value;
+          worker.photo = photoData;
+          worker.rate = document.getElementById('worker-form-rate').value;
+          worker.locationText = document.getElementById('worker-form-location-text').value;
+          worker.mapsLink = mapsLink;
+          worker.coords = coords;
+          worker.status = 'pending';
+
+          appState.currentUser.data = worker;
+          logPlatformActivity('Worker Profile Resubmitted', `${worker.name} (${worker.id})`, 'Updated profile fields. Resubmitted for admin review.');
+          showToast('Profile updated & submitted for admin review!', 'info');
+        }
+      } else {
+        const newWorker = {
+          id: 'worker_' + Date.now(),
+          name: document.getElementById('worker-form-name').value,
+          age: parseInt(document.getElementById('worker-form-age').value, 10),
+          phone: document.getElementById('worker-form-phone').value,
+          photo: photoData,
+          rate: document.getElementById('worker-form-rate').value,
+          locationText: document.getElementById('worker-form-location-text').value,
+          mapsLink: mapsLink,
+          coords: coords,
+          status: 'pending',
+          appliedJobs: [],
+          ratings: []
+        };
+
+        appState.workers.push(newWorker);
+        appState.currentUser = { role: 'worker', data: newWorker };
+        logPlatformActivity('Worker Registered', `${newWorker.name} (${newWorker.id})`, 'Submitted registration for approval.');
+        showToast('Registration submitted for admin approval!', 'success');
+      }
+
+      saveState();
+      closeWorkerRegModal();
+      updateAuthUI();
+      navigateTo('dashboard-view');
+    }
+
+    function openBookingModal(jobId) {
+      if (!appState.currentUser || appState.currentUser.role !== 'worker') {
+        showToast('Only workers can book slots.', 'error');
+        return;
+      }
+      if (appState.currentUser.data.status !== 'approved') {
+        showToast('Your profile must be approved by admin before applying.', 'error');
+        return;
+      }
+      const job = appState.jobs.find(j => j.id === jobId);
+      if (!job) return;
+
+      const remainingSlots = getJobRemainingSlotsCount(job);
+      if (remainingSlots <= 0) {
+        showToast('This shift has no remaining slots.', 'error');
+        return;
+      }
+
+      appState.activeBookingJobId = jobId;
+      bookingFriendList = [];
+
+      document.getElementById('booking-modal-job-summary').innerHTML = `
+        <div style="background:#f8fafc; border:1px solid var(--border); padding:12px; border-radius:var(--radius-sm);">
+          <h4 style="font-size:1.1rem; color:var(--dark); margin-bottom:4px;">${job.title}</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted);"><i class="fa-solid fa-calendar"></i> ${job.date} | <i class="fa-solid fa-clock"></i> ${job.time} | <strong>₹${job.perHeadAmount} / head</strong></p>
+        </div>
+      `;
+
+      updateBookingModalFriendsUI();
+      showModal('booking-modal');
+    }
+
+    function handleAddFriendRow() {
+      const job = appState.jobs.find(j => j.id === appState.activeBookingJobId);
+      if (!job) return;
+      const remainingSlots = getJobRemainingSlotsCount(job);
+      const currentRequested = 1 + bookingFriendList.length;
+
+      if (currentRequested >= remainingSlots) {
+        showToast(`Cannot add more friends. Only ${remainingSlots} slots remaining on this event.`, 'warning');
+        return;
+      }
+
+      bookingFriendList.push({ name: '', phone: '' });
+      updateBookingModalFriendsUI();
+    }
+
+    function handleRemoveFriendRow(index) {
+      bookingFriendList.splice(index, 1);
+      updateBookingModalFriendsUI();
+    }
+
+    function updateBookingModalFriendsUI() {
+      const container = document.getElementById('booking-friends-container');
+      const job = appState.jobs.find(j => j.id === appState.activeBookingJobId);
+      if (!job) return;
+
+      const remainingSlots = getJobRemainingSlotsCount(job);
+      const totalRequested = 1 + bookingFriendList.length;
+
+      document.getElementById('booking-slots-indicator').textContent = `Remaining on Event: ${remainingSlots}`;
+      document.getElementById('btn-confirm-booking-submit').textContent = `Confirm Booking (${totalRequested} Slot${totalRequested > 1 ? 's' : ''})`;
+
+      const btnAddFriend = document.getElementById('btn-add-friend');
+      if (totalRequested >= remainingSlots) {
+        btnAddFriend.classList.add('btn-disabled');
+        btnAddFriend.disabled = true;
+      } else {
+        btnAddFriend.classList.remove('btn-disabled');
+        btnAddFriend.disabled = false;
+      }
+
+      if (bookingFriendList.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-muted); font-size:0.85rem; background:#f8fafc; border-radius:var(--radius-sm);">No friends added. Booking 1 slot for yourself.</div>`;
+        return;
+      }
+
+      container.innerHTML = bookingFriendList.map((f, i) => `
+        <div class="friend-row">
+          <div class="friend-row-header">
+            <span>Friend #${i + 1}</span>
+            <button type="button" class="btn-remove-friend" onclick="handleRemoveFriendRow(${i})" title="Remove">&times;</button>
+          </div>
+          <div class="form-grid" style="gap:10px;">
+            <div class="form-group">
+              <label style="font-size:0.78rem;">Full Name <span class="required">*</span></label>
+              <input type="text" placeholder="Friend's Name" value="${f.name}" oninput="bookingFriendList[${i}].name = this.value" required />
+            </div>
+            <div class="form-group">
+              <label style="font-size:0.78rem;">Phone Number <span class="required">*</span></label>
+              <input type="tel" placeholder="Friend's Phone" value="${f.phone}" oninput="bookingFriendList[${i}].phone = this.value" required />
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function handleConfirmBookingSubmit(e) {
+      e.preventDefault();
+      const job = appState.jobs.find(j => j.id === appState.activeBookingJobId);
+      if (!job) return;
+
+      const worker = appState.currentUser.data;
+      const remainingSlots = getJobRemainingSlotsCount(job);
+      const totalSlotsToBook = 1 + bookingFriendList.length;
+
+      if (totalSlotsToBook > remainingSlots) {
+        showToast(`Cannot book ${totalSlotsToBook} slots. Only ${remainingSlots} slots remain!`, 'error');
+        return;
+      }
+
+      for (let i = 0; i < bookingFriendList.length; i++) {
+        if (!bookingFriendList[i].name.trim() || !bookingFriendList[i].phone.trim()) {
+          showToast(`Please enter name and phone number for Friend #${i + 1}.`, 'error');
+          return;
+        }
+      }
+
+      job.applicants.push({
+        workerId: worker.id,
+        status: 'accepted',
+        appliedAt: new Date().toLocaleTimeString(),
+        friends: JSON.parse(JSON.stringify(bookingFriendList))
+      });
+
+      if (!worker.appliedJobs.includes(job.id)) {
+        worker.appliedJobs.push(job.id);
+      }
+
+      if (getJobRemainingSlotsCount(job) === 0) {
+        job.status = 'filled';
+      }
+
+      logPlatformActivity('Slot Booked', `${worker.name} (${worker.id})`, `Booked ${totalSlotsToBook} slot(s) on ${job.title}`);
+      saveState();
+      hideModal('booking-modal');
+      showToast(`Successfully booked ${totalSlotsToBook} slot(s)!`, 'success');
+      renderJobs();
+    }
+
+    function cancelWorkerBooking(jobId) {
+      const job = appState.jobs.find(j => j.id === jobId);
+      if (!job) return;
+
+      const worker = appState.currentUser.data;
+      const evaluation = evaluateCancellationEligibility(job);
+
+      if (!evaluation.canCancel) {
+        showToast(`Cannot cancel: Event is in ${evaluation.hoursRemaining} hours (minimum 4 hours required).`, 'error');
+        return;
+      }
+
+      if (!confirm(`Are you sure you want to cancel your booking for "${job.title}"? This will release your slot and all grouped friends.`)) {
+        return;
+      }
+
+      job.applicants = job.applicants.filter(a => a.workerId !== worker.id);
+      worker.appliedJobs = worker.appliedJobs.filter(id => id !== jobId);
+
+      if (getJobRemainingSlotsCount(job) > 0 && job.status !== 'completed') {
+        job.status = 'open';
+      }
+
+      logPlatformActivity('Slot Cancelled', `${worker.name} (${worker.id})`, `Cancelled booking on ${job.title}`);
+      saveState();
+      showToast('Booking cancelled. All other work posts are now unlocked!', 'info');
+      renderJobs();
+    }
+
+    function viewJobApplicants(jobId) {
+      const job = appState.jobs.find(j => j.id === jobId);
+      if (!job) return;
+
+      const remaining = getJobRemainingSlotsCount(job);
+      const filled = getJobFilledSlotsCount(job);
+
+      document.getElementById('applicants-modal-title').textContent = `Applicants for: ${job.title} (${filled}/${job.boysNeeded} Filled — ${remaining} Remaining)`;
+      const container = document.getElementById('applicants-list-container');
+
+      if (!job.applicants || job.applicants.length === 0) {
+        container.innerHTML = '<p class="text-muted" style="text-align:center; padding:20px;">No workers have booked this shift yet.</p>';
+      } else {
+        container.innerHTML = job.applicants.map(app => {
+          const worker = appState.workers.find(w => w.id === app.workerId) || { name: 'Deleted Worker', photo: '', phone: '-' };
+          const friends = app.friends || [];
+          const totalGroupSlots = 1 + friends.length;
+
+          return `
+            <div class="applicant-group-card">
+              <div class="applicant-main-row">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <img src="${worker.photo}" style="width:48px; height:48px; border-radius:50%; object-fit:cover;" />
+                  <div>
+                    <strong style="font-size:1rem;">${worker.name}</strong> 
+                    <span class="card-badge badge-approved" style="position:static; margin-left:6px; font-size:0.7rem;">Primary Booker (${totalGroupSlots} Slots)</span>
+                    <br><small class="text-muted"><i class="fa-solid fa-phone"></i> ${worker.phone} | Rate: ${worker.rate}</small>
+                  </div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="closeApplicantsModal(); startChatWithWorker('${worker.id}')">
+                  <i class="fa-solid fa-comments"></i> Chat
+                </button>
+              </div>
+
+              ${friends.length > 0 ? `
+                <div class="applicant-friends-sublist">
+                  <span style="font-size:0.78rem; font-weight:700; color:var(--text-muted);">
+                    <i class="fa-solid fa-user-group"></i> Included Friends (${friends.length}):
+                  </span>
+                  <div style="display:flex; flex-direction:column; gap:4px;">
+                    ${friends.map((f, idx) => `
+                      <div class="friend-chip">
+                        <span><strong>#${idx + 1}</strong> ${f.name}</span>
+                        <span style="color:var(--text-muted); margin-left:auto;"><i class="fa-solid fa-phone"></i> ${f.phone}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+      showModal('applicants-modal');
+    }
+
+    function closeApplicantsModal() {
+      hideModal('applicants-modal');
+    }
+
+    function handlePostWorkClick() {
+      if (!appState.currentUser) {
+        startEmployerDirectFlow();
+        return;
+      }
+      if (appState.currentUser.role !== 'employer') {
+        showToast('Only registered Employers can post work.', 'error');
+        return;
+      }
+      if (appState.currentUser.data.status !== 'approved') {
+        showToast('Your Employer account is pending admin approval.', 'error');
+        return;
+      }
+      document.getElementById('post-form-name').value = appState.currentUser.data.name;
+      showModal('work-post-modal');
+    }
+
+    function closeWorkPostModal() {
+      hideModal('work-post-modal');
+    }
+
     function handleImageFileSelected(event, type) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1951,424 +3480,6 @@
       }
     }
 
-    // Coordinates & Distance
-    function parseCoordinatesFromMapsUrl(url) {
-      if (!url || typeof url !== 'string') return { lat: 19.0760, lng: 72.8777 };
-      const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
-      const queryMatch = url.match(/[?&](?:q|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (queryMatch) return { lat: parseFloat(queryMatch[1]), lng: parseFloat(queryMatch[2]) };
-      return { lat: 19.0760, lng: 72.8777 };
-    }
-
-    function calculateHaversineDistanceKm(coords1, coords2) {
-      if (!coords1 || !coords2) return 0;
-      const toRad = (val) => (val * Math.PI) / 180;
-      const R = 6371;
-      const dLat = toRad(coords2.lat - coords1.lat);
-      const dLng = toRad(coords2.lng - coords1.lng);
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(toRad(coords1.lat)) * Math.cos(toRad(coords2.lat)) *
-        Math.sin(dLng / 2) * Math.sin(dLng / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return (R * c).toFixed(1);
-    }
-
-    // Navigation
-    function navigateTo(viewId) {
-      document.querySelectorAll('.view-panel').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-
-      const targetView = document.getElementById(viewId);
-      if (targetView) targetView.classList.add('active');
-
-      const activeBtn = document.querySelector(`.tab-btn[data-target="${viewId}"]`);
-      if (activeBtn) activeBtn.classList.add('active');
-
-      if (viewId === 'jobs-view') renderJobs();
-      if (viewId === 'directory-view') renderWorkersDirectory();
-      if (viewId === 'dashboard-view') renderDashboard();
-      if (viewId === 'chat-view') renderChatList();
-      if (viewId === 'admin-view') renderAdminTables();
-    }
-
-    // Direct Entry Point Flows
-    function startWorkerDirectFlow() {
-      if (appState.currentUser) {
-        if (appState.currentUser.role === 'worker') {
-          navigateTo('dashboard-view');
-        } else {
-          showToast('You are currently signed in as an Employer.', 'info');
-        }
-        return;
-      }
-      appState.pendingAuthTargetRole = 'worker';
-      showModal('auth-modal');
-    }
-
-    function startEmployerDirectFlow() {
-      if (appState.currentUser) {
-        if (appState.currentUser.role === 'employer') {
-          if (appState.currentUser.data.status === 'approved') {
-            document.getElementById('post-form-name').value = appState.currentUser.data.name;
-            showModal('work-post-modal');
-          } else {
-            showToast('Your Employer account is pending admin approval.', 'error');
-            navigateTo('dashboard-view');
-          }
-        } else {
-          showToast('You are currently signed in as a Worker.', 'info');
-        }
-        return;
-      }
-      appState.pendingAuthTargetRole = 'employer';
-      showModal('auth-modal');
-    }
-
-    // Render Work Posts
-    function renderJobs() {
-      const container = document.getElementById('jobs-list');
-      const search = (document.getElementById('job-search-input')?.value || '').toLowerCase();
-      const contextEl = document.getElementById('worker-distance-context');
-
-      let list = [...appState.jobs];
-      const isWorker = appState.currentUser && appState.currentUser.role === 'worker';
-
-      if (isWorker && appState.currentUser.data.coords) {
-        if (contextEl) contextEl.style.display = 'flex';
-        list.sort((a, b) => {
-          const distA = parseFloat(calculateHaversineDistanceKm(appState.currentUser.data.coords, a.coords));
-          const distB = parseFloat(calculateHaversineDistanceKm(appState.currentUser.data.coords, b.coords));
-          return distA - distB;
-        });
-      } else {
-        if (contextEl) contextEl.style.display = 'none';
-      }
-
-      if (search) {
-        list = list.filter(j => j.title.toLowerCase().includes(search) || j.venueName.toLowerCase().includes(search));
-      }
-
-      if (list.length === 0) {
-        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">No work posts available.</div>`;
-        return;
-      }
-
-      container.innerHTML = list.map(job => {
-        let distanceBadge = '';
-        if (isWorker && appState.currentUser.data.coords) {
-          const dist = calculateHaversineDistanceKm(appState.currentUser.data.coords, job.coords);
-          distanceBadge = `<span class="distance-pill"><i class="fa-solid fa-location-arrow"></i> ${dist} km away</span>`;
-        }
-
-        const hasApplied = isWorker && job.applicants.some(a => a.workerId === appState.currentUser.data.id);
-        const acceptedCount = job.applicants.filter(a => a.status === 'accepted').length;
-
-        let actionBtn = '';
-        if (!appState.currentUser) {
-          actionBtn = `<button class="btn btn-outline full-width" onclick="openAuthModal()"><i class="fa-solid fa-lock"></i> Sign in to Apply</button>`;
-        } else if (isWorker) {
-          if (appState.currentUser.data.status !== 'approved') {
-            actionBtn = `<button class="btn btn-outline full-width" disabled><i class="fa-solid fa-clock"></i> Approval Pending</button>`;
-          } else if (hasApplied) {
-            actionBtn = `<button class="btn btn-success full-width" disabled><i class="fa-solid fa-check"></i> Applied / Booked</button>`;
-          } else if (job.status === 'filled') {
-            actionBtn = `<button class="btn btn-outline full-width" disabled>Slot Filled</button>`;
-          } else {
-            actionBtn = `<button class="btn btn-primary full-width" onclick="applyForJob('${job.id}')"><i class="fa-solid fa-hand-pointer"></i> Book / Apply Slot</button>`;
-          }
-        }
-
-        return `
-          <div class="card">
-            <span class="card-badge ${job.status === 'open' ? 'badge-open' : 'badge-filled'}">${job.status}</span>
-            <div>
-              <h3 class="card-title">${job.title}</h3>
-              <p class="card-subtext">Posted by <strong>${job.employerName}</strong> ${distanceBadge}</p>
-              <div class="highlight-pay">₹${job.perHeadAmount} / per head</div>
-              <ul class="card-details-list">
-                <li><i class="fa-solid fa-users"></i> Boys Needed: ${job.boysNeeded} (Accepted: ${acceptedCount})</li>
-                <li><i class="fa-solid fa-calendar-days"></i> ${job.date} | ${job.time}</li>
-                <li><i class="fa-solid fa-map-pin"></i> ${job.venueName}</li>
-                <li><i class="fa-solid fa-location-dot"></i> <a href="${job.mapsLink}" target="_blank" rel="noopener" class="maps-link-btn">📍 View Location</a></li>
-              </ul>
-            </div>
-            <div class="card-footer-actions">${actionBtn}</div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // Render Worker Directory (No timings field)
-    function renderWorkersDirectory() {
-      const container = document.getElementById('worker-directory-list');
-      const search = (document.getElementById('worker-search-input')?.value || '').toLowerCase();
-      let list = appState.workers.filter(w => w.status === 'approved');
-
-      if (search) {
-        list = list.filter(w => w.name.toLowerCase().includes(search) || w.locationText.toLowerCase().includes(search) || w.rate.toLowerCase().includes(search));
-      }
-
-      if (list.length === 0) {
-        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">No verified workers available.</div>`;
-        return;
-      }
-
-      container.innerHTML = list.map(w => {
-        let actionBtn = '';
-        if (!appState.currentUser) {
-          actionBtn = `<button class="btn btn-outline full-width" onclick="openAuthModal()"><i class="fa-solid fa-comments"></i> Sign in to Chat</button>`;
-        } else {
-          actionBtn = `<button class="btn btn-primary full-width" onclick="startChatWithWorker('${w.id}')"><i class="fa-solid fa-comment-dots"></i> Message Worker</button>`;
-        }
-
-        return `
-          <div class="card">
-            <div class="worker-card-header">
-              <img src="${w.photo}" alt="${w.name}" class="worker-avatar" />
-              <div class="worker-meta">
-                <h3 style="font-size: 1.15rem; font-weight:800;">${w.name}</h3>
-                <p style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-cake-candles"></i> Age: ${w.age} yrs</p>
-                <span class="card-badge badge-approved" style="position:static; display:inline-block; margin-top:4px;">Verified</span>
-              </div>
-            </div>
-            <div class="highlight-pay">${w.rate}</div>
-            <ul class="card-details-list">
-              <li><i class="fa-solid fa-location-dot"></i> ${w.locationText}</li>
-              <li><i class="fa-solid fa-map-location-dot"></i> <a href="${w.mapsLink}" target="_blank" rel="noopener" class="maps-link-btn">📍 View Location</a></li>
-            </ul>
-            <div class="card-footer-actions">${actionBtn}</div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // User Dashboard (No timings field)
-    function renderDashboard() {
-      const container = document.getElementById('dashboard-content');
-      if (!appState.currentUser) {
-        container.innerHTML = `<div style="text-align: center; padding: 40px;"><p>Please sign in to view dashboard.</p><button class="btn btn-primary" onclick="openAuthModal()" style="margin-top:10px;">Sign In</button></div>`;
-        return;
-      }
-
-      if (appState.currentUser.role === 'admin') {
-        container.innerHTML = `<div style="text-align:center; padding: 30px;"><h3>You are signed in as Administrator.</h3><p style="margin-top:8px;">Access the admin panel tab to approve users and view activity.</p></div>`;
-        return;
-      }
-
-      const u = appState.currentUser.data;
-      const isWorker = appState.currentUser.role === 'worker';
-
-      let bannerClass = 'badge-pending';
-      let bannerText = '⏳ Account Under Admin Review — visible once approved.';
-      if (u.status === 'approved') {
-        bannerClass = 'badge-approved';
-        bannerText = isWorker ? '✅ Profile Approved & Visible in Directory' : '✅ Verified Employer — You can post work.';
-      } else if (u.status === 'rejected') {
-        bannerClass = 'badge-rejected';
-        bannerText = '❌ Profile Rejected by Admin.';
-      }
-
-      let activityHtml = '';
-      if (isWorker) {
-        const applied = appState.jobs.filter(j => j.applicants.some(a => a.workerId === u.id));
-        activityHtml = `
-          <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card);">
-            <h3 style="font-weight:800;">Your Job Bookings (${applied.length})</h3>
-            <div style="margin-top:16px; display:flex; flex-direction:column; gap:12px;">
-              ${applied.length === 0 ? '<p class="text-muted">No applications submitted yet.</p>' : applied.map(j => `
-                <div style="padding:12px 16px; border:1px solid var(--border); border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center;">
-                  <div><strong>${j.title}</strong><br><small class="text-muted">${j.date} | ₹${j.perHeadAmount}</small></div>
-                  <span class="card-badge badge-approved" style="position:static;">Applied</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      } else {
-        const myJobs = appState.jobs.filter(j => j.employerId === u.id);
-        activityHtml = `
-          <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-              <h3 style="font-weight:800;">Your Posted Events (${myJobs.length})</h3>
-              <button class="btn btn-employer-3d btn-sm" onclick="handlePostWorkClick()"><i class="fa-solid fa-plus"></i> Post Event</button>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:12px;">
-              ${myJobs.length === 0 ? '<p class="text-muted">No events posted yet.</p>' : myJobs.map(j => `
-                <div style="padding:14px 18px; border:1px solid var(--border); border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                  <div>
-                    <strong style="font-size:1rem;">${j.title}</strong><br>
-                    <small class="text-muted">${j.date} | Needed: ${j.boysNeeded} | Rate: ₹${j.perHeadAmount}</small>
-                  </div>
-                  <div style="display:flex; gap:8px;">
-                    <button class="btn btn-outline btn-sm" onclick="viewJobApplicants('${j.id}')"><i class="fa-solid fa-users"></i> Applicants (${j.applicants.length})</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteJobPost('${j.id}')"><i class="fa-solid fa-trash"></i></button>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      }
-
-      container.innerHTML = `
-        <div class="dashboard-grid">
-          <div class="dash-profile-card">
-            <img src="${u.photo}" alt="${u.name}" class="dash-avatar" />
-            <h3 style="font-size:1.3rem; font-weight:800;">${u.name}</h3>
-            <p class="text-muted">${isWorker ? 'Catering Crew Profile' : 'Event Organizer / Employer'}</p>
-            <div class="dash-status-banner ${bannerClass}">${bannerText}</div>
-            <table class="dash-details-table">
-              <tr><td>Phone</td><td><strong>${u.phone}</strong></td></tr>
-              <tr><td>Age</td><td>${u.age} yrs</td></tr>
-              <tr><td>Location</td><td>${u.locationText}</td></tr>
-              ${isWorker ? `<tr><td>Rate</td><td><strong>${u.rate}</strong></td></tr>` : ''}
-              <tr><td>Maps Link</td><td><a href="${u.mapsLink}" target="_blank" class="maps-link-btn">📍 View Map</a></td></tr>
-            </table>
-            <div class="dash-actions-panel">
-              ${isWorker ? `<button class="btn btn-outline full-width" onclick="openWorkerEditModal()"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>` : ''}
-              <button class="btn btn-danger full-width" onclick="openDeleteAccountModal()"><i class="fa-solid fa-trash"></i> Delete My Account</button>
-            </div>
-          </div>
-          <div>${activityHtml}</div>
-        </div>
-      `;
-    }
-
-    // Work Applications
-    function applyForJob(jobId) {
-      if (!appState.currentUser || appState.currentUser.role !== 'worker') {
-        showToast('Only workers can book slots.', 'error');
-        return;
-      }
-      const worker = appState.currentUser.data;
-      if (worker.status !== 'approved') {
-        showToast('Your profile must be approved by admin before applying.', 'error');
-        return;
-      }
-      const job = appState.jobs.find(j => j.id === jobId);
-      if (!job) return;
-
-      if (job.applicants.some(a => a.workerId === worker.id)) {
-        showToast('You have already applied for this shift.', 'info');
-        return;
-      }
-
-      job.applicants.push({
-        workerId: worker.id,
-        status: 'accepted',
-        appliedAt: new Date().toLocaleTimeString()
-      });
-
-      if (!worker.appliedJobs.includes(jobId)) {
-        worker.appliedJobs.push(jobId);
-      }
-
-      const acceptedCount = job.applicants.filter(a => a.status === 'accepted').length;
-      if (acceptedCount >= job.boysNeeded) {
-        job.status = 'filled';
-      }
-
-      logPlatformActivity('Slot Booked', `${worker.name} (${worker.id})`, `Applied for slot: ${job.title}`);
-      saveState();
-      showToast('Booking submitted successfully!', 'success');
-      renderJobs();
-    }
-
-    // Work Posting
-    function handlePostWorkClick() {
-      if (!appState.currentUser) {
-        startEmployerDirectFlow();
-        return;
-      }
-      if (appState.currentUser.role !== 'employer') {
-        showToast('Only registered Employers can post work.', 'error');
-        return;
-      }
-      if (appState.currentUser.data.status !== 'approved') {
-        showToast('Your Employer account is pending admin approval.', 'error');
-        return;
-      }
-      document.getElementById('post-form-name').value = appState.currentUser.data.name;
-      showModal('work-post-modal');
-    }
-
-    function closeWorkPostModal() {
-      hideModal('work-post-modal');
-    }
-
-    function handleCreateWorkPostSubmit(e) {
-      e.preventDefault();
-      const employer = appState.currentUser.data;
-      const mapsLink = document.getElementById('post-form-maps-link').value;
-      const coords = parseCoordinatesFromMapsUrl(mapsLink);
-
-      const newJob = {
-        id: 'job_' + Date.now(),
-        employerId: employer.id,
-        employerName: document.getElementById('post-form-name').value,
-        title: document.getElementById('post-form-title').value,
-        boysNeeded: parseInt(document.getElementById('post-form-boys').value, 10),
-        date: document.getElementById('post-form-date').value,
-        time: document.getElementById('post-form-time').value,
-        perHeadAmount: parseFloat(document.getElementById('post-form-amount').value),
-        venueName: document.getElementById('post-form-venue').value,
-        mapsLink: mapsLink,
-        coords: coords,
-        status: 'open',
-        applicants: []
-      };
-
-      appState.jobs.unshift(newJob);
-      logPlatformActivity('Work Post Created', `${employer.name} (${employer.id})`, `Created: ${newJob.title}`);
-      saveState();
-      closeWorkPostModal();
-      document.getElementById('work-post-form').reset();
-      showToast('Work post published!', 'success');
-      navigateTo('jobs-view');
-    }
-
-    function deleteJobPost(jobId) {
-      if (!confirm('Are you sure you want to delete this work post?')) return;
-      appState.jobs = appState.jobs.filter(j => j.id !== jobId);
-      saveState();
-      showToast('Work post removed.', 'info');
-      renderDashboard();
-    }
-
-    function viewJobApplicants(jobId) {
-      const job = appState.jobs.find(j => j.id === jobId);
-      if (!job) return;
-      document.getElementById('applicants-modal-title').textContent = `Applicants for: ${job.title}`;
-      const container = document.getElementById('applicants-list-container');
-
-      if (job.applicants.length === 0) {
-        container.innerHTML = '<p class="text-muted" style="text-align:center; padding:20px;">No workers have applied yet.</p>';
-      } else {
-        container.innerHTML = job.applicants.map(app => {
-          const worker = appState.workers.find(w => w.id === app.workerId) || { name: 'Deleted Worker', photo: '', phone: '-' };
-          return `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid var(--border);">
-              <div style="display:flex; align-items:center; gap:12px;">
-                <img src="${worker.photo}" style="width:44px; height:44px; border-radius:50%; object-fit:cover;" />
-                <div><strong style="font-size:0.95rem;">${worker.name}</strong><br><small class="text-muted">${worker.phone} | Rate: ${worker.rate}</small></div>
-              </div>
-              <div style="display:flex; gap:8px;">
-                <button class="btn btn-primary btn-sm" onclick="closeApplicantsModal(); startChatWithWorker('${worker.id}')"><i class="fa-solid fa-comments"></i> Chat</button>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-      showModal('applicants-modal');
-    }
-
-    function closeApplicantsModal() {
-      hideModal('applicants-modal');
-    }
-
-    // In-App Chat
     function startChatWithWorker(workerId) {
       if (!appState.currentUser) {
         openAuthModal();
@@ -2470,7 +3581,6 @@
       openChatWindow(activeChatThreadId);
     }
 
-    // Admin Panel (No timings field in table)
     function switchAdminTab(tabName) {
       document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.remove('active'));
@@ -2481,39 +3591,45 @@
       } else if (tabName === 'employers-tab') {
         document.querySelectorAll('.admin-nav-btn')[1].classList.add('active');
         document.getElementById('admin-employers-tab').classList.add('active');
-      } else {
+      } else if (tabName === 'reports-tab') {
         document.querySelectorAll('.admin-nav-btn')[2].classList.add('active');
+        document.getElementById('admin-reports-tab').classList.add('active');
+      } else {
+        document.querySelectorAll('.admin-nav-btn')[3].classList.add('active');
         document.getElementById('admin-logs-tab').classList.add('active');
       }
     }
 
     function renderAdminTables() {
-      // Workers Table
       const wBody = document.getElementById('admin-workers-table-body');
-      wBody.innerHTML = appState.workers.map(w => `
-        <tr>
-          <td>
-            <div style="display:flex; align-items:center; gap:10px;">
-              <img src="${w.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" />
-              <strong>${w.name}</strong>
-            </div>
-          </td>
-          <td>${w.phone}<br><small class="text-muted">${w.age} yrs</small></td>
-          <td>${w.locationText}<br><a href="${w.mapsLink}" target="_blank" class="maps-link-btn">📍 Maps</a></td>
-          <td>${w.rate}</td>
-          <td><span class="card-badge badge-${w.status}" style="position:static;">${w.status}</span></td>
-          <td>
-            <div class="admin-action-btn-group">
-              <button class="btn btn-success btn-sm" title="Approve" onclick="adminUpdateWorkerStatus('${w.id}', 'approved')"><i class="fa-solid fa-check"></i></button>
-              <button class="btn btn-danger btn-sm" title="Reject" onclick="adminUpdateWorkerStatus('${w.id}', 'rejected')"><i class="fa-solid fa-xmark"></i></button>
-              <button class="btn btn-outline btn-sm" title="Hide/Unhide" onclick="adminToggleWorkerHide('${w.id}')"><i class="fa-solid fa-eye-slash"></i></button>
-              <button class="btn btn-danger btn-sm" title="Delete" onclick="adminDeleteUser('worker', '${w.id}')"><i class="fa-solid fa-trash"></i></button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
+      wBody.innerHTML = appState.workers.map(w => {
+        const rating = getWorkerRatingSummary(w);
+        const ratingText = rating ? `★ ${rating.avg} (${rating.count})` : 'New';
+        return `
+          <tr>
+            <td>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <img src="${w.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" />
+                <strong>${w.name}</strong>
+              </div>
+            </td>
+            <td>${w.phone}<br><small class="text-muted">${w.age} yrs</small></td>
+            <td>${w.locationText}<br><a href="${w.mapsLink}" target="_blank" class="maps-link-btn">📍 Maps</a></td>
+            <td>${w.rate}</td>
+            <td><span class="star-badge">${ratingText}</span></td>
+            <td><span class="card-badge badge-${w.status}" style="position:static;">${w.status}</span></td>
+            <td>
+              <div class="admin-action-btn-group">
+                <button class="btn btn-success btn-sm" title="Approve" onclick="adminUpdateWorkerStatus('${w.id}', 'approved')"><i class="fa-solid fa-check"></i></button>
+                <button class="btn btn-danger btn-sm" title="Reject" onclick="adminUpdateWorkerStatus('${w.id}', 'rejected')"><i class="fa-solid fa-xmark"></i></button>
+                <button class="btn btn-outline btn-sm" title="Hide/Unhide" onclick="adminToggleWorkerHide('${w.id}')"><i class="fa-solid fa-eye-slash"></i></button>
+                <button class="btn btn-danger btn-sm" title="Delete" onclick="adminDeleteUser('worker', '${w.id}')"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
 
-      // Employers Table
       const eBody = document.getElementById('admin-employers-table-body');
       eBody.innerHTML = appState.employers.map(e => `
         <tr>
@@ -2537,7 +3653,23 @@
         </tr>
       `).join('');
 
-      // Logs Table
+      const rBody = document.getElementById('admin-reports-table-body');
+      const reports = appState.reports || [];
+      rBody.innerHTML = reports.length === 0 ? `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No reports submitted.</td></tr>` : reports.map(r => `
+        <tr>
+          <td><small>${r.timestamp}</small></td>
+          <td><strong>${r.reporterName}</strong></td>
+          <td>${r.reportedUserName} (${r.reportedUserType})</td>
+          <td><span style="color:#b91c1c;">"${r.message}"</span></td>
+          <td><span class="card-badge ${r.status === 'open' ? 'badge-rejected' : 'badge-approved'}" style="position:static;">${r.status}</span></td>
+          <td>
+            ${r.status === 'open' ? `
+              <button class="btn btn-success btn-sm" onclick="markReportReviewed('${r.id}')"><i class="fa-solid fa-check"></i> Mark Reviewed</button>
+            ` : '<span class="text-muted">Resolved</span>'}
+          </td>
+        </tr>
+      `).join('');
+
       const lBody = document.getElementById('admin-logs-table-body');
       lBody.innerHTML = appState.auditLogs.map(l => `
         <tr>
@@ -2611,7 +3743,6 @@
       showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} and associated data deleted.`, 'info');
     }
 
-    // Account Self-Deletion
     function openDeleteAccountModal() {
       document.getElementById('delete-confirm-input').value = '';
       showModal('delete-account-modal');
@@ -2652,7 +3783,6 @@
       navigateTo('jobs-view');
     }
 
-    // Google Auth Simulation
     function openAuthModal() {
       showModal('auth-modal');
     }
@@ -2684,8 +3814,10 @@
         document.getElementById('worker-reg-modal-title').textContent = 'Worker Profile Registration';
         showModal('worker-reg-modal');
       } else {
+        currentEmployerEditId = null;
         document.getElementById('employer-reg-form').reset();
         resetUploadPreview('employer');
+        document.getElementById('employer-reg-modal-title').textContent = 'Employer Profile Registration';
         showModal('employer-reg-modal');
       }
     }
@@ -2700,108 +3832,6 @@
 
     function closeEmployerRegModal() {
       hideModal('employer-reg-modal');
-    }
-
-    // Worker Registration / Edit Submission (No timings property)
-    function handleWorkerRegistrationSubmit(e) {
-      e.preventDefault();
-      const mapsLink = document.getElementById('worker-form-maps-link').value;
-      const coords = parseCoordinatesFromMapsUrl(mapsLink);
-      const photoData = document.getElementById('worker-form-photo-data').value || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&auto=format&fit=crop&q=60';
-
-      if (currentWorkerEditId) {
-        const worker = appState.workers.find(w => w.id === currentWorkerEditId);
-        if (worker) {
-          worker.name = document.getElementById('worker-form-name').value;
-          worker.age = parseInt(document.getElementById('worker-form-age').value, 10);
-          worker.phone = document.getElementById('worker-form-phone').value;
-          worker.photo = photoData;
-          worker.rate = document.getElementById('worker-form-rate').value;
-          worker.locationText = document.getElementById('worker-form-location-text').value;
-          worker.mapsLink = mapsLink;
-          worker.coords = coords;
-          worker.status = 'pending';
-
-          appState.currentUser.data = worker;
-          logPlatformActivity('Worker Profile Edited', `${worker.name} (${worker.id})`, 'Updated profile fields. Resubmitted for admin review.');
-          showToast('Profile updated! Changes submitted for admin re-review.', 'info');
-        }
-      } else {
-        const newWorker = {
-          id: 'worker_' + Date.now(),
-          name: document.getElementById('worker-form-name').value,
-          age: parseInt(document.getElementById('worker-form-age').value, 10),
-          phone: document.getElementById('worker-form-phone').value,
-          photo: photoData,
-          rate: document.getElementById('worker-form-rate').value,
-          locationText: document.getElementById('worker-form-location-text').value,
-          mapsLink: mapsLink,
-          coords: coords,
-          status: 'pending',
-          appliedJobs: []
-        };
-
-        appState.workers.push(newWorker);
-        appState.currentUser = { role: 'worker', data: newWorker };
-        logPlatformActivity('Worker Registered', `${newWorker.name} (${newWorker.id})`, 'Submitted registration for approval.');
-        showToast('Registration submitted for admin approval!', 'success');
-      }
-
-      saveState();
-      closeWorkerRegModal();
-      updateAuthUI();
-      navigateTo('dashboard-view');
-    }
-
-    function openWorkerEditModal() {
-      if (!appState.currentUser || appState.currentUser.role !== 'worker') return;
-      const w = appState.currentUser.data;
-      currentWorkerEditId = w.id;
-
-      document.getElementById('worker-reg-modal-title').textContent = 'Edit Worker Profile (Requires Re-Review)';
-      document.getElementById('worker-form-name').value = w.name;
-      document.getElementById('worker-form-age').value = w.age;
-      document.getElementById('worker-form-phone').value = w.phone;
-      document.getElementById('worker-form-photo-data').value = w.photo;
-      document.getElementById('worker-img-preview').src = w.photo;
-      document.getElementById('worker-upload-placeholder').style.display = 'none';
-      document.getElementById('worker-preview-container').style.display = 'flex';
-      
-      document.getElementById('worker-form-rate').value = w.rate;
-      document.getElementById('worker-form-location-text').value = w.locationText;
-      document.getElementById('worker-form-maps-link').value = w.mapsLink;
-
-      showModal('worker-reg-modal');
-    }
-
-    // Employer Registration Submission
-    function handleEmployerRegistrationSubmit(e) {
-      e.preventDefault();
-      const mapsLink = document.getElementById('emp-form-maps-link').value;
-      const coords = parseCoordinatesFromMapsUrl(mapsLink);
-      const photoData = document.getElementById('emp-form-photo-data').value || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&auto=format&fit=crop&q=60';
-
-      const newEmployer = {
-        id: 'emp_' + Date.now(),
-        name: document.getElementById('emp-form-name').value,
-        age: parseInt(document.getElementById('emp-form-age').value, 10),
-        phone: document.getElementById('emp-form-phone').value,
-        photo: photoData,
-        locationText: document.getElementById('emp-form-location-text').value,
-        mapsLink: mapsLink,
-        coords: coords,
-        status: 'pending'
-      };
-
-      appState.employers.push(newEmployer);
-      appState.currentUser = { role: 'employer', data: newEmployer };
-      logPlatformActivity('Employer Registered', `${newEmployer.name} (${newEmployer.id})`, 'Submitted registration for approval.');
-      saveState();
-
-      closeEmployerRegModal();
-      updateAuthUI();
-      showToast('Registration submitted for admin review.', 'success');
-      navigateTo('dashboard-view');
     }
 
     function updateAuthUI() {
@@ -2820,11 +3850,11 @@
       }
     }
 
-    // Service Worker Registration
+    // PWA Service Worker Registration
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'catermatch-v4-cache';
+          const CACHE_NAME = 'catermatch-v6-cache';
           self.addEventListener('install', (e) => self.skipWaiting());
           self.addEventListener('activate', (e) => self.clients.claim());
           self.addEventListener('push', (event) => {
@@ -2853,11 +3883,11 @@
         `;
         const blob = new Blob([swCode], { type: 'application/javascript' });
         navigator.serviceWorker.register(URL.createObjectURL(blob))
-          .catch(err => console.log('SW registration skipped:', err));
+          .catch(err => console.log('SW registration skipped or unsupported:', err));
       });
     }
 
-    // PWA Install Prompt Listener
+    // PWA Install Prompt
     let deferredPrompt;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -2873,7 +3903,7 @@
       }
     });
 
-    // Initialize App
+    // App Initialization
     document.addEventListener('DOMContentLoaded', () => {
       updateAuthUI();
       renderJobs();
