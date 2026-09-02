@@ -1,38 +1,3 @@
-Here is the complete, full index.html codebase with the refined 24-hour work
-post edit and cancellation policy, worker unlocking and notification mechanisms,
-applicant warning dialogs, and updated publishing confirmation rules.
-
-Summary of Changes:
-
-1.  24-Hour Edit & Cancellation Policy for Employers:
-      - Evaluates the exact time remaining until event start (job.date +
-        job.time).
-      - If > 24 hours remain: Employer dashboard displays active "Edit" and
-        "Cancel Post" 3D buttons.
-      - If ≤ 24 hours remain (or event has passed): Actions are replaced with a
-        locked badge: <span class="card-badge badge-slots-none"><i
-        class="fa-solid fa-lock"></i> Locked (&lt; 24h)</span>.
-2.  Updated Publishing Confirmation Warning:
-      - The pre-publish review modal explicitly communicates the updated policy:
-        "You can edit or cancel this post any time up until 24 hours before the
-        event starts. After that, it will be locked and cannot be changed."
-3.  Worker Unlocking & Notifications on Post Cancellation:
-      - Cancelling a post with booked workers prompts a confirmation dialog
-        stating how many workers will be affected.
-      - Upon confirmation, all booked workers (and their friends) have the job
-        removed from their records, instantly releasing their "one active job"
-        lock.
-      - Stores worker notifications and automatically alerts affected workers
-        with a clear banner/toast: "The job '[Job Title]' you booked was
-        cancelled by the employer. You're free to book other available work."
-      - Logs the cancellation in the Activity/Audit Log.
-4.  Editing Posts with Existing Booked Workers:
-      - Pre-fills the post form with current event details.
-      - If workers have already booked, warns the employer before saving that
-        changes may impact existing crew bookings.
-      - Preserves all accepted applicants and group bookings, and logs "Work
-        Post Edited" in the Audit Log.
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
