@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="CaterMatch" />
-  <link rel="manifest" href='data:application/manifest+json,{"name":"CaterMatch — Catering Crew Platform","short_name":"CaterMatch","start_url":".","display":"standalone","background_color":"%234f46e5","theme_color":"%234f46e5","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3448/3448609.png","sizes":"192x192","type":"image/png"},{"src":"https://cdn-icons-png.flaticon.com/512/3448/3448609.png","sizes":"512x512","type":"image/png"}]}' />
+  <link rel="manifest" href='data:application/manifest+json,{"name":"CaterMatch — Catering Platform","short_name":"CaterMatch","start_url":".","display":"standalone","background_color":"%234f46e5","theme_color":"%234f46e5","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3448/3448609.png","sizes":"192x192","type":"image/png"},{"src":"https://cdn-icons-png.flaticon.com/512/3448/3448609.png","sizes":"512x512","type":"image/png"}]}' />
 
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -18,11 +18,11 @@
   <!-- ================= APPLICATION STYLES (CSS) ================= -->
   <style>
     :root {
-      /* Energetic & Vibrant Color Theme */
       --primary: #4f46e5;
       --primary-dark: #3730a3;
       --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-      
+      --primary-light: #eff6ff;
+
       --worker-accent: #f59e0b;
       --worker-dark: #b45309;
       --worker-gradient: linear-gradient(135deg, #fbbf24 0%, #ea580c 100%);
@@ -47,7 +47,6 @@
       --text-main: #1e293b;
       --text-muted: #64748b;
 
-      /* 3D Depth Shadows */
       --shadow-3d-card: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(226, 232, 240, 0.9);
       --shadow-3d-card-hover: 0 20px 30px -10px rgba(79, 70, 229, 0.15), 0 10px 15px -5px rgba(15, 23, 42, 0.06), 0 0 0 1px #818cf8;
       
@@ -78,6 +77,11 @@
       justify-content: center;
     }
 
+    body.modal-open {
+      overflow: hidden !important;
+      height: 100vh !important;
+    }
+
     #app-container {
       width: 100%;
       max-width: 1280px;
@@ -89,7 +93,7 @@
       box-shadow: 0 0 50px rgba(0, 0, 0, 0.08);
     }
 
-    /* ================= TOP NAVBAR ================= */
+    /* Top Navbar */
     .navbar {
       background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
       color: #fff;
@@ -177,7 +181,7 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
-    /* ================= SUB NAVIGATION ================= */
+    /* Sub Navigation */
     .sub-nav {
       background-color: var(--surface);
       border-bottom: 1px solid var(--border);
@@ -218,7 +222,7 @@
       box-shadow: inset 0 0 0 1.5px #c7d2fe;
     }
 
-    /* ================= CONTENT & HERO CTA ================= */
+    /* Content Area & Hero */
     .content-area {
       flex: 1;
       padding: 22px;
@@ -238,7 +242,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* HERO TWO-WAY ENTRY POINT BANNER */
+    /* Hero Entry Banner */
     .hero-entry-banner {
       background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
       border-radius: var(--radius-lg);
@@ -305,9 +309,7 @@
     }
 
     @media (max-width: 680px) {
-      .entry-cta-grid {
-        grid-template-columns: 1fr;
-      }
+      .entry-cta-grid { grid-template-columns: 1fr; }
     }
 
     .entry-cta-card {
@@ -330,13 +332,8 @@
       border-color: rgba(255, 255, 255, 0.4);
     }
 
-    .entry-cta-card.worker-cta {
-      border-top: 4px solid var(--worker-accent);
-    }
-
-    .entry-cta-card.employer-cta {
-      border-top: 4px solid var(--employer-accent);
-    }
+    .entry-cta-card.worker-cta { border-top: 4px solid var(--worker-accent); }
+    .entry-cta-card.employer-cta { border-top: 4px solid var(--employer-accent); }
 
     .cta-card-top {
       display: flex;
@@ -357,13 +354,8 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     }
 
-    .worker-cta .cta-icon-wrap {
-      background: var(--worker-gradient);
-    }
-
-    .employer-cta .cta-icon-wrap {
-      background: var(--employer-gradient);
-    }
+    .worker-cta .cta-icon-wrap { background: var(--worker-gradient); }
+    .employer-cta .cta-icon-wrap { background: var(--employer-gradient); }
 
     .cta-info h3 {
       font-size: 1.25rem;
@@ -377,7 +369,7 @@
       margin-top: 2px;
     }
 
-    /* ================= 3D BUTTONS ================= */
+    /* 3D Buttons */
     .btn {
       padding: 11px 20px;
       border-radius: var(--radius-sm);
@@ -395,7 +387,6 @@
       position: relative;
     }
 
-    /* Primary 3D Button (Indigo) */
     .btn-primary {
       background: var(--primary-gradient);
       color: #ffffff;
@@ -411,7 +402,6 @@
       box-shadow: 0 1px 0 var(--primary-dark), 0 2px 4px rgba(79, 70, 229, 0.2);
     }
 
-    /* Worker 3D Button (Amber/Orange) */
     .btn-worker-3d {
       background: var(--worker-gradient);
       color: #ffffff;
@@ -427,7 +417,6 @@
       box-shadow: 0 1px 0 var(--worker-dark), 0 2px 4px rgba(234, 88, 12, 0.2);
     }
 
-    /* Employer 3D Button (Cyan/Blue) */
     .btn-employer-3d {
       background: var(--employer-gradient);
       color: #ffffff;
@@ -443,7 +432,6 @@
       box-shadow: 0 1px 0 var(--employer-dark), 0 2px 4px rgba(2, 132, 199, 0.2);
     }
 
-    /* Success 3D Button (Emerald) */
     .btn-success {
       background: var(--success-gradient);
       color: #ffffff;
@@ -459,7 +447,6 @@
       box-shadow: 0 1px 0 var(--success-dark), 0 2px 4px rgba(16, 185, 129, 0.2);
     }
 
-    /* Danger 3D Button (Red) */
     .btn-danger {
       background: var(--danger-gradient);
       color: #ffffff;
@@ -475,7 +462,6 @@
       box-shadow: 0 1px 0 var(--danger-dark), 0 2px 4px rgba(239, 68, 68, 0.2);
     }
 
-    /* Outline 3D Button */
     .btn-outline {
       background: #ffffff;
       color: var(--text-main);
@@ -492,7 +478,6 @@
       box-shadow: 0 1px 0 #cbd5e1, 0 2px 4px rgba(0,0,0,0.05);
     }
 
-    /* Google Button 3D */
     .btn-google-3d {
       background: #ffffff;
       color: #1f2937;
@@ -518,7 +503,7 @@
     .full-width { width: 100%; }
     .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
 
-    /* ================= SECTION HEADERS & CARDS ================= */
+    /* Section Headers */
     .section-header {
       display: flex;
       justify-content: space-between;
@@ -581,7 +566,7 @@
       gap: 6px;
     }
 
-    /* 3D CARDS GRID */
+    /* 3D Cards Grid */
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -728,7 +713,7 @@
       gap: 10px;
     }
 
-    /* ================= FILE UPLOAD ZONE ================= */
+    /* File Upload Zone */
     .file-upload-box {
       border: 2px dashed #818cf8;
       background: #f5f7ff;
@@ -796,7 +781,7 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.06);
     }
 
-    /* ================= USER DASHBOARD ================= */
+    /* User Dashboard */
     .dashboard-grid {
       display: grid;
       grid-template-columns: 1fr 2fr;
@@ -863,7 +848,7 @@
       margin-top: 16px;
     }
 
-    /* ================= CHAT VIEW ================= */
+    /* Chat View */
     .chat-layout {
       display: grid;
       grid-template-columns: 320px 1fr;
@@ -1007,7 +992,7 @@
       font-size: 0.95rem;
     }
 
-    /* ================= ADMIN TABLES ================= */
+    /* Admin Tables */
     .admin-tab-group {
       display: flex;
       gap: 12px;
@@ -1051,12 +1036,12 @@
     .data-table th { background: #f8fafc; color: var(--text-muted); font-weight: 800; text-transform: uppercase; font-size: 0.78rem; }
     .admin-action-btn-group { display: flex; gap: 6px; }
 
-    /* ================= MODALS & POPUPS ================= */
+    /* ================= SMOOTH & LOCKED MODAL ARCHITECTURE ================= */
     .modal-backdrop {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.7);
-      backdrop-filter: blur(5px);
+      inset: 0;
+      background: rgba(15, 23, 42, 0.72);
+      backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1065,22 +1050,35 @@
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.2s ease, visibility 0.2s ease;
+      overscroll-behavior: contain;
     }
 
-    .modal-backdrop.show { opacity: 1; visibility: visible; }
+    .modal-backdrop.show {
+      opacity: 1;
+      visibility: visible;
+    }
 
     .modal-card {
       background: var(--surface);
       border-radius: var(--radius-lg);
       width: 100%;
       max-width: 480px;
-      max-height: 92vh;
+      max-height: 88vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
       border: 1px solid rgba(255, 255, 255, 0.6);
+      position: relative;
       animation: modalSlide 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modal-card form {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
     }
 
     @keyframes modalSlide {
@@ -1099,14 +1097,31 @@
       justify-content: space-between;
       align-items: center;
       background: #fafafa;
+      flex-shrink: 0;
     }
 
     .modal-header h3 { font-size: 1.2rem; font-weight: 800; color: var(--dark); }
     .close-btn { background: none; border: none; font-size: 1.6rem; color: var(--text-muted); cursor: pointer; }
-    .modal-body { padding: 22px; overflow-y: auto; }
-    .modal-footer { padding: 16px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; background: var(--surface-alt); }
     
-    /* Clean Google Auth Card */
+    .modal-body { 
+      padding: 22px; 
+      overflow-y: auto; 
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .modal-footer { 
+      padding: 16px 22px; 
+      border-top: 1px solid var(--border); 
+      display: flex; 
+      justify-content: flex-end; 
+      gap: 12px; 
+      background: var(--surface-alt);
+      flex-shrink: 0;
+    }
+    
     .auth-modal-clean {
       text-align: center;
       padding: 30px 24px;
@@ -1423,7 +1438,7 @@
                   <th>Worker</th>
                   <th>Contact / Age</th>
                   <th>Location (Maps)</th>
-                  <th>Rate & Timings</th>
+                  <th>Rate</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -1472,8 +1487,8 @@
     <!-- ================= MODALS ================= -->
 
     <!-- Clean Google Auth Modal -->
-    <div id="auth-modal" class="modal-backdrop">
-      <div class="modal-card">
+    <div id="auth-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'auth-modal')">
+      <div class="modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
           <h3>Sign in to CaterMatch</h3>
           <button class="close-btn" onclick="closeAuthModal()">&times;</button>
@@ -1497,11 +1512,12 @@
       </div>
     </div>
 
-    <!-- Role Selection Modal (First-Time User) -->
-    <div id="role-selection-modal" class="modal-backdrop">
-      <div class="modal-card role-choice-card">
+    <!-- Role Selection Modal -->
+    <div id="role-selection-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'role-selection-modal')">
+      <div class="modal-card role-choice-card" onclick="event.stopPropagation()">
         <div class="modal-header">
           <h3>Choose Your Platform Role</h3>
+          <button class="close-btn" onclick="closeRoleSelectionModal()">&times;</button>
         </div>
         <div class="modal-body">
           <div class="alert-info">
@@ -1526,9 +1542,9 @@
       </div>
     </div>
 
-    <!-- Worker Registration / Edit Modal with Device Image Upload -->
-    <div id="worker-reg-modal" class="modal-backdrop">
-      <div class="modal-card form-modal-card">
+    <!-- Worker Registration / Edit Modal (Timings Field Removed) -->
+    <div id="worker-reg-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'worker-reg-modal')">
+      <div class="modal-card form-modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
           <h3 id="worker-reg-modal-title">Worker Profile Registration</h3>
           <button class="close-btn" onclick="closeWorkerRegModal()">&times;</button>
@@ -1580,10 +1596,6 @@
               <label>Location Text / Address <span class="required">*</span></label>
               <input type="text" id="worker-form-location-text" placeholder="e.g. Andheri East, Mumbai" required />
             </div>
-            <div class="form-group full-width">
-              <label>Available Timings & Dates <span class="required">*</span></label>
-              <input type="text" id="worker-form-timings" placeholder="e.g. Daily Evenings & Weekends" required />
-            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline" onclick="closeWorkerRegModal()">Cancel</button>
@@ -1593,9 +1605,9 @@
       </div>
     </div>
 
-    <!-- Employer Registration Modal with Device Image Upload -->
-    <div id="employer-reg-modal" class="modal-backdrop">
-      <div class="modal-card form-modal-card">
+    <!-- Employer Registration Modal -->
+    <div id="employer-reg-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'employer-reg-modal')">
+      <div class="modal-card form-modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
           <h3 id="employer-reg-modal-title">Employer Profile Registration</h3>
           <button class="close-btn" onclick="closeEmployerRegModal()">&times;</button>
@@ -1603,7 +1615,6 @@
         <form id="employer-reg-form" onsubmit="handleEmployerRegistrationSubmit(event)">
           <div class="modal-body form-grid">
             
-            <!-- File Upload Input with Live Preview -->
             <div class="form-group full-width">
               <label>Company / Organizer Photo <span class="required">*</span></label>
               <div class="file-upload-box" onclick="document.getElementById('emp-file-input').click()">
@@ -1653,8 +1664,8 @@
     </div>
 
     <!-- Create Work Post Modal -->
-    <div id="work-post-modal" class="modal-backdrop">
-      <div class="modal-card form-modal-card">
+    <div id="work-post-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'work-post-modal')">
+      <div class="modal-card form-modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
           <h3>Post New Catering Work Slot</h3>
           <button class="close-btn" onclick="closeWorkPostModal()">&times;</button>
@@ -1702,9 +1713,9 @@
       </div>
     </div>
 
-    <!-- Applicants Modal (Employer View) -->
-    <div id="applicants-modal" class="modal-backdrop">
-      <div class="modal-card large-modal-card">
+    <!-- Applicants Modal -->
+    <div id="applicants-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'applicants-modal')">
+      <div class="modal-card large-modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
           <h3 id="applicants-modal-title">Job Applicants</h3>
           <button class="close-btn" onclick="closeApplicantsModal()">&times;</button>
@@ -1716,8 +1727,8 @@
     </div>
 
     <!-- Account Self-Deletion Modal -->
-    <div id="delete-account-modal" class="modal-backdrop">
-      <div class="modal-card">
+    <div id="delete-account-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'delete-account-modal')">
+      <div class="modal-card" onclick="event.stopPropagation()">
         <div class="modal-header text-danger">
           <h3>Delete Your Account Permanently</h3>
           <button class="close-btn" onclick="closeDeleteAccountModal()">&times;</button>
@@ -1744,7 +1755,7 @@
     // Initial Mock Repository
     const INITIAL_STATE = {
       currentUser: null,
-      pendingAuthTargetRole: null, // Track direct CTA clicks ('worker' | 'employer' | null)
+      pendingAuthTargetRole: null,
       workers: [
         {
           id: 'worker_1',
@@ -1756,7 +1767,6 @@
           locationText: 'Andheri East, Mumbai',
           coords: { lat: 19.1136, lng: 72.8697 },
           rate: '₹850 / shift',
-          timings: 'Daily Evening shifts & Weekends',
           status: 'approved',
           appliedJobs: ['job_1']
         },
@@ -1770,7 +1780,6 @@
           locationText: 'Dadar West, Mumbai',
           coords: { lat: 19.0178, lng: 72.8478 },
           rate: '₹900 / shift',
-          timings: 'Fri-Sun evening receptions',
           status: 'approved',
           appliedJobs: []
         }
@@ -1875,9 +1884,30 @@
       setTimeout(() => toast.remove(), 3500);
     }
 
-    // ================= DEVICE FILE UPLOAD & PREVIEW =================
-    // Note: Converted to local Base64/Object Data for mock state.
-    // In Phase 14, this will be swapped for direct Firebase Storage upload.
+    // Modal Manager with Body Scroll Lock
+    function showModal(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.add('show');
+        document.body.classList.add('modal-open');
+      }
+    }
+
+    function hideModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('show');
+      if (!document.querySelector('.modal-backdrop.show')) {
+        document.body.classList.remove('modal-open');
+      }
+    }
+
+    function handleBackdropClick(event, modalId) {
+      if (event.target.id === modalId) {
+        hideModal(modalId);
+      }
+    }
+
+    // Device Image Upload with Preview
     function handleImageFileSelected(event, type) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1921,7 +1951,7 @@
       }
     }
 
-    // Map Coordinate Parsing & Haversine Distance
+    // Coordinates & Distance
     function parseCoordinatesFromMapsUrl(url) {
       if (!url || typeof url !== 'string') return { lat: 19.0760, lng: 72.8777 };
       const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
@@ -1945,7 +1975,7 @@
       return (R * c).toFixed(1);
     }
 
-    // Navigation System
+    // Navigation
     function navigateTo(viewId) {
       document.querySelectorAll('.view-panel').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -1963,7 +1993,7 @@
       if (viewId === 'admin-view') renderAdminTables();
     }
 
-    // ================= DIRECT ENTRY-POINT FLOWS =================
+    // Direct Entry Point Flows
     function startWorkerDirectFlow() {
       if (appState.currentUser) {
         if (appState.currentUser.role === 'worker') {
@@ -1974,7 +2004,7 @@
         return;
       }
       appState.pendingAuthTargetRole = 'worker';
-      openAuthModal();
+      showModal('auth-modal');
     }
 
     function startEmployerDirectFlow() {
@@ -1982,7 +2012,7 @@
         if (appState.currentUser.role === 'employer') {
           if (appState.currentUser.data.status === 'approved') {
             document.getElementById('post-form-name').value = appState.currentUser.data.name;
-            document.getElementById('work-post-modal').classList.add('show');
+            showModal('work-post-modal');
           } else {
             showToast('Your Employer account is pending admin approval.', 'error');
             navigateTo('dashboard-view');
@@ -1993,7 +2023,7 @@
         return;
       }
       appState.pendingAuthTargetRole = 'employer';
-      openAuthModal();
+      showModal('auth-modal');
     }
 
     // Render Work Posts
@@ -2070,7 +2100,7 @@
       }).join('');
     }
 
-    // Render Worker Directory
+    // Render Worker Directory (No timings field)
     function renderWorkersDirectory() {
       const container = document.getElementById('worker-directory-list');
       const search = (document.getElementById('worker-search-input')?.value || '').toLowerCase();
@@ -2105,7 +2135,6 @@
             </div>
             <div class="highlight-pay">${w.rate}</div>
             <ul class="card-details-list">
-              <li><i class="fa-solid fa-clock"></i> ${w.timings}</li>
               <li><i class="fa-solid fa-location-dot"></i> ${w.locationText}</li>
               <li><i class="fa-solid fa-map-location-dot"></i> <a href="${w.mapsLink}" target="_blank" rel="noopener" class="maps-link-btn">📍 View Location</a></li>
             </ul>
@@ -2115,7 +2144,7 @@
       }).join('');
     }
 
-    // User Dashboard
+    // User Dashboard (No timings field)
     function renderDashboard() {
       const container = document.getElementById('dashboard-content');
       if (!appState.currentUser) {
@@ -2194,7 +2223,7 @@
               <tr><td>Phone</td><td><strong>${u.phone}</strong></td></tr>
               <tr><td>Age</td><td>${u.age} yrs</td></tr>
               <tr><td>Location</td><td>${u.locationText}</td></tr>
-              ${isWorker ? `<tr><td>Rate</td><td><strong>${u.rate}</strong></td></tr><tr><td>Timings</td><td>${u.timings}</td></tr>` : ''}
+              ${isWorker ? `<tr><td>Rate</td><td><strong>${u.rate}</strong></td></tr>` : ''}
               <tr><td>Maps Link</td><td><a href="${u.mapsLink}" target="_blank" class="maps-link-btn">📍 View Map</a></td></tr>
             </table>
             <div class="dash-actions-panel">
@@ -2207,7 +2236,7 @@
       `;
     }
 
-    // Work Application Flow
+    // Work Applications
     function applyForJob(jobId) {
       if (!appState.currentUser || appState.currentUser.role !== 'worker') {
         showToast('Only workers can book slots.', 'error');
@@ -2247,7 +2276,7 @@
       renderJobs();
     }
 
-    // Employer Work Post Flow
+    // Work Posting
     function handlePostWorkClick() {
       if (!appState.currentUser) {
         startEmployerDirectFlow();
@@ -2262,11 +2291,11 @@
         return;
       }
       document.getElementById('post-form-name').value = appState.currentUser.data.name;
-      document.getElementById('work-post-modal').classList.add('show');
+      showModal('work-post-modal');
     }
 
     function closeWorkPostModal() {
-      document.getElementById('work-post-modal').classList.remove('show');
+      hideModal('work-post-modal');
     }
 
     function handleCreateWorkPostSubmit(e) {
@@ -2332,11 +2361,11 @@
           `;
         }).join('');
       }
-      document.getElementById('applicants-modal').classList.add('show');
+      showModal('applicants-modal');
     }
 
     function closeApplicantsModal() {
-      document.getElementById('applicants-modal').classList.remove('show');
+      hideModal('applicants-modal');
     }
 
     // In-App Chat
@@ -2441,7 +2470,7 @@
       openChatWindow(activeChatThreadId);
     }
 
-    // Admin Panel Controller
+    // Admin Panel (No timings field in table)
     function switchAdminTab(tabName) {
       document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.remove('active'));
@@ -2471,7 +2500,7 @@
           </td>
           <td>${w.phone}<br><small class="text-muted">${w.age} yrs</small></td>
           <td>${w.locationText}<br><a href="${w.mapsLink}" target="_blank" class="maps-link-btn">📍 Maps</a></td>
-          <td>${w.rate}<br><small class="text-muted">${w.timings}</small></td>
+          <td>${w.rate}</td>
           <td><span class="card-badge badge-${w.status}" style="position:static;">${w.status}</span></td>
           <td>
             <div class="admin-action-btn-group">
@@ -2575,23 +2604,21 @@
         appState.jobs = appState.jobs.filter(j => j.employerId !== id);
       }
 
-      // Cascade chat cleanup
       appState.chats = appState.chats.filter(c => !c.participants.includes(id));
-
       logPlatformActivity('Admin Deleted User', `${type}: ${id}`, `Admin wiped user and associated data.`);
       saveState();
       renderAdminTables();
       showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} and associated data deleted.`, 'info');
     }
 
-    // Self Account Deletion (Cascade Cleanup)
+    // Account Self-Deletion
     function openDeleteAccountModal() {
       document.getElementById('delete-confirm-input').value = '';
-      document.getElementById('delete-account-modal').classList.add('show');
+      showModal('delete-account-modal');
     }
 
     function closeDeleteAccountModal() {
-      document.getElementById('delete-account-modal').classList.remove('show');
+      hideModal('delete-account-modal');
     }
 
     function confirmSelfAccountDeletion() {
@@ -2625,32 +2652,29 @@
       navigateTo('jobs-view');
     }
 
-    // ================= GOOGLE AUTH FLOW SIMULATION =================
+    // Google Auth Simulation
     function openAuthModal() {
-      document.getElementById('auth-modal').classList.add('show');
+      showModal('auth-modal');
     }
 
     function closeAuthModal() {
-      document.getElementById('auth-modal').classList.remove('show');
+      hideModal('auth-modal');
       appState.pendingAuthTargetRole = null;
     }
 
     function handleGoogleSignInButtonClick() {
       closeAuthModal();
-
-      // Check if user clicked a direct entry point (Join as Boy or Post Work)
       if (appState.pendingAuthTargetRole === 'worker') {
         selectInitialRole('worker');
       } else if (appState.pendingAuthTargetRole === 'employer') {
         selectInitialRole('employer');
       } else {
-        // Generic sign-in clicked: ask for fixed role choice
-        document.getElementById('role-selection-modal').classList.add('show');
+        showModal('role-selection-modal');
       }
     }
 
     function selectInitialRole(role) {
-      document.getElementById('role-selection-modal').classList.remove('show');
+      hideModal('role-selection-modal');
       appState.pendingAuthTargetRole = null;
 
       if (role === 'worker') {
@@ -2658,23 +2682,27 @@
         document.getElementById('worker-reg-form').reset();
         resetUploadPreview('worker');
         document.getElementById('worker-reg-modal-title').textContent = 'Worker Profile Registration';
-        document.getElementById('worker-reg-modal').classList.add('show');
+        showModal('worker-reg-modal');
       } else {
         document.getElementById('employer-reg-form').reset();
         resetUploadPreview('employer');
-        document.getElementById('employer-reg-modal').classList.add('show');
+        showModal('employer-reg-modal');
       }
     }
 
+    function closeRoleSelectionModal() {
+      hideModal('role-selection-modal');
+    }
+
     function closeWorkerRegModal() {
-      document.getElementById('worker-reg-modal').classList.remove('show');
+      hideModal('worker-reg-modal');
     }
 
     function closeEmployerRegModal() {
-      document.getElementById('employer-reg-modal').classList.remove('show');
+      hideModal('employer-reg-modal');
     }
 
-    // Worker Registration / Edit Submission
+    // Worker Registration / Edit Submission (No timings property)
     function handleWorkerRegistrationSubmit(e) {
       e.preventDefault();
       const mapsLink = document.getElementById('worker-form-maps-link').value;
@@ -2682,7 +2710,6 @@
       const photoData = document.getElementById('worker-form-photo-data').value || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&auto=format&fit=crop&q=60';
 
       if (currentWorkerEditId) {
-        // Edit existing worker — status resets to 'pending' for re-verification
         const worker = appState.workers.find(w => w.id === currentWorkerEditId);
         if (worker) {
           worker.name = document.getElementById('worker-form-name').value;
@@ -2691,17 +2718,15 @@
           worker.photo = photoData;
           worker.rate = document.getElementById('worker-form-rate').value;
           worker.locationText = document.getElementById('worker-form-location-text').value;
-          worker.timings = document.getElementById('worker-form-timings').value;
           worker.mapsLink = mapsLink;
           worker.coords = coords;
-          worker.status = 'pending'; // Reset for moderation
+          worker.status = 'pending';
 
           appState.currentUser.data = worker;
           logPlatformActivity('Worker Profile Edited', `${worker.name} (${worker.id})`, 'Updated profile fields. Resubmitted for admin review.');
           showToast('Profile updated! Changes submitted for admin re-review.', 'info');
         }
       } else {
-        // New Worker
         const newWorker = {
           id: 'worker_' + Date.now(),
           name: document.getElementById('worker-form-name').value,
@@ -2710,7 +2735,6 @@
           photo: photoData,
           rate: document.getElementById('worker-form-rate').value,
           locationText: document.getElementById('worker-form-location-text').value,
-          timings: document.getElementById('worker-form-timings').value,
           mapsLink: mapsLink,
           coords: coords,
           status: 'pending',
@@ -2745,10 +2769,9 @@
       
       document.getElementById('worker-form-rate').value = w.rate;
       document.getElementById('worker-form-location-text').value = w.locationText;
-      document.getElementById('worker-form-timings').value = w.timings;
       document.getElementById('worker-form-maps-link').value = w.mapsLink;
 
-      document.getElementById('worker-reg-modal').classList.add('show');
+      showModal('worker-reg-modal');
     }
 
     // Employer Registration Submission
@@ -2797,11 +2820,11 @@
       }
     }
 
-    // Service Worker Registration via inline Blob (Full PWA shell caching & Web Push listener structure)
+    // Service Worker Registration
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'catermatch-v3-cache';
+          const CACHE_NAME = 'catermatch-v4-cache';
           self.addEventListener('install', (e) => self.skipWaiting());
           self.addEventListener('activate', (e) => self.clients.claim());
           self.addEventListener('push', (event) => {
