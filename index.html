@@ -1,102 +1,2251 @@
-/**
- * CaterMatch — Progressive Web App Service Worker
- * Handles offline shell caching and background Web Push notification listeners.
- */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>CaterMatch — Catering Worker & Event Platform</title>
 
-const CACHE_NAME = 'catermatch-cache-v2';
-const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './style.css',
-  './script.js',
-  './manifest.json',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
-];
+  <!-- PWA Theme & Inline Manifest -->
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="CaterMatch" />
+  <link rel="manifest" href='data:application/manifest+json,{"name":"CaterMatch — Catering Crew Platform","short_name":"CaterMatch","start_url":".","display":"standalone","background_color":"%230f172a","theme_color":"%230f172a","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3448/3448609.png","sizes":"192x192","type":"image/png"},{"src":"https://cdn-icons-png.flaticon.com/512/3448/3448609.png","sizes":"512x512","type":"image/png"}]}' />
 
-// Install Event — Cache App Shell
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(ASSETS_TO_CACHE))
-      .then(() => self.skipWaiting())
-  );
-});
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-// Activate Event — Clean up Old Caches
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
-  );
-});
-
-// Fetch Event — Network-First with Offline Fallback
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-
-  event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, networkResponse.clone());
-          return networkResponse;
-        });
-      })
-      .catch(() => caches.match(event.request))
-  );
-});
-
-// Push Event — Web Push Notifications Handler
-self.addEventListener('push', (event) => {
-  let notificationData = {
-    title: 'CaterMatch Alert',
-    body: 'New catering shift available in your area!'
-  };
-
-  if (event.data) {
-    try {
-      notificationData = event.data.json();
-    } catch (e) {
-      notificationData.body = event.data.text();
+  <!-- ================= APPLICATION STYLES (CSS) ================= -->
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --dark: #0f172a;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --border: #e2e8f0;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+      --transition: all 0.2s ease-in-out;
     }
-  }
 
-  const options = {
-    body: notificationData.body,
-    icon: 'https://cdn-icons-png.flaticon.com/512/3448/3448609.png',
-    badge: 'https://cdn-icons-png.flaticon.com/512/3448/3448609.png',
-    vibrate: [200, 100, 200],
-    data: {
-      url: './index.html'
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
-  };
 
-  event.waitUntil(
-    self.registration.showNotification(notificationData.title, options)
-  );
-});
+    body {
+      background-color: #f1f5f9;
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
 
-// Notification Click Handler — Open/Focus App
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
+    #app-container {
+      width: 100%;
+      max-width: 1280px;
+      min-height: 100vh;
+      background-color: var(--surface-alt);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.06);
+    }
 
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url.includes('index.html') && 'focus' in client) {
-          return client.focus();
+    /* Top Navbar */
+    .navbar {
+      background-color: var(--dark);
+      color: #fff;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .brand-icon { font-size: 1.8rem; }
+    .brand-title { font-size: 1.2rem; font-weight: 800; color: #fff; display: block; }
+    .brand-tagline { font-size: 0.72rem; color: #94a3b8; display: block; margin-top: -3px; }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .auth-pill {
+      background-color: rgba(255, 255, 255, 0.12);
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.12);
+      border: none;
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* Sub Navigation */
+    .sub-nav {
+      background-color: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 0 10px;
+    }
+
+    .sub-nav::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 14px 18px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 3px solid transparent;
+      transition: var(--transition);
+    }
+
+    .tab-btn:hover { color: var(--primary); }
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    /* Content Area & Views */
+    .content-area {
+      flex: 1;
+      padding: 20px;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .view-panel { display: none; }
+    .view-panel.active {
+      display: block;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 18px;
+    }
+
+    .section-header h2 { font-size: 1.35rem; font-weight: 700; color: var(--dark); }
+    .section-desc { font-size: 0.88rem; color: var(--text-muted); }
+
+    /* Filters & Search */
+    .filter-card {
+      background-color: var(--surface);
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface-alt);
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .search-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      width: 100%;
+      font-size: 0.95rem;
+    }
+
+    .geo-sort-info {
+      font-size: 0.82rem;
+      color: var(--primary);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-open { background: #dcfce7; color: #166534; }
+    .badge-filled { background: #fee2e2; color: #991b1b; }
+    .badge-approved { background: #dbeafe; color: #1e40af; }
+    .badge-pending { background: #fef3c7; color: #92400e; }
+    .badge-rejected { background: #fee2e2; color: #b91c1c; }
+    .badge-hidden { background: #f1f5f9; color: #64748b; }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 6px;
+      padding-right: 70px;
+    }
+
+    .card-subtext {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .card-details-list {
+      list-style: none;
+      margin: 12px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.88rem;
+    }
+
+    .card-details-list li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #334155;
+    }
+
+    .card-details-list li i {
+      width: 18px;
+      color: var(--primary);
+      text-align: center;
+    }
+
+    .highlight-pay {
+      background-color: #ecfdf5;
+      color: #065f46;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: inline-block;
+      margin: 6px 0;
+    }
+
+    .distance-pill {
+      background: #eff6ff;
+      color: #1e40af;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .maps-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .maps-link-btn:hover { text-decoration: underline; }
+
+    .worker-card-header {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .worker-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-full);
+      object-fit: cover;
+      border: 2px solid var(--border);
+    }
+
+    .card-footer-actions {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+
+    .btn-primary { background-color: var(--primary); color: #fff; }
+    .btn-primary:hover { background-color: var(--primary-hover); }
+    .btn-outline { background-color: transparent; border-color: var(--border); color: var(--text-main); }
+    .btn-outline:hover { background-color: var(--surface-alt); }
+    .btn-danger { background-color: var(--danger); color: #fff; }
+    .btn-success { background-color: var(--success); color: #fff; }
+    .btn-admin { background-color: #475569; color: #fff; }
+    .btn-google { background-color: #ffffff; color: #374151; border-color: #d1d5db; width: 100%; padding: 12px; }
+    .full-width { width: 100%; }
+    .btn-sm { padding: 5px 10px; font-size: 0.78rem; }
+
+    /* Dashboard */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 840px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+
+    .dash-profile-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .dash-avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: var(--radius-full);
+      object-fit: cover;
+      margin-bottom: 12px;
+      border: 3px solid var(--primary-light);
+    }
+
+    .dash-status-banner {
+      width: 100%;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      margin: 14px 0;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .dash-details-table {
+      width: 100%;
+      text-align: left;
+      margin: 15px 0;
+      font-size: 0.86rem;
+    }
+
+    .dash-details-table td {
+      padding: 6px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .dash-details-table td:first-child {
+      color: var(--text-muted);
+      width: 40%;
+    }
+
+    .dash-actions-panel {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    /* Chat Layout */
+    .chat-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      height: 75vh;
+      overflow: hidden;
+    }
+
+    @media (max-width: 768px) {
+      .chat-layout { grid-template-columns: 1fr; height: 80vh; }
+    }
+
+    .chat-sidebar {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      background: var(--surface-alt);
+    }
+
+    .chat-sidebar-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .chat-threads-list { flex: 1; overflow-y: auto; }
+
+    .chat-thread-item {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .chat-thread-item:hover, .chat-thread-item.active { background-color: #e2e8f0; }
+
+    .chat-thread-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-full);
+      object-fit: cover;
+    }
+
+    .chat-thread-info { flex: 1; overflow: hidden; }
+    .chat-thread-name { font-weight: 700; font-size: 0.9rem; display: flex; justify-content: space-between; }
+    .chat-thread-last { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .chat-main { display: flex; flex-direction: column; background: #ffffff; }
+
+    .chat-empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      gap: 10px;
+    }
+
+    .chat-empty-state i { font-size: 3rem; color: #cbd5e1; }
+    .chat-active-box { display: flex; flex-direction: column; height: 100%; }
+
+    .chat-header {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .chat-partner-info { display: flex; align-items: center; gap: 10px; }
+    .chat-partner-info img { width: 38px; height: 38px; border-radius: var(--radius-full); object-fit: cover; }
+
+    .badge-role {
+      font-size: 0.72rem;
+      padding: 2px 6px;
+      border-radius: var(--radius-full);
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .chat-messages-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: #f8fafc;
+    }
+
+    .message-bubble {
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      word-break: break-word;
+    }
+
+    .msg-sent { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 2px; }
+    .msg-received { align-self: flex-start; background: #e2e8f0; color: var(--text-main); border-bottom-left-radius: 2px; }
+    .msg-timestamp { font-size: 0.68rem; opacity: 0.75; display: block; text-align: right; margin-top: 4px; }
+
+    .chat-composer {
+      padding: 12px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      background: var(--surface);
+    }
+
+    .chat-composer input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      outline: none;
+    }
+
+    /* Admin Panel Tables */
+    .admin-tab-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+
+    .admin-nav-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .admin-nav-btn.active { background: var(--dark); color: #fff; border-color: var(--dark); }
+    .admin-tab-panel { display: none; }
+    .admin-tab-panel.active { display: block; }
+
+    .table-responsive {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+    }
+
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .data-table th, .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .data-table th { background: #f8fafc; color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; }
+    .admin-action-btn-group { display: flex; gap: 6px; }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
+    .modal-backdrop.show { opacity: 1; visibility: visible; }
+
+    .modal-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 480px;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .form-modal-card { max-width: 640px; }
+    .large-modal-card { max-width: 720px; }
+    .role-choice-card { max-width: 700px; }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 { font-size: 1.15rem; font-weight: 700; }
+    .close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
+    .modal-body { padding: 20px; overflow-y: auto; }
+    .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: var(--surface-alt); }
+    .modal-divider { border: 0; border-top: 1px solid var(--border); margin: 18px 0; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group.full-width { grid-column: 1 / -1; }
+    .form-group label { font-size: 0.82rem; font-weight: 600; color: #334155; }
+    .form-group input { padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem; }
+    .required { color: var(--danger); }
+    .alert-info { background: #eff6ff; border-left: 4px solid var(--primary); padding: 12px; font-size: 0.85rem; color: #1e3a8a; border-radius: 4px; margin-bottom: 16px; }
+
+    .role-cards-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 580px) { .role-cards-wrapper { grid-template-columns: 1fr; } }
+
+    .role-selection-box {
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .role-selection-box:hover { border-color: var(--primary); background: var(--primary-light); }
+    .role-icon { font-size: 2.5rem; }
+    .quick-user-selector { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+
+    /* Toast Notifications */
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--dark);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    .toast.success { border-left: 5px solid var(--success); }
+    .toast.error { border-left: 5px solid var(--danger); }
+    .toast.info { border-left: 5px solid var(--primary); }
+  </style>
+</head>
+<body>
+  <div id="app-container">
+
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+      <div class="nav-brand" onclick="navigateTo('jobs-view')">
+        <span class="brand-icon">🍽️</span>
+        <div class="brand-text">
+          <span class="brand-title">CaterMatch</span>
+          <span class="brand-tagline">Event Crew Platform</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <div id="auth-status-badge" class="auth-pill" onclick="openAuthModal()">
+          <i class="fa-solid fa-user-circle"></i>
+          <span id="nav-user-label">Sign In</span>
+        </div>
+        <button id="pwa-install-btn" class="icon-btn" title="Install App" style="display: none;">
+          <i class="fa-solid fa-download"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Sub Navigation Tabs -->
+    <nav class="sub-nav">
+      <button class="tab-btn active" data-target="jobs-view" onclick="navigateTo('jobs-view')">
+        <i class="fa-solid fa-briefcase"></i> Work Posts
+      </button>
+      <button class="tab-btn" data-target="directory-view" onclick="navigateTo('directory-view')">
+        <i class="fa-solid fa-users"></i> Crew Directory
+      </button>
+      <button class="tab-btn" id="nav-dashboard-tab" data-target="dashboard-view" onclick="navigateTo('dashboard-view')" style="display: none;">
+        <i class="fa-solid fa-gauge-high"></i> Dashboard
+      </button>
+      <button class="tab-btn" id="nav-chat-tab" data-target="chat-view" onclick="navigateTo('chat-view')" style="display: none;">
+        <i class="fa-solid fa-comments"></i> Messages
+      </button>
+      <button class="tab-btn" id="nav-admin-tab" data-target="admin-view" onclick="navigateTo('admin-view')">
+        <i class="fa-solid fa-shield-halved"></i> Admin Panel
+      </button>
+    </nav>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+
+    <!-- MAIN VIEW AREA -->
+    <main class="content-area">
+
+      <!-- ================= 1. WORK POSTS VIEW ================= -->
+      <section id="jobs-view" class="view-panel active">
+        <div class="section-header">
+          <div>
+            <h2>Available Catering Work</h2>
+            <p class="section-desc">Browse upcoming events, wedding receptions, and catering shifts.</p>
+          </div>
+          <div class="header-action-group">
+            <button class="btn btn-primary" onclick="handlePostWorkClick()">
+              <i class="fa-solid fa-plus"></i> Post Work
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-card">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="job-search-input" placeholder="Search by event title, location..." oninput="renderJobs()" />
+          </div>
+          <div class="geo-sort-info" id="worker-distance-context" style="display: none;">
+            <i class="fa-solid fa-location-crosshairs"></i>
+            <span>Sorted by nearest to your profile location.</span>
+          </div>
+        </div>
+
+        <div id="jobs-list" class="cards-grid"></div>
+      </section>
+
+      <!-- ================= 2. WORKER DIRECTORY VIEW ================= -->
+      <section id="directory-view" class="view-panel">
+        <div class="section-header">
+          <div>
+            <h2>Verified Worker Directory</h2>
+            <p class="section-desc">Browse verified catering crew members ready for direct contact.</p>
+          </div>
+        </div>
+
+        <div class="filter-card">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="worker-search-input" placeholder="Search workers by name, area, or rate..." oninput="renderWorkersDirectory()" />
+          </div>
+        </div>
+
+        <div id="worker-directory-list" class="cards-grid"></div>
+      </section>
+
+      <!-- ================= 3. USER DASHBOARD VIEW ================= -->
+      <section id="dashboard-view" class="view-panel">
+        <div id="dashboard-content"></div>
+      </section>
+
+      <!-- ================= 4. CHAT VIEW ================= -->
+      <section id="chat-view" class="view-panel">
+        <div class="chat-layout">
+          <div class="chat-sidebar">
+            <div class="chat-sidebar-header">
+              <h3>Messages</h3>
+            </div>
+            <div class="chat-threads-list" id="chat-threads-container"></div>
+          </div>
+
+          <div class="chat-main" id="chat-main-window">
+            <div class="chat-empty-state" id="chat-placeholder">
+              <i class="fa-regular fa-comments"></i>
+              <p>Select a message thread or start a chat from the worker directory.</p>
+            </div>
+
+            <div class="chat-active-box" id="chat-active-box" style="display: none;">
+              <div class="chat-header">
+                <div class="chat-partner-info">
+                  <img id="chat-partner-avatar" src="" alt="Avatar" />
+                  <div>
+                    <strong id="chat-partner-name">User</strong>
+                    <span id="chat-partner-role" class="badge-role">Role</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="chat-messages-body" id="chat-messages-container"></div>
+
+              <form class="chat-composer" onsubmit="handleSendMessage(event)">
+                <input type="text" id="chat-message-input" placeholder="Type a message..." autocomplete="off" required />
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 5. ADMIN PANEL ================= -->
+      <section id="admin-view" class="view-panel">
+        <div class="section-header">
+          <div>
+            <h2>Admin Management Console</h2>
+            <p class="section-desc">Review registrations, manage statuses, and audit platform activities.</p>
+          </div>
+        </div>
+
+        <div class="admin-tab-group">
+          <button class="admin-nav-btn active" onclick="switchAdminTab('workers-tab')">
+            <i class="fa-solid fa-user-gear"></i> Workers Queue
+          </button>
+          <button class="admin-nav-btn" onclick="switchAdminTab('employers-tab')">
+            <i class="fa-solid fa-building-user"></i> Employers Queue
+          </button>
+          <button class="admin-nav-btn" onclick="switchAdminTab('logs-tab')">
+            <i class="fa-solid fa-list-check"></i> Platform Audit Log
+          </button>
+        </div>
+
+        <div id="admin-workers-tab" class="admin-tab-panel active">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Worker</th>
+                  <th>Contact / Age</th>
+                  <th>Location (Maps)</th>
+                  <th>Rate & Timings</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-workers-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="admin-employers-tab" class="admin-tab-panel">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Employer</th>
+                  <th>Contact / Age</th>
+                  <th>Base Location</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-employers-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="admin-logs-tab" class="admin-tab-panel">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date & Time</th>
+                  <th>Event Type</th>
+                  <th>Actor Involved</th>
+                  <th>Audit Details</th>
+                </tr>
+              </thead>
+              <tbody id="admin-logs-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- Auth Simulation Modal -->
+    <div id="auth-modal" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Sign in to CaterMatch</h3>
+          <button class="close-btn" onclick="closeAuthModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="auth-modal-body">
+          <p class="text-muted">Simulate signing in with a demo profile or register fresh:</p>
+          <div class="quick-user-selector">
+            <button class="btn btn-outline" onclick="mockSignIn('worker_1')">
+              <i class="fa-solid fa-person-walking"></i> Rahul Sharma (Approved Worker)
+            </button>
+            <button class="btn btn-outline" onclick="mockSignIn('worker_pending')">
+              <i class="fa-solid fa-clock"></i> Amit Kumar (Pending Worker)
+            </button>
+            <button class="btn btn-outline" onclick="mockSignIn('emp_1')">
+              <i class="fa-solid fa-briefcase"></i> Royal Feast Caterers (Approved Employer)
+            </button>
+            <button class="btn btn-outline" onclick="mockSignIn('emp_pending')">
+              <i class="fa-solid fa-user-clock"></i> Priya Verma (Pending Employer)
+            </button>
+            <button class="btn btn-admin" onclick="mockSignIn('admin_user')">
+              <i class="fa-solid fa-shield-halved"></i> Platform Admin
+            </button>
+          </div>
+          <hr class="modal-divider" />
+          <button class="btn btn-google" onclick="initiateFirstTimeRegistration()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" width="18" />
+            Sign in as New Google User (First-Time Flow)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Role Selection Modal (First-Time User) -->
+    <div id="role-selection-modal" class="modal-backdrop">
+      <div class="modal-card role-choice-card">
+        <div class="modal-header">
+          <h3>Choose Your Platform Role</h3>
+        </div>
+        <div class="modal-body">
+          <div class="alert-info">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <strong>Important:</strong> Role selection is permanent for your Google Account. Workers cannot post work, and Employers cannot apply for jobs.
+          </div>
+          <div class="role-cards-wrapper">
+            <div class="role-selection-box" onclick="selectInitialRole('worker')">
+              <div class="role-icon">🧑‍🍳</div>
+              <h4>Register as Worker</h4>
+              <p>Find catering jobs, set your event rates, get hired, and chat directly with organizers.</p>
+              <button class="btn btn-primary full-width">Continue as Worker</button>
+            </div>
+            <div class="role-selection-box" onclick="selectInitialRole('employer')">
+              <div class="role-icon">🏢</div>
+              <h4>Register as Employer</h4>
+              <p>Post events, specify headcount, check applicants, and browse available catering boys.</p>
+              <button class="btn btn-primary full-width">Continue as Employer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Worker Registration / Edit Modal -->
+    <div id="worker-reg-modal" class="modal-backdrop">
+      <div class="modal-card form-modal-card">
+        <div class="modal-header">
+          <h3 id="worker-reg-modal-title">Worker Profile Registration</h3>
+          <button class="close-btn" onclick="closeWorkerRegModal()">&times;</button>
+        </div>
+        <form id="worker-reg-form" onsubmit="handleWorkerRegistrationSubmit(event)">
+          <div class="modal-body form-grid">
+            <div class="form-group full-width">
+              <label>Profile Photo URL <span class="required">*</span></label>
+              <input type="url" id="worker-form-photo" placeholder="https://images.unsplash.com/..." required />
+            </div>
+            <div class="form-group">
+              <label>Full Name <span class="required">*</span></label>
+              <input type="text" id="worker-form-name" placeholder="e.g. Sunil Yadav" required />
+            </div>
+            <div class="form-group">
+              <label>Age <span class="required">*</span></label>
+              <input type="number" id="worker-form-age" min="18" max="70" placeholder="e.g. 23" required />
+            </div>
+            <div class="form-group">
+              <label>Phone Number <span class="required">*</span></label>
+              <input type="tel" id="worker-form-phone" placeholder="e.g. +91 98765 43210" required />
+            </div>
+            <div class="form-group">
+              <label>Expected Charge Per Event (₹) <span class="required">*</span></label>
+              <input type="text" id="worker-form-rate" placeholder="e.g. ₹850 / shift" required />
+            </div>
+            <div class="form-group full-width">
+              <label>Google Maps Location Link <span class="required">*</span></label>
+              <input type="url" id="worker-form-maps-link" placeholder="Paste Google Maps URL (e.g., https://maps.app.goo.gl/... or ?q=19.11,72.86)" required />
+            </div>
+            <div class="form-group full-width">
+              <label>Location Text / Address <span class="required">*</span></label>
+              <input type="text" id="worker-form-location-text" placeholder="e.g. Andheri East, Mumbai" required />
+            </div>
+            <div class="form-group full-width">
+              <label>Available Timings & Dates <span class="required">*</span></label>
+              <input type="text" id="worker-form-timings" placeholder="e.g. Daily Evenings & Weekends" required />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeWorkerRegModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="worker-submit-btn">Submit Profile</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Employer Registration Modal -->
+    <div id="employer-reg-modal" class="modal-backdrop">
+      <div class="modal-card form-modal-card">
+        <div class="modal-header">
+          <h3 id="employer-reg-modal-title">Employer Profile Registration</h3>
+          <button class="close-btn" onclick="closeEmployerRegModal()">&times;</button>
+        </div>
+        <form id="employer-reg-form" onsubmit="handleEmployerRegistrationSubmit(event)">
+          <div class="modal-body form-grid">
+            <div class="form-group full-width">
+              <label>Company / Profile Photo URL <span class="required">*</span></label>
+              <input type="url" id="emp-form-photo" placeholder="https://images.unsplash.com/..." required />
+            </div>
+            <div class="form-group">
+              <label>Employer / Company Name <span class="required">*</span></label>
+              <input type="text" id="emp-form-name" placeholder="e.g. Grand Feast Organizers" required />
+            </div>
+            <div class="form-group">
+              <label>Age <span class="required">*</span></label>
+              <input type="number" id="emp-form-age" min="18" max="99" placeholder="e.g. 35" required />
+            </div>
+            <div class="form-group full-width">
+              <label>Phone Number <span class="required">*</span></label>
+              <input type="tel" id="emp-form-phone" placeholder="e.g. +91 98111 22334" required />
+            </div>
+            <div class="form-group full-width">
+              <label>Google Maps Location Link <span class="required">*</span></label>
+              <input type="url" id="emp-form-maps-link" placeholder="Paste Google Maps URL" required />
+            </div>
+            <div class="form-group full-width">
+              <label>Base Location / Address <span class="required">*</span></label>
+              <input type="text" id="emp-form-location-text" placeholder="e.g. Bandra West, Mumbai" required />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeEmployerRegModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Submit Profile</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Create Work Post Modal -->
+    <div id="work-post-modal" class="modal-backdrop">
+      <div class="modal-card form-modal-card">
+        <div class="modal-header">
+          <h3>Post New Catering Work Slot</h3>
+          <button class="close-btn" onclick="closeWorkPostModal()">&times;</button>
+        </div>
+        <form id="work-post-form" onsubmit="handleCreateWorkPostSubmit(event)">
+          <div class="modal-body form-grid">
+            <div class="form-group full-width">
+              <label>Work / Event Name <span class="required">*</span></label>
+              <input type="text" id="post-form-title" placeholder="e.g. Grand Wedding Reception Catering" required />
+            </div>
+            <div class="form-group">
+              <label>Contact / Organizer Name <span class="required">*</span></label>
+              <input type="text" id="post-form-name" placeholder="e.g. Royal Banquet Team" required />
+            </div>
+            <div class="form-group">
+              <label>Boys Needed <span class="required">*</span></label>
+              <input type="number" id="post-form-boys" min="1" max="100" placeholder="e.g. 10" required />
+            </div>
+            <div class="form-group">
+              <label>Event Date <span class="required">*</span></label>
+              <input type="date" id="post-form-date" required />
+            </div>
+            <div class="form-group">
+              <label>Time & Shift <span class="required">*</span></label>
+              <input type="text" id="post-form-time" placeholder="e.g. 05:00 PM – 11:30 PM" required />
+            </div>
+            <div class="form-group">
+              <label>Per Head Amount (₹) <span class="required">*</span></label>
+              <input type="number" id="post-form-amount" placeholder="e.g. 900" required />
+            </div>
+            <div class="form-group">
+              <label>Venue Name / Address <span class="required">*</span></label>
+              <input type="text" id="post-form-venue" placeholder="e.g. Sahara Star Banquet, Vile Parle" required />
+            </div>
+            <div class="form-group full-width">
+              <label>Work Location Link (Google Maps) <span class="required">*</span></label>
+              <input type="url" id="post-form-maps-link" placeholder="Paste Google Maps URL" required />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeWorkPostModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Publish Work Post</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Applicants Modal (Employer View) -->
+    <div id="applicants-modal" class="modal-backdrop">
+      <div class="modal-card large-modal-card">
+        <div class="modal-header">
+          <h3 id="applicants-modal-title">Job Applicants</h3>
+          <button class="close-btn" onclick="closeApplicantsModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="applicants-list-container" class="applicants-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Self-Deletion Modal -->
+    <div id="delete-account-modal" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header text-danger">
+          <h3>Delete Your Account Permanently</h3>
+          <button class="close-btn" onclick="closeDeleteAccountModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p><strong>Warning:</strong> This self-service action is strictly irreversible.</p>
+          <p>All your profile details, listings/applications, messages, and photos will be permanently deleted.</p>
+          <div class="form-group" style="margin-top: 15px;">
+            <label>Type <strong>DELETE</strong> to confirm:</label>
+            <input type="text" id="delete-confirm-input" placeholder="DELETE" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeDeleteAccountModal()">Cancel</button>
+          <button type="button" class="btn btn-danger" onclick="confirmSelfAccountDeletion()">Permanently Delete Account</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= APPLICATION LOGIC (JAVASCRIPT) ================= -->
+  <script>
+    // Initial Mock Repository
+    const INITIAL_STATE = {
+      currentUser: null,
+      workers: [
+        {
+          id: 'worker_1',
+          name: 'Rahul Sharma',
+          age: 23,
+          phone: '+91 98765 43210',
+          photo: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&auto=format&fit=crop&q=60',
+          mapsLink: 'https://maps.google.com/?q=19.1136,72.8697',
+          locationText: 'Andheri East, Mumbai',
+          coords: { lat: 19.1136, lng: 72.8697 },
+          rate: '₹850 / shift',
+          timings: 'Daily Evening shifts & Weekends',
+          status: 'approved',
+          appliedJobs: ['job_1']
+        },
+        {
+          id: 'worker_2',
+          name: 'Vikas Kumar',
+          age: 21,
+          phone: '+91 98111 55667',
+          photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=60',
+          mapsLink: 'https://maps.google.com/?q=19.0178,72.8478',
+          locationText: 'Dadar West, Mumbai',
+          coords: { lat: 19.0178, lng: 72.8478 },
+          rate: '₹900 / shift',
+          timings: 'Fri-Sun evening receptions',
+          status: 'approved',
+          appliedJobs: []
+        },
+        {
+          id: 'worker_pending',
+          name: 'Amit Kumar',
+          age: 22,
+          phone: '+91 97654 11223',
+          photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=60',
+          mapsLink: 'https://maps.google.com/?q=19.1970,72.8273',
+          locationText: 'Borivali West, Mumbai',
+          coords: { lat: 19.1970, lng: 72.8273 },
+          rate: '₹800 / shift',
+          timings: 'All 7 Days (After 2:00 PM)',
+          status: 'pending',
+          appliedJobs: []
         }
+      ],
+      employers: [
+        {
+          id: 'emp_1',
+          name: 'Royal Feast Caterers',
+          age: 42,
+          phone: '+91 98220 99881',
+          photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&auto=format&fit=crop&q=60',
+          mapsLink: 'https://maps.google.com/?q=19.0760,72.8777',
+          locationText: 'BKC, Mumbai',
+          coords: { lat: 19.0760, lng: 72.8777 },
+          status: 'approved'
+        },
+        {
+          id: 'emp_pending',
+          name: 'Priya Verma',
+          age: 35,
+          phone: '+91 99887 66554',
+          photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=60',
+          mapsLink: 'https://maps.google.com/?q=19.1363,72.8277',
+          locationText: 'Lokhandwala, Mumbai',
+          coords: { lat: 19.1363, lng: 72.8277 },
+          status: 'pending'
+        }
+      ],
+      jobs: [
+        {
+          id: 'job_1',
+          employerId: 'emp_1',
+          employerName: 'Royal Feast Caterers',
+          title: 'Grand Wedding Reception Catering',
+          boysNeeded: 12,
+          date: '2026-10-15',
+          time: '04:00 PM – 11:30 PM',
+          perHeadAmount: 950,
+          venueName: 'The Leela Grand Ballroom, Mumbai',
+          mapsLink: 'https://maps.google.com/?q=19.1031,72.8732',
+          coords: { lat: 19.1031, lng: 72.8732 },
+          status: 'open',
+          applicants: [
+            { workerId: 'worker_1', status: 'accepted', appliedAt: '2026-09-01 10:30 AM' }
+          ]
+        },
+        {
+          id: 'job_2',
+          employerId: 'emp_1',
+          employerName: 'Royal Feast Caterers',
+          title: 'Corporate Gala & Dinner Service',
+          boysNeeded: 6,
+          date: '2026-10-18',
+          time: '06:00 PM – 12:00 AM',
+          perHeadAmount: 850,
+          venueName: 'Nesco Hall 4, Goregaon, Mumbai',
+          mapsLink: 'https://maps.google.com/?q=19.1551,72.8550',
+          coords: { lat: 19.1551, lng: 72.8550 },
+          status: 'open',
+          applicants: []
+        }
+      ],
+      chats: [
+        {
+          id: 'chat_emp1_worker1',
+          participants: ['emp_1', 'worker_1'],
+          messages: [
+            { senderId: 'emp_1', text: 'Hello Rahul, are you available for Oct 15 wedding reception?', timestamp: '10:30 AM' },
+            { senderId: 'worker_1', text: 'Yes Sir, I am available and have black uniform ready.', timestamp: '10:32 AM' }
+          ]
+        }
+      ],
+      auditLogs: [
+        { id: 'log_1', eventType: 'System Started', userInvolved: 'System', timestamp: 'Initial Load', details: 'Platform environment initialized.' }
+      ]
+    };
+
+    let appState = loadState();
+    let activeChatThreadId = null;
+    let currentWorkerEditId = null;
+
+    function loadState() {
+      const saved = localStorage.getItem('catermatch_db');
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) { console.error(e); }
       }
-      if (clients.openWindow) {
-        return clients.openWindow('./index.html');
+      return JSON.parse(JSON.stringify(INITIAL_STATE));
+    }
+
+    function saveState() {
+      localStorage.setItem('catermatch_db', JSON.stringify(appState));
+    }
+
+    function logPlatformActivity(eventType, userInvolved, details) {
+      const now = new Date();
+      const timeString = now.toLocaleDateString() + ' ' + now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      appState.auditLogs.unshift({
+        id: 'log_' + Date.now(),
+        eventType,
+        userInvolved,
+        timestamp: timeString,
+        details
+      });
+      saveState();
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    // Map Coordinate Parsing & Haversine Distance
+    function parseCoordinatesFromMapsUrl(url) {
+      if (!url || typeof url !== 'string') return { lat: 19.0760, lng: 72.8777 };
+      const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
+      const queryMatch = url.match(/[?&](?:q|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (queryMatch) return { lat: parseFloat(queryMatch[1]), lng: parseFloat(queryMatch[2]) };
+      return { lat: 19.0760, lng: 72.8777 };
+    }
+
+    function calculateHaversineDistanceKm(coords1, coords2) {
+      if (!coords1 || !coords2) return 0;
+      const toRad = (val) => (val * Math.PI) / 180;
+      const R = 6371;
+      const dLat = toRad(coords2.lat - coords1.lat);
+      const dLng = toRad(coords2.lng - coords1.lng);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(coords1.lat)) * Math.cos(toRad(coords2.lat)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return (R * c).toFixed(1);
+    }
+
+    // Navigation System
+    function navigateTo(viewId) {
+      document.querySelectorAll('.view-panel').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+      const targetView = document.getElementById(viewId);
+      if (targetView) targetView.classList.add('active');
+
+      const activeBtn = document.querySelector(`.tab-btn[data-target="${viewId}"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      if (viewId === 'jobs-view') renderJobs();
+      if (viewId === 'directory-view') renderWorkersDirectory();
+      if (viewId === 'dashboard-view') renderDashboard();
+      if (viewId === 'chat-view') renderChatList();
+      if (viewId === 'admin-view') renderAdminTables();
+    }
+
+    // Render Work Posts
+    function renderJobs() {
+      const container = document.getElementById('jobs-list');
+      const search = (document.getElementById('job-search-input')?.value || '').toLowerCase();
+      const contextEl = document.getElementById('worker-distance-context');
+
+      let list = [...appState.jobs];
+      const isWorker = appState.currentUser && appState.currentUser.role === 'worker';
+
+      if (isWorker && appState.currentUser.data.coords) {
+        if (contextEl) contextEl.style.display = 'flex';
+        list.sort((a, b) => {
+          const distA = parseFloat(calculateHaversineDistanceKm(appState.currentUser.data.coords, a.coords));
+          const distB = parseFloat(calculateHaversineDistanceKm(appState.currentUser.data.coords, b.coords));
+          return distA - distB;
+        });
+      } else {
+        if (contextEl) contextEl.style.display = 'none';
       }
-    })
-  );
-});
+
+      if (search) {
+        list = list.filter(j => j.title.toLowerCase().includes(search) || j.venueName.toLowerCase().includes(search));
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">No work posts available.</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(job => {
+        let distanceBadge = '';
+        if (isWorker && appState.currentUser.data.coords) {
+          const dist = calculateHaversineDistanceKm(appState.currentUser.data.coords, job.coords);
+          distanceBadge = `<span class="distance-pill"><i class="fa-solid fa-location-arrow"></i> ${dist} km away</span>`;
+        }
+
+        const hasApplied = isWorker && job.applicants.some(a => a.workerId === appState.currentUser.data.id);
+        const acceptedCount = job.applicants.filter(a => a.status === 'accepted').length;
+
+        let actionBtn = '';
+        if (!appState.currentUser) {
+          actionBtn = `<button class="btn btn-outline full-width" onclick="openAuthModal()"><i class="fa-solid fa-lock"></i> Sign in to Apply</button>`;
+        } else if (isWorker) {
+          if (appState.currentUser.data.status !== 'approved') {
+            actionBtn = `<button class="btn btn-outline full-width" disabled><i class="fa-solid fa-clock"></i> Approval Pending</button>`;
+          } else if (hasApplied) {
+            actionBtn = `<button class="btn btn-success full-width" disabled><i class="fa-solid fa-check"></i> Applied / Booked</button>`;
+          } else if (job.status === 'filled') {
+            actionBtn = `<button class="btn btn-outline full-width" disabled>Slot Filled</button>`;
+          } else {
+            actionBtn = `<button class="btn btn-primary full-width" onclick="applyForJob('${job.id}')"><i class="fa-solid fa-hand-pointer"></i> Book / Apply Slot</button>`;
+          }
+        }
+
+        return `
+          <div class="card">
+            <span class="card-badge ${job.status === 'open' ? 'badge-open' : 'badge-filled'}">${job.status}</span>
+            <div>
+              <h3 class="card-title">${job.title}</h3>
+              <p class="card-subtext">Posted by <strong>${job.employerName}</strong> ${distanceBadge}</p>
+              <div class="highlight-pay">₹${job.perHeadAmount} / per head</div>
+              <ul class="card-details-list">
+                <li><i class="fa-solid fa-users"></i> Boys Needed: ${job.boysNeeded} (Accepted: ${acceptedCount})</li>
+                <li><i class="fa-solid fa-calendar-days"></i> ${job.date} | ${job.time}</li>
+                <li><i class="fa-solid fa-map-pin"></i> ${job.venueName}</li>
+                <li><i class="fa-solid fa-location-dot"></i> <a href="${job.mapsLink}" target="_blank" rel="noopener" class="maps-link-btn">📍 View Location</a></li>
+              </ul>
+            </div>
+            <div class="card-footer-actions">${actionBtn}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Render Worker Directory
+    function renderWorkersDirectory() {
+      const container = document.getElementById('worker-directory-list');
+      const search = (document.getElementById('worker-search-input')?.value || '').toLowerCase();
+      let list = appState.workers.filter(w => w.status === 'approved');
+
+      if (search) {
+        list = list.filter(w => w.name.toLowerCase().includes(search) || w.locationText.toLowerCase().includes(search) || w.rate.toLowerCase().includes(search));
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px;">No verified workers available.</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(w => {
+        let actionBtn = '';
+        if (!appState.currentUser) {
+          actionBtn = `<button class="btn btn-outline full-width" onclick="openAuthModal()"><i class="fa-solid fa-comments"></i> Sign in to Chat</button>`;
+        } else {
+          actionBtn = `<button class="btn btn-primary full-width" onclick="startChatWithWorker('${w.id}')"><i class="fa-solid fa-comment-dots"></i> Message Worker</button>`;
+        }
+
+        return `
+          <div class="card">
+            <div class="worker-card-header">
+              <img src="${w.photo}" alt="${w.name}" class="worker-avatar" />
+              <div class="worker-meta">
+                <h3>${w.name}</h3>
+                <p><i class="fa-solid fa-cake-candles"></i> Age: ${w.age} yrs</p>
+                <span class="badge-approved" style="font-size: 0.72rem; padding: 2px 6px; border-radius: 4px;">Verified</span>
+              </div>
+            </div>
+            <div class="highlight-pay">${w.rate}</div>
+            <ul class="card-details-list">
+              <li><i class="fa-solid fa-clock"></i> ${w.timings}</li>
+              <li><i class="fa-solid fa-location-dot"></i> ${w.locationText}</li>
+              <li><i class="fa-solid fa-map-location-dot"></i> <a href="${w.mapsLink}" target="_blank" rel="noopener" class="maps-link-btn">📍 View Location</a></li>
+            </ul>
+            <div class="card-footer-actions">${actionBtn}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // User Dashboard
+    function renderDashboard() {
+      const container = document.getElementById('dashboard-content');
+      if (!appState.currentUser) {
+        container.innerHTML = `<div style="text-align: center; padding: 40px;"><p>Please sign in to view dashboard.</p><button class="btn btn-primary" onclick="openAuthModal()" style="margin-top:10px;">Sign In</button></div>`;
+        return;
+      }
+
+      if (appState.currentUser.role === 'admin') {
+        container.innerHTML = `<div style="text-align:center; padding: 30px;"><h3>You are signed in as Administrator.</h3><p style="margin-top:8px;">Access the admin panel tab to approve users and view activity.</p></div>`;
+        return;
+      }
+
+      const u = appState.currentUser.data;
+      const isWorker = appState.currentUser.role === 'worker';
+
+      let bannerClass = 'badge-pending';
+      let bannerText = '⏳ Account Under Admin Review — visible once approved.';
+      if (u.status === 'approved') {
+        bannerClass = 'badge-approved';
+        bannerText = isWorker ? '✅ Profile Approved & Visible in Directory' : '✅ Verified Employer — You can post work.';
+      } else if (u.status === 'rejected') {
+        bannerClass = 'badge-rejected';
+        bannerText = '❌ Profile Rejected by Admin.';
+      }
+
+      let activityHtml = '';
+      if (isWorker) {
+        const applied = appState.jobs.filter(j => j.applicants.some(a => a.workerId === u.id));
+        activityHtml = `
+          <div style="background:var(--surface); padding:20px; border-radius:var(--radius-lg); border:1px solid var(--border);">
+            <h3>Your Job Bookings (${applied.length})</h3>
+            <div style="margin-top:14px; display:flex; flex-direction:column; gap:10px;">
+              ${applied.length === 0 ? '<p class="text-muted">No applications submitted yet.</p>' : applied.map(j => `
+                <div style="padding:10px; border:1px solid var(--border); border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center;">
+                  <div><strong>${j.title}</strong><br><small class="text-muted">${j.date} | ₹${j.perHeadAmount}</small></div>
+                  <span class="card-badge badge-approved">Applied</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else {
+        const myJobs = appState.jobs.filter(j => j.employerId === u.id);
+        activityHtml = `
+          <div style="background:var(--surface); padding:20px; border-radius:var(--radius-lg); border:1px solid var(--border);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <h3>Your Posted Events (${myJobs.length})</h3>
+              <button class="btn btn-primary btn-sm" onclick="handlePostWorkClick()"><i class="fa-solid fa-plus"></i> Post Event</button>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              ${myJobs.length === 0 ? '<p class="text-muted">No events posted yet.</p>' : myJobs.map(j => `
+                <div style="padding:12px; border:1px solid var(--border); border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                  <div>
+                    <strong>${j.title}</strong><br>
+                    <small class="text-muted">${j.date} | Needed: ${j.boysNeeded} | Rate: ₹${j.perHeadAmount}</small>
+                  </div>
+                  <div style="display:flex; gap:6px;">
+                    <button class="btn btn-outline btn-sm" onclick="viewJobApplicants('${j.id}')"><i class="fa-solid fa-users"></i> Applicants (${j.applicants.length})</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteJobPost('${j.id}')"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = `
+        <div class="dashboard-grid">
+          <div class="dash-profile-card">
+            <img src="${u.photo}" alt="${u.name}" class="dash-avatar" />
+            <h3>${u.name}</h3>
+            <p class="text-muted">${isWorker ? 'Catering Crew Profile' : 'Event Organizer / Employer'}</p>
+            <div class="dash-status-banner ${bannerClass}">${bannerText}</div>
+            <table class="dash-details-table">
+              <tr><td>Phone</td><td>${u.phone}</td></tr>
+              <tr><td>Age</td><td>${u.age} yrs</td></tr>
+              <tr><td>Location</td><td>${u.locationText}</td></tr>
+              ${isWorker ? `<tr><td>Rate</td><td>${u.rate}</td></tr><tr><td>Timings</td><td>${u.timings}</td></tr>` : ''}
+              <tr><td>Maps Link</td><td><a href="${u.mapsLink}" target="_blank" class="maps-link-btn">📍 View</a></td></tr>
+            </table>
+            <div class="dash-actions-panel">
+              ${isWorker ? `<button class="btn btn-outline full-width" onclick="openWorkerEditModal()"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>` : ''}
+              <button class="btn btn-danger full-width" onclick="openDeleteAccountModal()"><i class="fa-solid fa-trash"></i> Delete My Account</button>
+            </div>
+          </div>
+          <div>${activityHtml}</div>
+        </div>
+      `;
+    }
+
+    // Work Application Flow
+    function applyForJob(jobId) {
+      if (!appState.currentUser || appState.currentUser.role !== 'worker') {
+        showToast('Only workers can book slots.', 'error');
+        return;
+      }
+      const worker = appState.currentUser.data;
+      if (worker.status !== 'approved') {
+        showToast('Your profile must be approved by admin before applying.', 'error');
+        return;
+      }
+      const job = appState.jobs.find(j => j.id === jobId);
+      if (!job) return;
+
+      if (job.applicants.some(a => a.workerId === worker.id)) {
+        showToast('You have already applied for this shift.', 'info');
+        return;
+      }
+
+      job.applicants.push({
+        workerId: worker.id,
+        status: 'accepted',
+        appliedAt: new Date().toLocaleTimeString()
+      });
+
+      if (!worker.appliedJobs.includes(jobId)) {
+        worker.appliedJobs.push(jobId);
+      }
+
+      const acceptedCount = job.applicants.filter(a => a.status === 'accepted').length;
+      if (acceptedCount >= job.boysNeeded) {
+        job.status = 'filled';
+      }
+
+      logPlatformActivity('Slot Booked', `${worker.name} (${worker.id})`, `Applied for slot: ${job.title}`);
+      saveState();
+      showToast('Booking submitted successfully!', 'success');
+      renderJobs();
+    }
+
+    // Employer Work Post Flow
+    function handlePostWorkClick() {
+      if (!appState.currentUser) {
+        openAuthModal();
+        return;
+      }
+      if (appState.currentUser.role !== 'employer') {
+        showToast('Only registered Employers can post work.', 'error');
+        return;
+      }
+      if (appState.currentUser.data.status !== 'approved') {
+        showToast('Your Employer account is pending admin approval.', 'error');
+        return;
+      }
+      document.getElementById('post-form-name').value = appState.currentUser.data.name;
+      document.getElementById('work-post-modal').classList.add('show');
+    }
+
+    function closeWorkPostModal() {
+      document.getElementById('work-post-modal').classList.remove('show');
+    }
+
+    function handleCreateWorkPostSubmit(e) {
+      e.preventDefault();
+      const employer = appState.currentUser.data;
+      const mapsLink = document.getElementById('post-form-maps-link').value;
+      const coords = parseCoordinatesFromMapsUrl(mapsLink);
+
+      const newJob = {
+        id: 'job_' + Date.now(),
+        employerId: employer.id,
+        employerName: document.getElementById('post-form-name').value,
+        title: document.getElementById('post-form-title').value,
+        boysNeeded: parseInt(document.getElementById('post-form-boys').value, 10),
+        date: document.getElementById('post-form-date').value,
+        time: document.getElementById('post-form-time').value,
+        perHeadAmount: parseFloat(document.getElementById('post-form-amount').value),
+        venueName: document.getElementById('post-form-venue').value,
+        mapsLink: mapsLink,
+        coords: coords,
+        status: 'open',
+        applicants: []
+      };
+
+      appState.jobs.unshift(newJob);
+      logPlatformActivity('Work Post Created', `${employer.name} (${employer.id})`, `Created: ${newJob.title}`);
+      saveState();
+      closeWorkPostModal();
+      document.getElementById('work-post-form').reset();
+      showToast('Work post published!', 'success');
+      navigateTo('jobs-view');
+    }
+
+    function deleteJobPost(jobId) {
+      if (!confirm('Are you sure you want to delete this work post?')) return;
+      appState.jobs = appState.jobs.filter(j => j.id !== jobId);
+      saveState();
+      showToast('Work post removed.', 'info');
+      renderDashboard();
+    }
+
+    function viewJobApplicants(jobId) {
+      const job = appState.jobs.find(j => j.id === jobId);
+      if (!job) return;
+      document.getElementById('applicants-modal-title').textContent = `Applicants for: ${job.title}`;
+      const container = document.getElementById('applicants-list-container');
+
+      if (job.applicants.length === 0) {
+        container.innerHTML = '<p class="text-muted" style="text-align:center; padding:20px;">No workers have applied yet.</p>';
+      } else {
+        container.innerHTML = job.applicants.map(app => {
+          const worker = appState.workers.find(w => w.id === app.workerId) || { name: 'Deleted Worker', photo: '', phone: '-' };
+          return `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid var(--border);">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <img src="${worker.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" />
+                <div><strong>${worker.name}</strong><br><small class="text-muted">${worker.phone} | Rate: ${worker.rate}</small></div>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-primary btn-sm" onclick="closeApplicantsModal(); startChatWithWorker('${worker.id}')"><i class="fa-solid fa-comments"></i> Chat</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      document.getElementById('applicants-modal').classList.add('show');
+    }
+
+    function closeApplicantsModal() {
+      document.getElementById('applicants-modal').classList.remove('show');
+    }
+
+    // In-App Chat
+    function startChatWithWorker(workerId) {
+      if (!appState.currentUser) {
+        openAuthModal();
+        return;
+      }
+      const myId = appState.currentUser.data.id;
+      let chat = appState.chats.find(c => c.participants.includes(myId) && c.participants.includes(workerId));
+
+      if (!chat) {
+        chat = {
+          id: `chat_${Date.now()}`,
+          participants: [myId, workerId],
+          messages: []
+        };
+        appState.chats.unshift(chat);
+        saveState();
+      }
+
+      activeChatThreadId = chat.id;
+      navigateTo('chat-view');
+      renderChatList();
+      openChatWindow(chat.id);
+    }
+
+    function renderChatList() {
+      const container = document.getElementById('chat-threads-container');
+      if (!appState.currentUser) return;
+
+      const myId = appState.currentUser.data.id;
+      const userChats = appState.chats.filter(c => c.participants.includes(myId));
+
+      if (userChats.length === 0) {
+        container.innerHTML = '<div style="padding:15px; color:var(--text-muted); font-size:0.85rem;">No conversations yet.</div>';
+        return;
+      }
+
+      container.innerHTML = userChats.map(c => {
+        const partnerId = c.participants.find(p => p !== myId);
+        let partner = appState.workers.find(w => w.id === partnerId) || appState.employers.find(e => e.id === partnerId) || { name: 'User', photo: '' };
+        const lastMsg = c.messages.length > 0 ? c.messages[c.messages.length - 1].text : 'No messages yet';
+
+        return `
+          <div class="chat-thread-item ${activeChatThreadId === c.id ? 'active' : ''}" onclick="openChatWindow('${c.id}')">
+            <img src="${partner.photo}" class="chat-thread-avatar" />
+            <div class="chat-thread-info">
+              <div class="chat-thread-name"><span>${partner.name}</span></div>
+              <div class="chat-thread-last">${lastMsg}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openChatWindow(chatId) {
+      activeChatThreadId = chatId;
+      const chat = appState.chats.find(c => c.id === chatId);
+      if (!chat || !appState.currentUser) return;
+
+      const myId = appState.currentUser.data.id;
+      const partnerId = chat.participants.find(p => p !== myId);
+      const partner = appState.workers.find(w => w.id === partnerId) || appState.employers.find(e => e.id === partnerId) || { name: 'User', photo: '', role: 'User' };
+
+      document.getElementById('chat-placeholder').style.display = 'none';
+      document.getElementById('chat-active-box').style.display = 'flex';
+      document.getElementById('chat-partner-name').textContent = partner.name;
+      document.getElementById('chat-partner-avatar').src = partner.photo;
+      document.getElementById('chat-partner-role').textContent = partner.rate ? 'Worker' : 'Employer';
+
+      const msgsContainer = document.getElementById('chat-messages-container');
+      msgsContainer.innerHTML = chat.messages.map(m => `
+        <div class="message-bubble ${m.senderId === myId ? 'msg-sent' : 'msg-received'}">
+          ${m.text}
+          <span class="msg-timestamp">${m.timestamp}</span>
+        </div>
+      `).join('');
+
+      msgsContainer.scrollTop = msgsContainer.scrollHeight;
+      renderChatList();
+    }
+
+    function handleSendMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('chat-message-input');
+      const text = input.value.trim();
+      if (!text || !activeChatThreadId || !appState.currentUser) return;
+
+      const chat = appState.chats.find(c => c.id === activeChatThreadId);
+      if (!chat) return;
+
+      const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      chat.messages.push({
+        senderId: appState.currentUser.data.id,
+        text: text,
+        timestamp: timeString
+      });
+
+      saveState();
+      input.value = '';
+      openChatWindow(activeChatThreadId);
+    }
+
+    // Admin Panel Controller
+    function switchAdminTab(tabName) {
+      document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.remove('active'));
+
+      if (tabName === 'workers-tab') {
+        document.querySelectorAll('.admin-nav-btn')[0].classList.add('active');
+        document.getElementById('admin-workers-tab').classList.add('active');
+      } else if (tabName === 'employers-tab') {
+        document.querySelectorAll('.admin-nav-btn')[1].classList.add('active');
+        document.getElementById('admin-employers-tab').classList.add('active');
+      } else {
+        document.querySelectorAll('.admin-nav-btn')[2].classList.add('active');
+        document.getElementById('admin-logs-tab').classList.add('active');
+      }
+    }
+
+    function renderAdminTables() {
+      // Workers Table
+      const wBody = document.getElementById('admin-workers-table-body');
+      wBody.innerHTML = appState.workers.map(w => `
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <img src="${w.photo}" style="width:36px; height:36px; border-radius:50%; object-fit:cover;" />
+              <strong>${w.name}</strong>
+            </div>
+          </td>
+          <td>${w.phone}<br><small class="text-muted">${w.age} yrs</small></td>
+          <td>${w.locationText}<br><a href="${w.mapsLink}" target="_blank" class="maps-link-btn">📍 Maps</a></td>
+          <td>${w.rate}<br><small class="text-muted">${w.timings}</small></td>
+          <td><span class="card-badge badge-${w.status}">${w.status}</span></td>
+          <td>
+            <div class="admin-action-btn-group">
+              <button class="btn btn-success btn-sm" title="Approve" onclick="adminUpdateWorkerStatus('${w.id}', 'approved')"><i class="fa-solid fa-check"></i></button>
+              <button class="btn btn-danger btn-sm" title="Reject" onclick="adminUpdateWorkerStatus('${w.id}', 'rejected')"><i class="fa-solid fa-xmark"></i></button>
+              <button class="btn btn-outline btn-sm" title="Hide/Unhide" onclick="adminToggleWorkerHide('${w.id}')"><i class="fa-solid fa-eye-slash"></i></button>
+              <button class="btn btn-danger btn-sm" title="Delete" onclick="adminDeleteUser('worker', '${w.id}')"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      // Employers Table
+      const eBody = document.getElementById('admin-employers-table-body');
+      eBody.innerHTML = appState.employers.map(e => `
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <img src="${e.photo}" style="width:36px; height:36px; border-radius:50%; object-fit:cover;" />
+              <strong>${e.name}</strong>
+            </div>
+          </td>
+          <td>${e.phone}<br><small class="text-muted">${e.age} yrs</small></td>
+          <td>${e.locationText}<br><a href="${e.mapsLink}" target="_blank" class="maps-link-btn">📍 Maps</a></td>
+          <td><span class="card-badge badge-${e.status}">${e.status}</span></td>
+          <td>
+            <div class="admin-action-btn-group">
+              <button class="btn btn-success btn-sm" title="Approve" onclick="adminUpdateEmployerStatus('${e.id}', 'approved')"><i class="fa-solid fa-check"></i></button>
+              <button class="btn btn-danger btn-sm" title="Reject" onclick="adminUpdateEmployerStatus('${e.id}', 'rejected')"><i class="fa-solid fa-xmark"></i></button>
+              <button class="btn btn-outline btn-sm" title="Hide/Unhide" onclick="adminToggleEmployerHide('${e.id}')"><i class="fa-solid fa-eye-slash"></i></button>
+              <button class="btn btn-danger btn-sm" title="Delete" onclick="adminDeleteUser('employer', '${e.id}')"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      // Logs Table
+      const lBody = document.getElementById('admin-logs-table-body');
+      lBody.innerHTML = appState.auditLogs.map(l => `
+        <tr>
+          <td><small>${l.timestamp}</small></td>
+          <td><strong>${l.eventType}</strong></td>
+          <td>${l.userInvolved}</td>
+          <td>${l.details}</td>
+        </tr>
+      `).join('');
+    }
+
+    function adminUpdateWorkerStatus(workerId, status) {
+      const w = appState.workers.find(x => x.id === workerId);
+      if (w) {
+        w.status = status;
+        logPlatformActivity(`Worker ${status}`, `${w.name} (${w.id})`, `Admin marked worker as ${status}.`);
+        saveState();
+        renderAdminTables();
+        showToast(`Worker status updated to ${status}.`, 'info');
+      }
+    }
+
+    function adminToggleWorkerHide(workerId) {
+      const w = appState.workers.find(x => x.id === workerId);
+      if (w) {
+        w.status = w.status === 'hidden' ? 'approved' : 'hidden';
+        logPlatformActivity('Worker Visibility Toggled', `${w.name} (${w.id})`, `Status changed to ${w.status}.`);
+        saveState();
+        renderAdminTables();
+      }
+    }
+
+    function adminUpdateEmployerStatus(empId, status) {
+      const e = appState.employers.find(x => x.id === empId);
+      if (e) {
+        e.status = status;
+        logPlatformActivity(`Employer ${status}`, `${e.name} (${e.id})`, `Admin marked employer as ${status}.`);
+        saveState();
+        renderAdminTables();
+        showToast(`Employer status updated to ${status}.`, 'info');
+      }
+    }
+
+    function adminToggleEmployerHide(empId) {
+      const e = appState.employers.find(x => x.id === empId);
+      if (e) {
+        e.status = e.status === 'hidden' ? 'approved' : 'hidden';
+        logPlatformActivity('Employer Visibility Toggled', `${e.name} (${e.id})`, `Status changed to ${e.status}.`);
+        saveState();
+        renderAdminTables();
+      }
+    }
+
+    // Fixed Admin User Deletion with Full Cascade Cleanup (including Chats & Bookings)
+    function adminDeleteUser(type, id) {
+      if (!confirm(`Are you sure you want to permanently delete this ${type}?`)) return;
+
+      if (type === 'worker') {
+        appState.workers = appState.workers.filter(w => w.id !== id);
+        appState.jobs.forEach(j => {
+          j.applicants = j.applicants.filter(a => a.workerId !== id);
+        });
+      } else if (type === 'employer') {
+        appState.employers = appState.employers.filter(e => e.id !== id);
+        appState.jobs = appState.jobs.filter(j => j.employerId !== id);
+      }
+
+      // Cascade cleanup: remove any chat threads the deleted user was part of
+      appState.chats = appState.chats.filter(c => !c.participants.includes(id));
+
+      logPlatformActivity('Admin Deleted User', `${type}: ${id}`, `Admin wiped ${type}, associated posts/bookings, and chat threads.`);
+      saveState();
+      renderAdminTables();
+      showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} and associated data deleted.`, 'info');
+    }
+
+    // Self Account Deletion (Cascade Cleanup)
+    function openDeleteAccountModal() {
+      document.getElementById('delete-confirm-input').value = '';
+      document.getElementById('delete-account-modal').classList.add('show');
+    }
+
+    function closeDeleteAccountModal() {
+      document.getElementById('delete-account-modal').classList.remove('show');
+    }
+
+    function confirmSelfAccountDeletion() {
+      const val = document.getElementById('delete-confirm-input').value.trim();
+      if (val !== 'DELETE') {
+        showToast('Please type DELETE exactly to confirm.', 'error');
+        return;
+      }
+
+      const u = appState.currentUser;
+      if (!u) return;
+
+      if (u.role === 'worker') {
+        appState.workers = appState.workers.filter(w => w.id !== u.data.id);
+        appState.jobs.forEach(j => {
+          j.applicants = j.applicants.filter(a => a.workerId !== u.data.id);
+        });
+      } else if (u.role === 'employer') {
+        appState.employers = appState.employers.filter(e => e.id !== u.data.id);
+        appState.jobs = appState.jobs.filter(j => j.employerId !== u.data.id);
+      }
+
+      appState.chats = appState.chats.filter(c => !c.participants.includes(u.data.id));
+      logPlatformActivity('Account Self-Deleted', `${u.data.name} (${u.data.id})`, `User permanently deleted their own account.`);
+
+      appState.currentUser = null;
+      saveState();
+      closeDeleteAccountModal();
+      updateAuthUI();
+      showToast('Your account and data have been permanently deleted.', 'info');
+      navigateTo('jobs-view');
+    }
+
+    // Auth & Role Setup Simulation
+    function openAuthModal() {
+      document.getElementById('auth-modal').classList.add('show');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.remove('show');
+    }
+
+    function mockSignIn(presetId) {
+      if (presetId === 'admin_user') {
+        appState.currentUser = { role: 'admin', data: { name: 'Admin Officer', id: 'admin_1' } };
+      } else if (presetId.startsWith('worker')) {
+        const w = appState.workers.find(x => x.id === presetId);
+        appState.currentUser = { role: 'worker', data: w };
+      } else {
+        const e = appState.employers.find(x => x.id === presetId);
+        appState.currentUser = { role: 'employer', data: e };
+      }
+
+      closeAuthModal();
+      updateAuthUI();
+      showToast(`Signed in as ${appState.currentUser.data.name}`, 'success');
+      navigateTo('dashboard-view');
+    }
+
+    function initiateFirstTimeRegistration() {
+      closeAuthModal();
+      document.getElementById('role-selection-modal').classList.add('show');
+    }
+
+    function selectInitialRole(role) {
+      document.getElementById('role-selection-modal').classList.remove('show');
+      if (role === 'worker') {
+        currentWorkerEditId = null;
+        document.getElementById('worker-reg-form').reset();
+        document.getElementById('worker-reg-modal-title').textContent = 'Worker Profile Registration';
+        document.getElementById('worker-reg-modal').classList.add('show');
+      } else {
+        document.getElementById('employer-reg-form').reset();
+        document.getElementById('employer-reg-modal').classList.add('show');
+      }
+    }
+
+    function closeWorkerRegModal() {
+      document.getElementById('worker-reg-modal').classList.remove('show');
+    }
+
+    function closeEmployerRegModal() {
+      document.getElementById('employer-reg-modal').classList.remove('show');
+    }
+
+    // Worker Profile Submission & Edit (Resets status to 'pending' for re-review on edit)
+    function handleWorkerRegistrationSubmit(e) {
+      e.preventDefault();
+      const mapsLink = document.getElementById('worker-form-maps-link').value;
+      const coords = parseCoordinatesFromMapsUrl(mapsLink);
+
+      if (currentWorkerEditId) {
+        // Edit existing worker — reset status to 'pending' for re-verification
+        const worker = appState.workers.find(w => w.id === currentWorkerEditId);
+        if (worker) {
+          worker.name = document.getElementById('worker-form-name').value;
+          worker.age = parseInt(document.getElementById('worker-form-age').value, 10);
+          worker.phone = document.getElementById('worker-form-phone').value;
+          worker.photo = document.getElementById('worker-form-photo').value;
+          worker.rate = document.getElementById('worker-form-rate').value;
+          worker.locationText = document.getElementById('worker-form-location-text').value;
+          worker.timings = document.getElementById('worker-form-timings').value;
+          worker.mapsLink = mapsLink;
+          worker.coords = coords;
+          worker.status = 'pending'; // Reset to pending for admin re-verification
+
+          appState.currentUser.data = worker;
+          logPlatformActivity('Worker Profile Edited', `${worker.name} (${worker.id})`, 'Updated profile fields. Resubmitted for admin review.');
+          showToast('Profile updated! Changes submitted for admin re-review.', 'info');
+        }
+      } else {
+        // Create new worker
+        const newWorker = {
+          id: 'worker_' + Date.now(),
+          name: document.getElementById('worker-form-name').value,
+          age: parseInt(document.getElementById('worker-form-age').value, 10),
+          phone: document.getElementById('worker-form-phone').value,
+          photo: document.getElementById('worker-form-photo').value,
+          rate: document.getElementById('worker-form-rate').value,
+          locationText: document.getElementById('worker-form-location-text').value,
+          timings: document.getElementById('worker-form-timings').value,
+          mapsLink: mapsLink,
+          coords: coords,
+          status: 'pending',
+          appliedJobs: []
+        };
+
+        appState.workers.push(newWorker);
+        appState.currentUser = { role: 'worker', data: newWorker };
+        logPlatformActivity('Worker Registered', `${newWorker.name} (${newWorker.id})`, 'Submitted new registration for review.');
+        showToast('Registration submitted for admin approval!', 'success');
+      }
+
+      saveState();
+      closeWorkerRegModal();
+      updateAuthUI();
+      navigateTo('dashboard-view');
+    }
+
+    function openWorkerEditModal() {
+      if (!appState.currentUser || appState.currentUser.role !== 'worker') return;
+      const w = appState.currentUser.data;
+      currentWorkerEditId = w.id;
+
+      document.getElementById('worker-reg-modal-title').textContent = 'Edit Worker Profile (Requires Re-Review)';
+      document.getElementById('worker-form-name').value = w.name;
+      document.getElementById('worker-form-age').value = w.age;
+      document.getElementById('worker-form-phone').value = w.phone;
+      document.getElementById('worker-form-photo').value = w.photo;
+      document.getElementById('worker-form-rate').value = w.rate;
+      document.getElementById('worker-form-location-text').value = w.locationText;
+      document.getElementById('worker-form-timings').value = w.timings;
+      document.getElementById('worker-form-maps-link').value = w.mapsLink;
+
+      document.getElementById('worker-reg-modal').classList.add('show');
+    }
+
+    function handleEmployerRegistrationSubmit(e) {
+      e.preventDefault();
+      const mapsLink = document.getElementById('emp-form-maps-link').value;
+      const coords = parseCoordinatesFromMapsUrl(mapsLink);
+
+      const newEmployer = {
+        id: 'emp_' + Date.now(),
+        name: document.getElementById('emp-form-name').value,
+        age: parseInt(document.getElementById('emp-form-age').value, 10),
+        phone: document.getElementById('emp-form-phone').value,
+        photo: document.getElementById('emp-form-photo').value,
+        locationText: document.getElementById('emp-form-location-text').value,
+        mapsLink: mapsLink,
+        coords: coords,
+        status: 'pending'
+      };
+
+      appState.employers.push(newEmployer);
+      appState.currentUser = { role: 'employer', data: newEmployer };
+      logPlatformActivity('Employer Registered', `${newEmployer.name} (${newEmployer.id})`, 'Submitted registration for approval.');
+      saveState();
+
+      closeEmployerRegModal();
+      updateAuthUI();
+      showToast('Registration submitted for admin review.', 'success');
+      navigateTo('dashboard-view');
+    }
+
+    function updateAuthUI() {
+      const label = document.getElementById('nav-user-label');
+      const dashTab = document.getElementById('nav-dashboard-tab');
+      const chatTab = document.getElementById('nav-chat-tab');
+
+      if (appState.currentUser) {
+        label.textContent = `${appState.currentUser.data.name.split(' ')[0]} (${appState.currentUser.role})`;
+        dashTab.style.display = 'inline-flex';
+        chatTab.style.display = 'inline-flex';
+      } else {
+        label.textContent = 'Sign In';
+        dashTab.style.display = 'none';
+        chatTab.style.display = 'none';
+      }
+    }
+
+    // Service Worker Registration via inline Blob (Full PWA shell caching & Web Push listener structure)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swCode = `
+          const CACHE_NAME = 'catermatch-single-cache-v1';
+          self.addEventListener('install', (e) => self.skipWaiting());
+          self.addEventListener('activate', (e) => self.clients.claim());
+          self.addEventListener('push', (event) => {
+            let data = { title: 'CaterMatch Alert', body: 'New catering event posted near you!' };
+            if (event.data) {
+              try { data = event.data.json(); } catch(e) { data.body = event.data.text(); }
+            }
+            event.waitUntil(
+              self.registration.showNotification(data.title, {
+                body: data.body,
+                icon: 'https://cdn-icons-png.flaticon.com/512/3448/3448609.png'
+              })
+            );
+          });
+          self.addEventListener('notificationclick', (event) => {
+            event.notification.close();
+            event.waitUntil(
+              clients.matchAll({ type: 'window' }).then((clientList) => {
+                for (const client of clientList) {
+                  if ('focus' in client) return client.focus();
+                }
+                if (clients.openWindow) return clients.openWindow('./');
+              })
+            );
+          });
+        `;
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(blob))
+          .catch(err => console.log('SW registration skipped or unsupported in environment:', err));
+      });
+    }
+
+    // PWA Install Prompt Listener
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById('pwa-install-btn');
+      if (installBtn) {
+        installBtn.style.display = 'inline-flex';
+        installBtn.addEventListener('click', () => {
+          deferredPrompt.prompt();
+          deferredPrompt = null;
+          installBtn.style.display = 'none';
+        });
+      }
+    });
+
+    // Initialize App
+    document.addEventListener('DOMContentLoaded', () => {
+      updateAuthUI();
+      renderJobs();
+    });
+  </script>
+</body>
+</html>
