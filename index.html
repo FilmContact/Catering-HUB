@@ -1,3 +1,38 @@
+Here is the complete, full index.html codebase with the refined 24-hour work
+post edit and cancellation policy, worker unlocking and notification mechanisms,
+applicant warning dialogs, and updated publishing confirmation rules.
+
+Summary of Changes:
+
+1.  24-Hour Edit & Cancellation Policy for Employers:
+      - Evaluates the exact time remaining until event start (job.date +
+        job.time).
+      - If > 24 hours remain: Employer dashboard displays active "Edit" and
+        "Cancel Post" 3D buttons.
+      - If ≤ 24 hours remain (or event has passed): Actions are replaced with a
+        locked badge: <span class="card-badge badge-slots-none"><i
+        class="fa-solid fa-lock"></i> Locked (&lt; 24h)</span>.
+2.  Updated Publishing Confirmation Warning:
+      - The pre-publish review modal explicitly communicates the updated policy:
+        "You can edit or cancel this post any time up until 24 hours before the
+        event starts. After that, it will be locked and cannot be changed."
+3.  Worker Unlocking & Notifications on Post Cancellation:
+      - Cancelling a post with booked workers prompts a confirmation dialog
+        stating how many workers will be affected.
+      - Upon confirmation, all booked workers (and their friends) have the job
+        removed from their records, instantly releasing their "one active job"
+        lock.
+      - Stores worker notifications and automatically alerts affected workers
+        with a clear banner/toast: "The job '[Job Title]' you booked was
+        cancelled by the employer. You're free to book other available work."
+      - Logs the cancellation in the Activity/Audit Log.
+4.  Editing Posts with Existing Booked Workers:
+      - Pre-fills the post form with current event details.
+      - If workers have already booked, warns the employer before saving that
+        changes may impact existing crew bookings.
+      - Preserves all accepted applicants and group bookings, and logs "Work
+        Post Edited" in the Audit Log.
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -790,7 +825,7 @@
       transform: scale(1.15);
     }
 
-    /* Permanent Confirmation Summary */
+    /* Confirmation Summary */
     .confirm-summary-box {
       background: #f8fafc;
       border: 1.5px solid var(--border);
@@ -804,11 +839,11 @@
     .confirm-summary-box td:first-child { color: var(--text-muted); width: 40%; font-weight: 600; }
 
     .permanent-warning-callout {
-      background: #fff1f2;
-      border: 2px solid #f43f5e;
+      background: #fffbeb;
+      border: 2px solid #f59e0b;
       border-radius: var(--radius-md);
       padding: 16px;
-      color: #9f1239;
+      color: #92400e;
       font-size: 0.88rem;
       margin-top: 14px;
       display: flex;
@@ -816,7 +851,7 @@
       align-items: flex-start;
     }
 
-    .permanent-warning-callout i { font-size: 1.4rem; color: #e11d48; margin-top: 2px; }
+    .permanent-warning-callout i { font-size: 1.4rem; color: #d97706; margin-top: 2px; }
 
     /* File Upload Zone */
     .file-upload-box {
@@ -1891,11 +1926,11 @@
       </div>
     </div>
 
-    <!-- 6. Create Work Post Modal (Form Step) -->
+    <!-- 6. Create / Edit Work Post Modal (Form Step) -->
     <div id="work-post-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'work-post-modal')">
       <div class="modal-card form-modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
-          <h3>Post New Catering Work Slot</h3>
+          <h3 id="work-post-modal-title">Post New Catering Work Slot</h3>
           <button class="close-btn" onclick="closeWorkPostModal()">&times;</button>
         </div>
         <form id="work-post-form" onsubmit="handleOpenWorkPostConfirm(event)">
@@ -1935,13 +1970,13 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline" onclick="closeWorkPostModal()">Cancel</button>
-            <button type="submit" class="btn btn-primary">Review & Continue</button>
+            <button type="submit" class="btn btn-primary" id="work-post-submit-btn">Review & Continue</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- 7. Work Post Mandatory Permanent Confirmation Screen -->
+    <!-- 7. Work Post Confirmation Screen (24h Edit/Cancel Policy) -->
     <div id="work-post-confirm-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'work-post-confirm-modal')">
       <div class="modal-card form-modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -1956,11 +1991,11 @@
           <div class="confirm-summary-box" id="confirm-post-summary-content"></div>
 
           <div class="permanent-warning-callout">
-            <i class="fa-solid fa-triangle-exclamation"></i>
+            <i class="fa-solid fa-clock-rotate-left"></i>
             <div>
-              <strong>Strict Platform Rule:</strong>
+              <strong>24-Hour Edit & Cancellation Policy:</strong>
               <p style="margin-top:2px;">
-                Once published, this work post <strong>CANNOT be edited or cancelled</strong> under any circumstance. Workers book slots relying on your post. Please confirm all details are 100% correct.
+                You can edit or cancel this post any time up until <strong>24 hours before the event starts</strong>. After that, it will be locked and cannot be changed.
               </p>
             </div>
           </div>
@@ -1970,7 +2005,7 @@
             <i class="fa-solid fa-arrow-left"></i> Edit Details
           </button>
           <button type="button" class="btn btn-success" onclick="executeFinalPublishWorkPost()">
-            <i class="fa-solid fa-check-circle"></i> Yes, Publish Permanently
+            <i class="fa-solid fa-check-circle"></i> Yes, Publish Post
           </button>
         </div>
       </div>
@@ -2083,8 +2118,10 @@
       pendingAuthTargetRole: null,
       activeBookingJobId: null,
       pendingWorkPostDraft: null,
+      currentJobEditId: null,
       activeRatingContext: null,
       activeReportTarget: null,
+      workerNotifications: {}, // Map of workerId -> array of messages
 
       workers: [
         {
@@ -2241,7 +2278,7 @@
     let bookingFriendList = [];
 
     function loadState() {
-      const saved = localStorage.getItem('catermatch_db_v6');
+      const saved = localStorage.getItem('catermatch_db_v7');
       if (saved) {
         try { return JSON.parse(saved); } catch (e) { console.error(e); }
       }
@@ -2249,7 +2286,7 @@
     }
 
     function saveState() {
-      localStorage.setItem('catermatch_db_v6', JSON.stringify(appState));
+      localStorage.setItem('catermatch_db_v7', JSON.stringify(appState));
     }
 
     function logPlatformActivity(eventType, userInvolved, details) {
@@ -2271,9 +2308,10 @@
       toast.className = `toast ${type}`;
       toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${message}</span>`;
       container.appendChild(toast);
-      setTimeout(() => toast.remove(), 3500);
+      setTimeout(() => toast.remove(), 4000);
     }
 
+    // Modal Manager with Body Scroll Locking
     function showModal(id) {
       const el = document.getElementById(id);
       if (el) {
@@ -2296,6 +2334,7 @@
       }
     }
 
+    // Geolocation & Math
     function parseCoordinatesFromMapsUrl(url) {
       if (!url || typeof url !== 'string') return { lat: 19.0760, lng: 72.8777 };
       const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
@@ -2353,8 +2392,9 @@
       );
     }
 
-    function evaluateCancellationEligibility(job) {
-      if (!job || !job.date) return { canCancel: true, hoursRemaining: 999 };
+    // Helper: Calculates hours remaining until event start
+    function getJobHoursRemaining(job) {
+      if (!job || !job.date) return 999;
       try {
         let startTimeStr = '00:00';
         if (job.time) {
@@ -2376,15 +2416,28 @@
         const now = new Date();
 
         const diffMs = eventStartDateTime.getTime() - now.getTime();
-        const hoursRemaining = diffMs / (1000 * 60 * 60);
-
-        return {
-          canCancel: hoursRemaining >= 4,
-          hoursRemaining: hoursRemaining.toFixed(1)
-        };
+        return diffMs / (1000 * 60 * 60);
       } catch (err) {
-        return { canCancel: true, hoursRemaining: 999 };
+        return 999;
       }
+    }
+
+    // Worker 4-Hour Cancellation Eligibility
+    function evaluateCancellationEligibility(job) {
+      const hoursRemaining = getJobHoursRemaining(job);
+      return {
+        canCancel: hoursRemaining >= 4,
+        hoursRemaining: hoursRemaining.toFixed(1)
+      };
+    }
+
+    // Employer 24-Hour Edit/Cancel Eligibility
+    function evaluateEmployerPostModificationEligibility(job) {
+      const hoursRemaining = getJobHoursRemaining(job);
+      return {
+        canModify: hoursRemaining > 24,
+        hoursRemaining: hoursRemaining.toFixed(1)
+      };
     }
 
     function navigateTo(viewId) {
@@ -2421,8 +2474,7 @@
       if (appState.currentUser) {
         if (appState.currentUser.role === 'employer') {
           if (appState.currentUser.data.status === 'approved') {
-            document.getElementById('post-form-name').value = appState.currentUser.data.name;
-            showModal('work-post-modal');
+            handlePostWorkClick();
           } else {
             showToast('Your Employer account is pending admin approval.', 'error');
             navigateTo('dashboard-view');
@@ -2436,6 +2488,7 @@
       showModal('auth-modal');
     }
 
+    // ================= 1. WORK POST LISTINGS =================
     function renderJobs() {
       const container = document.getElementById('jobs-list');
       const search = (document.getElementById('job-search-input')?.value || '').toLowerCase();
@@ -2445,6 +2498,17 @@
       const isWorker = appState.currentUser && appState.currentUser.role === 'worker';
       const activeBookedJob = isWorker ? getWorkerActiveBooking(appState.currentUser.data.id) : null;
 
+      // Check for employer cancellation notifications targeting current worker
+      if (isWorker && appState.workerNotifications && appState.workerNotifications[appState.currentUser.data.id]) {
+        const notes = appState.workerNotifications[appState.currentUser.data.id];
+        if (notes.length > 0) {
+          notes.forEach(msg => showToast(msg, 'warning'));
+          appState.workerNotifications[appState.currentUser.data.id] = [];
+          saveState();
+        }
+      }
+
+      // Active shift lock check
       if (isWorker && activeBookedJob) {
         if (noticeContainer) {
           noticeContainer.innerHTML = `
@@ -2566,6 +2630,7 @@
       `;
     }
 
+    // ================= 2. WORKER DIRECTORY =================
     function renderWorkersDirectory() {
       const container = document.getElementById('worker-directory-list');
       const search = (document.getElementById('worker-search-input')?.value || '').toLowerCase();
@@ -2617,6 +2682,7 @@
       }).join('');
     }
 
+    // ================= 3. USER DASHBOARD =================
     function renderDashboard() {
       const container = document.getElementById('dashboard-content');
       if (!appState.currentUser) {
@@ -2653,11 +2719,6 @@
       if (isWorker) {
         const activeJobs = appState.jobs.filter(j => j.status !== 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted'));
         const completedJobs = appState.jobs.filter(j => j.status === 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted'));
-
-        const ratingSummary = getWorkerRatingSummary(u);
-        const ratingDisplay = ratingSummary
-          ? `<div style="margin: 8px 0;"><span class="star-badge" style="font-size:0.9rem; padding:4px 12px;"><i class="fa-solid fa-star"></i> ${ratingSummary.avg} rating (${ratingSummary.count} reviews)</span></div>`
-          : `<div style="margin: 8px 0;"><span class="star-badge" style="background:#f1f5f9; color:var(--text-muted); border-color:#e2e8f0;">No reviews yet</span></div>`;
 
         mainActivityHtml = `
           <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card);">
@@ -2737,19 +2798,41 @@
               <h3 style="font-weight:800;">Your Active Events (${activePostedJobs.length})</h3>
               <button class="btn btn-employer-3d btn-sm" onclick="handlePostWorkClick()"><i class="fa-solid fa-plus"></i> Post Event</button>
             </div>
-            <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; flex-direction:column; gap:14px;">
               ${activePostedJobs.length === 0 ? '<p class="text-muted">No active events posted yet.</p>' : activePostedJobs.map(j => {
                 const remaining = getJobRemainingSlotsCount(j);
                 const filled = getJobFilledSlotsCount(j);
+                const modEval = evaluateEmployerPostModificationEligibility(j);
+
+                let editCancelButtons = '';
+                if (modEval.canModify) {
+                  editCancelButtons = `
+                    <button class="btn btn-outline btn-sm" onclick="openEditWorkPostModal('${j.id}')" title="Edit Post Details"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="employerCancelWorkPost('${j.id}')" title="Cancel Work Post"><i class="fa-solid fa-trash"></i> Cancel Post</button>
+                  `;
+                } else {
+                  editCancelButtons = `
+                    <button class="btn btn-disabled btn-sm" title="Locked — within 24 hours of event start, this post can no longer be edited or cancelled" onclick="showToast('Locked: Within 24 hours of event start, post cannot be edited or cancelled.', 'error')">
+                      <i class="fa-solid fa-lock"></i> Locked (< 24h)
+                    </button>
+                  `;
+                }
+
                 return `
-                  <div style="padding:14px 18px; border:1px solid var(--border); border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                    <div>
-                      <strong style="font-size:1rem;">${j.title}</strong><br>
-                      <small class="text-muted">${j.date} | Needed: ${j.boysNeeded} | Filled: ${filled} | <strong>Remaining: ${remaining}</strong></small>
+                  <div style="padding:16px; border:1px solid var(--border); border-radius:var(--radius-sm); display:flex; flex-direction:column; gap:10px; background:#ffffff;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+                      <div>
+                        <strong style="font-size:1.05rem;">${j.title}</strong><br>
+                        <small class="text-muted"><i class="fa-solid fa-calendar"></i> ${j.date} | <i class="fa-solid fa-clock"></i> ${j.time} | Needed: ${j.boysNeeded} | Filled: ${filled} | <strong>Remaining: ${remaining}</strong></small>
+                      </div>
+                      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn btn-outline btn-sm" onclick="viewJobApplicants('${j.id}')"><i class="fa-solid fa-users"></i> Applicants (${filled})</button>
+                        ${editCancelButtons}
+                        <button class="btn btn-success btn-sm" onclick="markJobCompleted('${j.id}')"><i class="fa-solid fa-flag-checkered"></i> Mark Completed</button>
+                      </div>
                     </div>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                      <button class="btn btn-outline btn-sm" onclick="viewJobApplicants('${j.id}')"><i class="fa-solid fa-users"></i> Applicants (${filled})</button>
-                      <button class="btn btn-success btn-sm" onclick="markJobCompleted('${j.id}')"><i class="fa-solid fa-flag-checkered"></i> Mark Completed</button>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">
+                      <i class="fa-solid fa-circle-info"></i> Edit and cancellation permitted up to 24 hours before event start.
                     </div>
                   </div>
                 `;
@@ -2838,11 +2921,108 @@
       `;
     }
 
+    // ================= 4. WORK POST CREATION, EDIT & CANCELLATION (24H RULE) =================
+    function handlePostWorkClick() {
+      if (!appState.currentUser) {
+        startEmployerDirectFlow();
+        return;
+      }
+      if (appState.currentUser.role !== 'employer') {
+        showToast('Only registered Employers can post work.', 'error');
+        return;
+      }
+      if (appState.currentUser.data.status !== 'approved') {
+        showToast('Your Employer account is pending admin approval.', 'error');
+        return;
+      }
+
+      appState.currentJobEditId = null;
+      document.getElementById('work-post-form').reset();
+      document.getElementById('work-post-modal-title').textContent = 'Post New Catering Work Slot';
+      document.getElementById('post-form-name').value = appState.currentUser.data.name;
+      document.getElementById('work-post-submit-btn').textContent = 'Review & Continue';
+      showModal('work-post-modal');
+    }
+
+    function openEditWorkPostModal(jobId) {
+      const job = appState.jobs.find(j => j.id === jobId);
+      if (!job) return;
+
+      const modEval = evaluateEmployerPostModificationEligibility(job);
+      if (!modEval.canModify) {
+        showToast(`Cannot edit: Event starts in ${modEval.hoursRemaining} hours (minimum 24 hours required).`, 'error');
+        return;
+      }
+
+      appState.currentJobEditId = jobId;
+      document.getElementById('work-post-modal-title').textContent = 'Edit Catering Work Slot';
+      document.getElementById('post-form-title').value = job.title;
+      document.getElementById('post-form-name').value = job.employerName;
+      document.getElementById('post-form-boys').value = job.boysNeeded;
+      document.getElementById('post-form-date').value = job.date;
+      document.getElementById('post-form-time').value = job.time;
+      document.getElementById('post-form-amount').value = job.perHeadAmount;
+      document.getElementById('post-form-venue').value = job.venueName;
+      document.getElementById('post-form-maps-link').value = job.mapsLink;
+      document.getElementById('work-post-submit-btn').textContent = 'Save Changes';
+
+      showModal('work-post-modal');
+    }
+
+    function closeWorkPostModal() {
+      hideModal('work-post-modal');
+      appState.currentJobEditId = null;
+    }
+
     function handleOpenWorkPostConfirm(e) {
       e.preventDefault();
       const mapsLink = document.getElementById('post-form-maps-link').value;
       const coords = parseCoordinatesFromMapsUrl(mapsLink);
 
+      // Check if this is an edit of an existing post with accepted applicants
+      if (appState.currentJobEditId) {
+        const existingJob = appState.jobs.find(j => j.id === appState.currentJobEditId);
+        if (existingJob) {
+          const modEval = evaluateEmployerPostModificationEligibility(existingJob);
+          if (!modEval.canModify) {
+            showToast(`Cannot edit: Within 24 hours of event start (${modEval.hoursRemaining}h remaining).`, 'error');
+            return;
+          }
+
+          const acceptedCount = getJobFilledSlotsCount(existingJob);
+          if (acceptedCount > 0) {
+            const proceed = confirm(`${acceptedCount} worker(s) have already booked this slot based on the current details. Editing may affect their booking — consider notifying them via chat. Proceed to save changes?`);
+            if (!proceed) return;
+          }
+
+          // Apply edits to existing job
+          existingJob.title = document.getElementById('post-form-title').value;
+          existingJob.employerName = document.getElementById('post-form-name').value;
+          existingJob.boysNeeded = parseInt(document.getElementById('post-form-boys').value, 10);
+          existingJob.date = document.getElementById('post-form-date').value;
+          existingJob.time = document.getElementById('post-form-time').value;
+          existingJob.perHeadAmount = parseFloat(document.getElementById('post-form-amount').value);
+          existingJob.venueName = document.getElementById('post-form-venue').value;
+          existingJob.mapsLink = mapsLink;
+          existingJob.coords = coords;
+
+          // Re-evaluate filled status if headcount increased/decreased
+          if (getJobRemainingSlotsCount(existingJob) === 0) {
+            existingJob.status = 'filled';
+          } else if (existingJob.status === 'filled') {
+            existingJob.status = 'open';
+          }
+
+          logPlatformActivity('Work Post Edited', `${appState.currentUser.data.name}`, `Edited shift: "${existingJob.title}"`);
+          saveState();
+          closeWorkPostModal();
+          showToast('Work post updated successfully!', 'success');
+          renderDashboard();
+          return;
+        }
+      }
+
+      // New Work Post Creation Draft
       appState.pendingWorkPostDraft = {
         title: document.getElementById('post-form-title').value,
         employerName: document.getElementById('post-form-name').value,
@@ -2893,16 +3073,61 @@
       };
 
       appState.jobs.unshift(newJob);
-      logPlatformActivity('Work Post Published', `${employer.name} (${employer.id})`, `Created permanent job: ${newJob.title}`);
+      logPlatformActivity('Work Post Published', `${employer.name} (${employer.id})`, `Created shift: ${newJob.title}`);
       saveState();
 
       appState.pendingWorkPostDraft = null;
       hideModal('work-post-confirm-modal');
       document.getElementById('work-post-form').reset();
-      showToast('Work post published permanently!', 'success');
+      showToast('Work post published successfully!', 'success');
       navigateTo('jobs-view');
     }
 
+    // Employer Cancels Work Post (24h Window with Worker Unlock & Alerts)
+    function employerCancelWorkPost(jobId) {
+      const job = appState.jobs.find(j => j.id === jobId);
+      if (!job) return;
+
+      const modEval = evaluateEmployerPostModificationEligibility(job);
+      if (!modEval.canModify) {
+        showToast(`Cannot cancel: Event is in ${modEval.hoursRemaining} hours (minimum 24 hours required).`, 'error');
+        return;
+      }
+
+      const acceptedWorkers = job.applicants.filter(a => a.status === 'accepted');
+      const affectedCount = acceptedWorkers.length;
+
+      if (affectedCount > 0) {
+        const proceed = confirm(`${affectedCount} worker(s) have already booked this slot. Cancelling will notify them so they can find other work. Are you sure you want to proceed?`);
+        if (!proceed) return;
+      } else {
+        if (!confirm(`Are you sure you want to cancel and remove the post "${job.title}"?`)) return;
+      }
+
+      // Unlock all applied workers from single job lock and queue notifications
+      if (!appState.workerNotifications) appState.workerNotifications = {};
+
+      acceptedWorkers.forEach(app => {
+        const workerObj = appState.workers.find(w => w.id === app.workerId);
+        if (workerObj) {
+          workerObj.appliedJobs = (workerObj.appliedJobs || []).filter(id => id !== jobId);
+        }
+        if (!appState.workerNotifications[app.workerId]) {
+          appState.workerNotifications[app.workerId] = [];
+        }
+        appState.workerNotifications[app.workerId].push(`The job "${job.title}" you booked was cancelled by the employer. You're free to book other available work.`);
+      });
+
+      // Remove job from database
+      appState.jobs = appState.jobs.filter(j => j.id !== jobId);
+
+      logPlatformActivity('Work Post Cancelled', `${job.employerName} (${job.employerId})`, `Cancelled "${job.title}" (${affectedCount} workers unlocked/notified)`);
+      saveState();
+      showToast(`Work post cancelled. ${affectedCount} booked worker(s) have been unlocked and notified.`, 'info');
+      renderDashboard();
+    }
+
+    // ================= 5. JOB COMPLETION & RATINGS =================
     function markJobCompleted(jobId) {
       const job = appState.jobs.find(j => j.id === jobId);
       if (!job) return;
@@ -2984,6 +3209,7 @@
       renderDashboard();
     }
 
+    // ================= 6. REPORTING SYSTEM =================
     function openReportModal(targetId, targetType, targetName) {
       if (!appState.currentUser) {
         showToast('Please sign in to report a profile.', 'error');
@@ -3037,6 +3263,7 @@
       }
     }
 
+    // ================= 7. EMPLOYER PROFILE EDITING =================
     function openEmployerEditModal() {
       if (!appState.currentUser || appState.currentUser.role !== 'employer') return;
       const emp = appState.currentUser.data;
@@ -3110,6 +3337,7 @@
       navigateTo('dashboard-view');
     }
 
+    // ================= 8. WORKER REGISTRATION & RESUBMISSION =================
     function openWorkerEditModal() {
       if (!appState.currentUser || appState.currentUser.role !== 'worker') return;
       const w = appState.currentUser.data;
@@ -3183,6 +3411,7 @@
       navigateTo('dashboard-view');
     }
 
+    // ================= 9. BOOKINGS, FRIENDS & CANCELLATION =================
     function openBookingModal(jobId) {
       if (!appState.currentUser || appState.currentUser.role !== 'worker') {
         showToast('Only workers can book slots.', 'error');
@@ -3410,27 +3639,6 @@
 
     function closeApplicantsModal() {
       hideModal('applicants-modal');
-    }
-
-    function handlePostWorkClick() {
-      if (!appState.currentUser) {
-        startEmployerDirectFlow();
-        return;
-      }
-      if (appState.currentUser.role !== 'employer') {
-        showToast('Only registered Employers can post work.', 'error');
-        return;
-      }
-      if (appState.currentUser.data.status !== 'approved') {
-        showToast('Your Employer account is pending admin approval.', 'error');
-        return;
-      }
-      document.getElementById('post-form-name').value = appState.currentUser.data.name;
-      showModal('work-post-modal');
-    }
-
-    function closeWorkPostModal() {
-      hideModal('work-post-modal');
     }
 
     function handleImageFileSelected(event, type) {
@@ -3850,7 +4058,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'catermatch-v6-cache';
+          const CACHE_NAME = 'catermatch-v7-cache';
           self.addEventListener('install', (e) => self.skipWaiting());
           self.addEventListener('activate', (e) => self.clients.claim());
           self.addEventListener('push', (event) => {
