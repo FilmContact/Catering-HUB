@@ -211,11 +211,7 @@
       margin: 4px 0;
     }
 
-    .tab-btn:hover {
-      color: var(--primary);
-      background-color: #f1f5f9;
-    }
-
+    .tab-btn:hover { color: var(--primary); background-color: #f1f5f9; }
     .tab-btn.active {
       color: var(--primary);
       background: var(--primary-light);
@@ -255,10 +251,18 @@
       overflow: hidden;
     }
 
-    .hero-header {
-      margin-bottom: 20px;
-      text-align: center;
+    .hero-entry-banner::after {
+      content: "";
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, transparent 70%);
+      pointer-events: none;
     }
+
+    .hero-header { margin-bottom: 20px; text-align: center; }
 
     .hero-badge {
       display: inline-flex;
@@ -276,18 +280,8 @@
       margin-bottom: 8px;
     }
 
-    .hero-header h2 {
-      font-size: 1.65rem;
-      font-weight: 800;
-      color: #ffffff;
-      letter-spacing: -0.5px;
-    }
-
-    .hero-header p {
-      font-size: 0.95rem;
-      color: #c7d2fe;
-      margin-top: 4px;
-    }
+    .hero-header h2 { font-size: 1.65rem; font-weight: 800; color: #ffffff; letter-spacing: -0.5px; }
+    .hero-header p { font-size: 0.95rem; color: #c7d2fe; margin-top: 4px; }
 
     .entry-cta-grid {
       display: grid;
@@ -752,6 +746,112 @@
     }
 
     .star-badge i { color: #f59e0b; }
+
+    /* Grooming Badges Styling */
+    .grooming-badges-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin: 6px 0;
+    }
+
+    .groom-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .groom-badge.ready {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .groom-badge.unstated {
+      background: #f1f5f9;
+      color: var(--text-muted);
+      border: 1px solid #e2e8f0;
+    }
+
+    /* Grooming Section within Form */
+    .form-section-divider {
+      grid-column: 1 / -1;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1.5px solid var(--border);
+    }
+
+    .form-section-divider h4 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-subtitle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      margin-bottom: 12px;
+    }
+
+    .grooming-tip-box {
+      grid-column: 1 / -1;
+      background: #eff6ff;
+      border-left: 4px solid var(--primary);
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      color: #1e3a8a;
+      border-radius: 4px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .grooming-checkbox-grid {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 540px) {
+      .grooming-checkbox-grid { grid-template-columns: 1fr; }
+    }
+
+    .grooming-checkbox-label {
+      background: #f8fafc;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .grooming-checkbox-label:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .grooming-checkbox-label input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--primary);
+    }
 
     .card-footer-actions {
       margin-top: 16px;
@@ -1607,6 +1707,7 @@
                   <th>Worker</th>
                   <th>Contact / Age</th>
                   <th>Location (Maps)</th>
+                  <th>Uniform & Grooming</th>
                   <th>Rate</th>
                   <th>Rating</th>
                   <th>Status</th>
@@ -1773,7 +1874,7 @@
       </div>
     </div>
 
-    <!-- 4. Worker Registration / Edit Modal -->
+    <!-- 4. Worker Registration / Edit Modal (With Grooming & Uniform Readiness Section) -->
     <div id="worker-reg-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'worker-reg-modal')">
       <div class="modal-card form-modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -1825,6 +1926,48 @@
               <label>Location Text / Address <span class="required">*</span></label>
               <input type="text" id="worker-form-location-text" placeholder="e.g. Andheri East, Mumbai" required />
             </div>
+
+            <!-- Grooming & Uniform Readiness Section -->
+            <div class="form-section-divider">
+              <h4><i class="fa-solid fa-shirt"></i> Grooming & Uniform Readiness</h4>
+              <p class="section-subtitle">Confirm which of these you have ready. Workers who are well-groomed and properly dressed get hired faster — employers prefer this at a glance.</p>
+            </div>
+
+            <div class="grooming-tip-box">
+              <i class="fa-solid fa-lightbulb"></i>
+              <span><strong>Tip:</strong> Workers confirmed with white shirt, black pant, shoes, and clean shave are significantly more likely to be picked for jobs. Keep this updated if your readiness changes.</span>
+            </div>
+
+            <div class="grooming-checkbox-grid">
+              <label class="grooming-checkbox-label">
+                <input type="checkbox" id="worker-grooming-white-shirt" />
+                <span>👔 White Shirt</span>
+              </label>
+              <label class="grooming-checkbox-label">
+                <input type="checkbox" id="worker-grooming-black-pant" />
+                <span>👖 Black Pant</span>
+              </label>
+              <label class="grooming-checkbox-label">
+                <input type="checkbox" id="worker-grooming-shoes" />
+                <span>👞 Formal Shoes</span>
+              </label>
+              <label class="grooming-checkbox-label">
+                <input type="checkbox" id="worker-grooming-clean-shave" />
+                <span>✂️ Clean Shave / Groomed</span>
+              </label>
+              <label class="grooming-checkbox-label" style="grid-column: 1 / -1;">
+                <input type="checkbox" id="worker-grooming-others-toggle" onchange="toggleGroomingOthersInput(this.checked)" />
+                <span>✨ Others (Bow tie, Apron, etc.)</span>
+              </label>
+            </div>
+
+            <div id="worker-grooming-others-container" style="display: none; grid-column: 1 / -1;">
+              <div class="form-group full-width">
+                <label style="font-size: 0.8rem;">Specify other items ready:</label>
+                <input type="text" id="worker-grooming-others-text" placeholder="e.g. Black bow tie, formal apron, catering ID badge" />
+              </div>
+            </div>
+
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline" onclick="closeWorkerRegModal()">Cancel</button>
@@ -2086,7 +2229,7 @@
       currentJobEditId: null,
       activeRatingContext: null,
       activeReportTarget: null,
-      workerNotifications: {}, // Map of workerId -> array of messages
+      workerNotifications: {},
 
       workers: [
         {
@@ -2101,6 +2244,13 @@
           rate: '₹850 / shift',
           status: 'approved',
           appliedJobs: ['job_1'],
+          grooming: {
+            whiteShirt: true,
+            blackPant: true,
+            shoes: true,
+            cleanShave: true,
+            others: 'Black bow tie'
+          },
           ratings: [
             {
               jobId: 'job_comp_1',
@@ -2124,6 +2274,13 @@
           rate: '₹900 / shift',
           status: 'approved',
           appliedJobs: [],
+          grooming: {
+            whiteShirt: true,
+            blackPant: true,
+            shoes: false,
+            cleanShave: true,
+            others: ''
+          },
           ratings: []
         }
       ],
@@ -2212,7 +2369,7 @@
           participants: ['emp_1', 'worker_1'],
           messages: [
             { senderId: 'emp_1', text: 'Hello Rahul, are you available for Oct 15 wedding reception?', timestamp: '10:30 AM' },
-            { senderId: 'worker_1', text: 'Yes Sir, Karan and I are available and have black uniforms ready.', timestamp: '10:32 AM' }
+            { senderId: 'worker_1', text: 'Yes Sir, Karan and I are ready in full formal uniforms.', timestamp: '10:32 AM' }
           ]
         }
       ],
@@ -2243,7 +2400,7 @@
     let bookingFriendList = [];
 
     function loadState() {
-      const saved = localStorage.getItem('catermatch_db_v7');
+      const saved = localStorage.getItem('catermatch_db_v8');
       if (saved) {
         try { return JSON.parse(saved); } catch (e) { console.error(e); }
       }
@@ -2251,7 +2408,7 @@
     }
 
     function saveState() {
-      localStorage.setItem('catermatch_db_v7', JSON.stringify(appState));
+      localStorage.setItem('catermatch_db_v8', JSON.stringify(appState));
     }
 
     function logPlatformActivity(eventType, userInvolved, details) {
@@ -2323,6 +2480,7 @@
       return (R * c).toFixed(1);
     }
 
+    // Ratings summary
     function getWorkerRatingSummary(worker) {
       if (!worker || !worker.ratings || worker.ratings.length === 0) {
         return null;
@@ -2332,6 +2490,36 @@
       return { avg, count: worker.ratings.length };
     }
 
+    // Grooming badges rendering helper
+    function renderGroomingBadgesHtml(grooming) {
+      if (!grooming) {
+        return '<span class="groom-badge unstated"><i class="fa-solid fa-circle-question"></i> Uniform unconfirmed</span>';
+      }
+      const badges = [];
+      if (grooming.whiteShirt) badges.push('<span class="groom-badge ready"><i class="fa-solid fa-check"></i> White Shirt</span>');
+      if (grooming.blackPant) badges.push('<span class="groom-badge ready"><i class="fa-solid fa-check"></i> Black Pant</span>');
+      if (grooming.shoes) badges.push('<span class="groom-badge ready"><i class="fa-solid fa-check"></i> Shoes</span>');
+      if (grooming.cleanShave) badges.push('<span class="groom-badge ready"><i class="fa-solid fa-check"></i> Clean Shave</span>');
+      if (grooming.others && grooming.others.trim()) {
+        badges.push(`<span class="groom-badge ready"><i class="fa-solid fa-check"></i> ${grooming.others.trim()}</span>`);
+      }
+      if (badges.length === 0) {
+        return '<span class="groom-badge unstated"><i class="fa-solid fa-circle-question"></i> Uniform unconfirmed</span>';
+      }
+      return `<div class="grooming-badges-wrap">${badges.join('')}</div>`;
+    }
+
+    function toggleGroomingOthersInput(isChecked) {
+      const container = document.getElementById('worker-grooming-others-container');
+      if (container) {
+        container.style.display = isChecked ? 'block' : 'none';
+        if (!isChecked) {
+          document.getElementById('worker-grooming-others-text').value = '';
+        }
+      }
+    }
+
+    // Slot Counters
     function getJobFilledSlotsCount(job) {
       if (!job || !job.applicants) return 0;
       return job.applicants.reduce((sum, app) => {
@@ -2357,7 +2545,6 @@
       );
     }
 
-    // Helper: Calculates hours remaining until event start
     function getJobHoursRemaining(job) {
       if (!job || !job.date) return 999;
       try {
@@ -2387,7 +2574,6 @@
       }
     }
 
-    // Worker 4-Hour Cancellation Eligibility
     function evaluateCancellationEligibility(job) {
       const hoursRemaining = getJobHoursRemaining(job);
       return {
@@ -2396,7 +2582,6 @@
       };
     }
 
-    // Employer 24-Hour Edit/Cancel Eligibility
     function evaluateEmployerPostModificationEligibility(job) {
       const hoursRemaining = getJobHoursRemaining(job);
       return {
@@ -2463,7 +2648,6 @@
       const isWorker = appState.currentUser && appState.currentUser.role === 'worker';
       const activeBookedJob = isWorker ? getWorkerActiveBooking(appState.currentUser.data.id) : null;
 
-      // Check for employer cancellation notifications targeting current worker
       if (isWorker && appState.workerNotifications && appState.workerNotifications[appState.currentUser.data.id]) {
         const notes = appState.workerNotifications[appState.currentUser.data.id];
         if (notes.length > 0) {
@@ -2473,7 +2657,6 @@
         }
       }
 
-      // Active shift lock check
       if (isWorker && activeBookedJob) {
         if (noticeContainer) {
           noticeContainer.innerHTML = `
@@ -2623,6 +2806,8 @@
           ? `<span class="star-badge"><i class="fa-solid fa-star"></i> ${ratingInfo.avg} (${ratingInfo.count} reviews)</span>`
           : `<span class="star-badge" style="color:var(--text-muted); background:#f1f5f9; border-color:#e2e8f0;"><i class="fa-regular fa-star"></i> New Crew</span>`;
 
+        const groomingBadgesHtml = renderGroomingBadgesHtml(w.grooming);
+
         return `
           <div class="card">
             <div class="worker-card-header">
@@ -2637,6 +2822,10 @@
               </div>
             </div>
             <div class="highlight-pay">${w.rate}</div>
+            <div style="margin-bottom: 8px;">
+              <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Uniform & Grooming:</span>
+              ${groomingBadgesHtml}
+            </div>
             <ul class="card-details-list">
               <li><i class="fa-solid fa-location-dot"></i> ${w.locationText}</li>
               <li><i class="fa-solid fa-map-location-dot"></i> <a href="${w.mapsLink}" target="_blank" rel="noopener" class="maps-link-btn">📍 View Location</a></li>
@@ -2647,7 +2836,7 @@
       }).join('');
     }
 
-    // ================= 3. USER DASHBOARD =================
+    // ================= 3. USER DASHBOARD (PRIVATE JOB HISTORY GUARD) =================
     function renderDashboard() {
       const container = document.getElementById('dashboard-content');
       if (!appState.currentUser) {
@@ -2662,6 +2851,13 @@
 
       const u = appState.currentUser.data;
       const isWorker = appState.currentUser.role === 'worker';
+
+      // Code-Level Privacy Guard: Job history is only processed and rendered for the authenticated profile owner
+      const isOwner = appState.currentUser && appState.currentUser.data && appState.currentUser.data.id === u.id;
+      if (!isOwner) {
+        container.innerHTML = `<div style="text-align:center; padding:30px;"><p class="text-muted">Access restricted.</p></div>`;
+        return;
+      }
 
       let bannerClass = 'badge-pending';
       let bannerText = '⏳ Account Under Admin Review — visible once approved.';
@@ -2683,7 +2879,12 @@
 
       if (isWorker) {
         const activeJobs = appState.jobs.filter(j => j.status !== 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted'));
+        
+        // Private worker job history
         const completedJobs = appState.jobs.filter(j => j.status === 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted'));
+
+        const ratingSummary = getWorkerRatingSummary(u);
+        const groomingBadgesHtml = renderGroomingBadgesHtml(u.grooming);
 
         mainActivityHtml = `
           <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card);">
@@ -2725,11 +2926,15 @@
           </div>
         `;
 
+        // Strict Private Job History (Visible only to the worker on their own dashboard)
         historySectionHtml = `
           <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card); margin-top:20px;">
-            <h3 style="font-weight:800;"><i class="fa-solid fa-clock-rotate-left"></i> Completed Shift History (${completedJobs.length})</h3>
-            <div style="margin-top:14px; display:flex; flex-direction:column; gap:12px;">
-              ${completedJobs.length === 0 ? '<p class="text-muted">No completed jobs yet.</p>' : completedJobs.map(j => {
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 style="font-weight:800;"><i class="fa-solid fa-user-shield"></i> Your Private Shift History (${completedJobs.length})</h3>
+              <span style="font-size:0.75rem; color:var(--text-muted); background:#f1f5f9; padding:3px 8px; border-radius:4px;"><i class="fa-solid fa-lock"></i> Visible only to you</span>
+            </div>
+            <div style="margin-top:10px; display:flex; flex-direction:column; gap:12px;">
+              ${completedJobs.length === 0 ? '<p class="text-muted">No completed shifts in your history yet.</p>' : completedJobs.map(j => {
                 const myRating = (u.ratings || []).find(r => r.jobId === j.id);
                 return `
                   <div class="history-card">
@@ -2742,9 +2947,9 @@
                     </div>
                     <div class="history-rating-box">
                       ${myRating ? `
-                        <div><strong>Employer Rating:</strong> <span class="star-badge"><i class="fa-solid fa-star"></i> ${myRating.stars}.0 / 5.0</span></div>
+                        <div><strong>Employer Feedback:</strong> <span class="star-badge"><i class="fa-solid fa-star"></i> ${myRating.stars}.0 / 5.0</span></div>
                         ${myRating.comment ? `<p style="margin-top:4px; font-style:italic;">"${myRating.comment}"</p>` : ''}
-                      ` : `<span class="text-muted">No rating left by employer yet.</span>`}
+                      ` : `<span class="text-muted">No review left by employer yet.</span>`}
                     </div>
                   </div>
                 `;
@@ -2777,7 +2982,7 @@
                   `;
                 } else {
                   editCancelButtons = `
-                    <button class="btn btn-disabled btn-sm" title="Locked — within 24 hours of event start, this post can no longer be edited or cancelled" onclick="showToast('Locked: Within 24 hours of event start, post cannot be edited or cancelled.', 'error')">
+                    <button class="btn btn-disabled btn-sm" title="Locked — within 24 hours of event start" onclick="showToast('Locked: Within 24 hours of event start, post cannot be edited or cancelled.', 'error')">
                       <i class="fa-solid fa-lock"></i> Locked (< 24h)
                     </button>
                   `;
@@ -2806,10 +3011,14 @@
           </div>
         `;
 
+        // Strict Private Employer Job History
         historySectionHtml = `
           <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card); margin-top:20px;">
-            <h3 style="font-weight:800;"><i class="fa-solid fa-clock-rotate-left"></i> Completed Events History (${completedPostedJobs.length})</h3>
-            <div style="margin-top:14px; display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 style="font-weight:800;"><i class="fa-solid fa-user-shield"></i> Your Private Completed Events (${completedPostedJobs.length})</h3>
+              <span style="font-size:0.75rem; color:var(--text-muted); background:#f1f5f9; padding:3px 8px; border-radius:4px;"><i class="fa-solid fa-lock"></i> Visible only to you</span>
+            </div>
+            <div style="margin-top:10px; display:flex; flex-direction:column; gap:12px;">
               ${completedPostedJobs.length === 0 ? '<p class="text-muted">No completed events yet.</p>' : completedPostedJobs.map(j => {
                 const acceptedApplicants = j.applicants.filter(a => a.status === 'accepted');
                 return `
@@ -2867,6 +3076,7 @@
               <tr><td>Age</td><td>${u.age} yrs</td></tr>
               <tr><td>Location</td><td>${u.locationText}</td></tr>
               ${isWorker ? `<tr><td>Rate</td><td><strong>${u.rate}</strong></td></tr>` : ''}
+              ${isWorker ? `<tr><td>Uniform</td><td>${renderGroomingBadgesHtml(u.grooming)}</td></tr>` : ''}
               <tr><td>Maps Link</td><td><a href="${u.mapsLink}" target="_blank" class="maps-link-btn">📍 View Map</a></td></tr>
             </table>
 
@@ -2944,7 +3154,6 @@
       const mapsLink = document.getElementById('post-form-maps-link').value;
       const coords = parseCoordinatesFromMapsUrl(mapsLink);
 
-      // Check if this is an edit of an existing post with accepted applicants
       if (appState.currentJobEditId) {
         const existingJob = appState.jobs.find(j => j.id === appState.currentJobEditId);
         if (existingJob) {
@@ -2960,7 +3169,6 @@
             if (!proceed) return;
           }
 
-          // Apply edits to existing job
           existingJob.title = document.getElementById('post-form-title').value;
           existingJob.employerName = document.getElementById('post-form-name').value;
           existingJob.boysNeeded = parseInt(document.getElementById('post-form-boys').value, 10);
@@ -2971,7 +3179,6 @@
           existingJob.mapsLink = mapsLink;
           existingJob.coords = coords;
 
-          // Re-evaluate filled status if headcount increased/decreased
           if (getJobRemainingSlotsCount(existingJob) === 0) {
             existingJob.status = 'filled';
           } else if (existingJob.status === 'filled') {
@@ -2987,7 +3194,6 @@
         }
       }
 
-      // New Work Post Creation Draft
       appState.pendingWorkPostDraft = {
         title: document.getElementById('post-form-title').value,
         employerName: document.getElementById('post-form-name').value,
@@ -3048,7 +3254,6 @@
       navigateTo('jobs-view');
     }
 
-    // Employer Cancels Work Post (24h Window with Worker Unlock & Alerts)
     function employerCancelWorkPost(jobId) {
       const job = appState.jobs.find(j => j.id === jobId);
       if (!job) return;
@@ -3069,7 +3274,6 @@
         if (!confirm(`Are you sure you want to cancel and remove the post "${job.title}"?`)) return;
       }
 
-      // Unlock all applied workers from single job lock and queue notifications
       if (!appState.workerNotifications) appState.workerNotifications = {};
 
       acceptedWorkers.forEach(app => {
@@ -3083,7 +3287,6 @@
         appState.workerNotifications[app.workerId].push(`The job "${job.title}" you booked was cancelled by the employer. You're free to book other available work.`);
       });
 
-      // Remove job from database
       appState.jobs = appState.jobs.filter(j => j.id !== jobId);
 
       logPlatformActivity('Work Post Cancelled', `${job.employerName} (${job.employerId})`, `Cancelled "${job.title}" (${affectedCount} workers unlocked/notified)`);
@@ -3302,7 +3505,7 @@
       navigateTo('dashboard-view');
     }
 
-    // ================= 8. WORKER REGISTRATION & RESUBMISSION =================
+    // ================= 8. WORKER REGISTRATION, GROOMING & RESUBMISSION =================
     function openWorkerEditModal() {
       if (!appState.currentUser || appState.currentUser.role !== 'worker') return;
       const w = appState.currentUser.data;
@@ -3320,6 +3523,19 @@
       document.getElementById('worker-form-rate').value = w.rate;
       document.getElementById('worker-form-location-text').value = w.locationText;
       document.getElementById('worker-form-maps-link').value = w.mapsLink;
+
+      // Grooming fields
+      const grooming = w.grooming || {};
+      document.getElementById('worker-grooming-white-shirt').checked = !!grooming.whiteShirt;
+      document.getElementById('worker-grooming-black-pant').checked = !!grooming.blackPant;
+      document.getElementById('worker-grooming-shoes').checked = !!grooming.shoes;
+      document.getElementById('worker-grooming-clean-shave').checked = !!grooming.cleanShave;
+      
+      const hasOthers = !!(grooming.others && grooming.others.trim());
+      document.getElementById('worker-grooming-others-toggle').checked = hasOthers;
+      toggleGroomingOthersInput(hasOthers);
+      document.getElementById('worker-grooming-others-text').value = grooming.others || '';
+
       document.getElementById('worker-submit-btn').textContent = w.status === 'rejected' ? 'Resubmit for Review' : 'Save & Submit for Re-Review';
 
       showModal('worker-reg-modal');
@@ -3330,6 +3546,14 @@
       const mapsLink = document.getElementById('worker-form-maps-link').value;
       const coords = parseCoordinatesFromMapsUrl(mapsLink);
       const photoData = document.getElementById('worker-form-photo-data').value || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&auto=format&fit=crop&q=60';
+
+      const groomingData = {
+        whiteShirt: document.getElementById('worker-grooming-white-shirt').checked,
+        blackPant: document.getElementById('worker-grooming-black-pant').checked,
+        shoes: document.getElementById('worker-grooming-shoes').checked,
+        cleanShave: document.getElementById('worker-grooming-clean-shave').checked,
+        others: document.getElementById('worker-grooming-others-toggle').checked ? document.getElementById('worker-grooming-others-text').value.trim() : ''
+      };
 
       if (currentWorkerEditId) {
         const worker = appState.workers.find(w => w.id === currentWorkerEditId);
@@ -3342,10 +3566,11 @@
           worker.locationText = document.getElementById('worker-form-location-text').value;
           worker.mapsLink = mapsLink;
           worker.coords = coords;
+          worker.grooming = groomingData;
           worker.status = 'pending';
 
           appState.currentUser.data = worker;
-          logPlatformActivity('Worker Profile Resubmitted', `${worker.name} (${worker.id})`, 'Updated profile fields. Resubmitted for admin review.');
+          logPlatformActivity('Worker Profile Resubmitted', `${worker.name} (${worker.id})`, 'Updated profile fields & grooming readiness. Resubmitted for review.');
           showToast('Profile updated & submitted for admin review!', 'info');
         }
       } else {
@@ -3360,13 +3585,14 @@
           mapsLink: mapsLink,
           coords: coords,
           status: 'pending',
+          grooming: groomingData,
           appliedJobs: [],
           ratings: []
         };
 
         appState.workers.push(newWorker);
         appState.currentUser = { role: 'worker', data: newWorker };
-        logPlatformActivity('Worker Registered', `${newWorker.name} (${newWorker.id})`, 'Submitted registration for approval.');
+        logPlatformActivity('Worker Registered', `${newWorker.name} (${newWorker.id})`, 'Submitted registration with grooming details.');
         showToast('Registration submitted for admin approval!', 'success');
       }
 
@@ -3774,6 +4000,8 @@
       wBody.innerHTML = appState.workers.map(w => {
         const rating = getWorkerRatingSummary(w);
         const ratingText = rating ? `★ ${rating.avg} (${rating.count})` : 'New';
+        const groomingHtml = renderGroomingBadgesHtml(w.grooming);
+
         return `
           <tr>
             <td>
@@ -3784,6 +4012,7 @@
             </td>
             <td>${w.phone}<br><small class="text-muted">${w.age} yrs</small></td>
             <td>${w.locationText}<br><a href="${w.mapsLink}" target="_blank" class="maps-link-btn">📍 Maps</a></td>
+            <td>${groomingHtml}</td>
             <td>${w.rate}</td>
             <td><span class="star-badge">${ratingText}</span></td>
             <td><span class="card-badge badge-${w.status}" style="position:static;">${w.status}</span></td>
@@ -3981,6 +4210,7 @@
         document.getElementById('worker-reg-form').reset();
         resetUploadPreview('worker');
         document.getElementById('worker-reg-modal-title').textContent = 'Worker Profile Registration';
+        toggleGroomingOthersInput(false);
         showModal('worker-reg-modal');
       } else {
         currentEmployerEditId = null;
@@ -4023,7 +4253,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'catermatch-v7-cache';
+          const CACHE_NAME = 'catermatch-v8-cache';
           self.addEventListener('install', (e) => self.skipWaiting());
           self.addEventListener('activate', (e) => self.clients.claim());
           self.addEventListener('push', (event) => {
