@@ -1,3 +1,32 @@
+Here is the complete, updated CaterMatch application in a single file
+(index.html).
+
+Key Enhancements Included:
+
+1.  Vibrant & 3D Visual Redesign:
+      - Upgraded to an energetic color scheme featuring vibrant sunset orange
+        and royal indigo gradients.
+      - Tactile 3D buttons with layered depth, bevel shadows, and active-pressed
+        states (transform: translateY(3px) with dynamic shadow compression).
+      - Cohesive 3D cards, badges, and modals with soft elevated depth and
+        polished surface styling.
+2.  Device File Upload with Live Image Preview:
+      - Replaced photo URL text inputs with <input type="file" accept="image/*">
+        file pickers in both Worker and Employer forms.
+      - Built interactive drag/tap upload containers with live thumbnail
+        previews using FileReader (stored as base64 in local state until
+        Firebase Storage is wired in).
+3.  Streamlined Google-Only Sign-In Modal:
+      - Removed all mock preset buttons.
+      - Replaced with a clean, branded "Continue with Google" button with OAuth
+        security badge.
+4.  Distinct Hero Entry Points:
+      - Prominent, high-visibility CTAs at the top of the home screen:
+          - 🧑‍🍳 "Join as a Boy" (directly launches Worker registration).
+          - 🏢 "Post Your Work" (directly launches Employer event creation &
+            registration).
+      - Standard "Sign In" pill in the navbar remains for returning accounts.
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,11 +35,11 @@
   <title>CaterMatch — Catering Worker & Event Platform</title>
 
   <!-- PWA Theme & Inline Manifest -->
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#4f46e5" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="CaterMatch" />
-  <link rel="manifest" href='data:application/manifest+json,{"name":"CaterMatch — Catering Crew Platform","short_name":"CaterMatch","start_url":".","display":"standalone","background_color":"%230f172a","theme_color":"%230f172a","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3448/3448609.png","sizes":"192x192","type":"image/png"},{"src":"https://cdn-icons-png.flaticon.com/512/3448/3448609.png","sizes":"512x512","type":"image/png"}]}' />
+  <link rel="manifest" href='data:application/manifest+json,{"name":"CaterMatch — Catering Crew Platform","short_name":"CaterMatch","start_url":".","display":"standalone","background_color":"%234f46e5","theme_color":"%234f46e5","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3448/3448609.png","sizes":"192x192","type":"image/png"},{"src":"https://cdn-icons-png.flaticon.com/512/3448/3448609.png","sizes":"512x512","type":"image/png"}]}' />
 
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -18,26 +47,44 @@
   <!-- ================= APPLICATION STYLES (CSS) ================= -->
   <style>
     :root {
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --primary-light: #eff6ff;
+      /* Energetic & Vibrant Color Theme */
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      
+      --worker-accent: #f59e0b;
+      --worker-dark: #b45309;
+      --worker-gradient: linear-gradient(135deg, #fbbf24 0%, #ea580c 100%);
+
+      --employer-accent: #0284c7;
+      --employer-dark: #0369a1;
+      --employer-gradient: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+
       --success: #10b981;
+      --success-dark: #047857;
+      --success-gradient: linear-gradient(135deg, #34d399 0%, #059669 100%);
+
       --danger: #ef4444;
-      --warning: #f59e0b;
+      --danger-dark: #b91c1c;
+      --danger-gradient: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+
       --dark: #0f172a;
       --surface: #ffffff;
       --surface-alt: #f8fafc;
       --border: #e2e8f0;
+      --border-highlight: #cbd5e1;
       --text-main: #1e293b;
       --text-muted: #64748b;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-      --radius-sm: 6px;
-      --radius-md: 10px;
-      --radius-lg: 16px;
+
+      /* 3D Depth Shadows */
+      --shadow-3d-card: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(226, 232, 240, 0.9);
+      --shadow-3d-card-hover: 0 20px 30px -10px rgba(79, 70, 229, 0.15), 0 10px 15px -5px rgba(15, 23, 42, 0.06), 0 0 0 1px #818cf8;
+      
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
       --radius-full: 9999px;
-      --transition: all 0.2s ease-in-out;
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     * {
@@ -49,7 +96,10 @@
     }
 
     body {
-      background-color: #f1f5f9;
+      background: #f1f5f9;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(245, 158, 11, 0.08) 0px, transparent 50%);
       color: var(--text-main);
       line-height: 1.5;
       min-height: 100vh;
@@ -65,74 +115,106 @@
       display: flex;
       flex-direction: column;
       position: relative;
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.08);
     }
 
-    /* Top Navbar */
+    /* ================= TOP NAVBAR ================= */
     .navbar {
-      background-color: var(--dark);
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
       color: #fff;
-      padding: 12px 20px;
+      padding: 14px 22px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.25);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .nav-brand {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       cursor: pointer;
+      user-select: none;
     }
 
-    .brand-icon { font-size: 1.8rem; }
-    .brand-title { font-size: 1.2rem; font-weight: 800; color: #fff; display: block; }
-    .brand-tagline { font-size: 0.72rem; color: #94a3b8; display: block; margin-top: -3px; }
+    .brand-icon {
+      font-size: 2rem;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    }
+
+    .brand-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: block;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-tagline {
+      font-size: 0.72rem;
+      color: #a5b4fc;
+      font-weight: 600;
+      display: block;
+      margin-top: -3px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
 
     .nav-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .auth-pill {
-      background-color: rgba(255, 255, 255, 0.12);
-      padding: 6px 14px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+      padding: 7px 16px;
       border-radius: var(--radius-full);
-      font-size: 0.85rem;
-      font-weight: 600;
+      font-size: 0.88rem;
+      font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      transition: var(--transition);
+    }
+
+    .auth-pill:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
     }
 
     .icon-btn {
       background: rgba(255, 255, 255, 0.12);
       border: none;
       color: #fff;
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
       border-radius: var(--radius-full);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 
-    /* Sub Navigation */
+    /* ================= SUB NAVIGATION ================= */
     .sub-nav {
       background-color: var(--surface);
       border-bottom: 1px solid var(--border);
       display: flex;
       overflow-x: auto;
       scrollbar-width: none;
-      padding: 0 10px;
+      padding: 4px 14px;
+      gap: 6px;
     }
 
     .sub-nav::-webkit-scrollbar { display: none; }
@@ -140,30 +222,35 @@
     .tab-btn {
       background: none;
       border: none;
-      padding: 14px 18px;
-      font-size: 0.9rem;
-      font-weight: 600;
+      padding: 12px 18px;
+      font-size: 0.92rem;
+      font-weight: 700;
       color: var(--text-muted);
       cursor: pointer;
       white-space: nowrap;
       display: flex;
       align-items: center;
       gap: 8px;
-      border-bottom: 3px solid transparent;
+      border-radius: var(--radius-md);
       transition: var(--transition);
+      margin: 4px 0;
     }
 
-    .tab-btn:hover { color: var(--primary); }
+    .tab-btn:hover {
+      color: var(--primary);
+      background-color: #f1f5f9;
+    }
+
     .tab-btn.active {
       color: var(--primary);
-      border-bottom-color: var(--primary);
       background: var(--primary-light);
+      box-shadow: inset 0 0 0 1.5px #c7d2fe;
     }
 
-    /* Content Area & Views */
+    /* ================= CONTENT & HERO CTA ================= */
     .content-area {
       flex: 1;
-      padding: 20px;
+      padding: 22px;
       max-width: 1200px;
       width: 100%;
       margin: 0 auto;
@@ -172,47 +259,337 @@
     .view-panel { display: none; }
     .view-panel.active {
       display: block;
-      animation: fadeIn 0.2s ease-in-out;
+      animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
+      from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
+    /* HERO TWO-WAY ENTRY POINT BANNER */
+    .hero-entry-banner {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+      border-radius: var(--radius-lg);
+      padding: 26px;
+      margin-bottom: 26px;
+      color: #ffffff;
+      box-shadow: 0 12px 30px -5px rgba(67, 56, 202, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-entry-banner::after {
+      content: "";
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-header {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245, 158, 11, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fde68a;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .hero-header h2 {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+    }
+
+    .hero-header p {
+      font-size: 0.95rem;
+      color: #c7d2fe;
+      margin-top: 4px;
+    }
+
+    .entry-cta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      position: relative;
+      z-index: 2;
+    }
+
+    @media (max-width: 680px) {
+      .entry-cta-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .entry-cta-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      border: 1.5px solid rgba(255, 255, 255, 0.18);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .entry-cta-card:hover {
+      transform: translateY(-3px);
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .entry-cta-card.worker-cta {
+      border-top: 4px solid var(--worker-accent);
+    }
+
+    .entry-cta-card.employer-cta {
+      border-top: 4px solid var(--employer-accent);
+    }
+
+    .cta-card-top {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .cta-icon-wrap {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: #ffffff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .worker-cta .cta-icon-wrap {
+      background: var(--worker-gradient);
+    }
+
+    .employer-cta .cta-icon-wrap {
+      background: var(--employer-gradient);
+    }
+
+    .cta-info h3 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .cta-info p {
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      margin-top: 2px;
+    }
+
+    /* ================= 3D BUTTONS ================= */
+    .btn {
+      padding: 11px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.12s ease-in-out;
+      border: none;
+      text-decoration: none;
+      user-select: none;
+      position: relative;
+    }
+
+    /* Primary 3D Button (Indigo) */
+    .btn-primary {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      box-shadow: 0 4px 0 var(--primary-dark), 0 6px 14px rgba(79, 70, 229, 0.35);
+      border: 1px solid #818cf8;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 var(--primary-dark), 0 10px 18px rgba(79, 70, 229, 0.45);
+    }
+    .btn-primary:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--primary-dark), 0 2px 4px rgba(79, 70, 229, 0.2);
+    }
+
+    /* Worker 3D Button (Amber/Orange) */
+    .btn-worker-3d {
+      background: var(--worker-gradient);
+      color: #ffffff;
+      box-shadow: 0 4px 0 var(--worker-dark), 0 6px 14px rgba(234, 88, 12, 0.4);
+      border: 1px solid #fdba74;
+    }
+    .btn-worker-3d:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 var(--worker-dark), 0 10px 18px rgba(234, 88, 12, 0.5);
+    }
+    .btn-worker-3d:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--worker-dark), 0 2px 4px rgba(234, 88, 12, 0.2);
+    }
+
+    /* Employer 3D Button (Cyan/Blue) */
+    .btn-employer-3d {
+      background: var(--employer-gradient);
+      color: #ffffff;
+      box-shadow: 0 4px 0 var(--employer-dark), 0 6px 14px rgba(2, 132, 199, 0.4);
+      border: 1px solid #7dd3fc;
+    }
+    .btn-employer-3d:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 var(--employer-dark), 0 10px 18px rgba(2, 132, 199, 0.5);
+    }
+    .btn-employer-3d:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--employer-dark), 0 2px 4px rgba(2, 132, 199, 0.2);
+    }
+
+    /* Success 3D Button (Emerald) */
+    .btn-success {
+      background: var(--success-gradient);
+      color: #ffffff;
+      box-shadow: 0 4px 0 var(--success-dark), 0 6px 12px rgba(16, 185, 129, 0.35);
+      border: 1px solid #6ee7b7;
+    }
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 var(--success-dark), 0 10px 16px rgba(16, 185, 129, 0.45);
+    }
+    .btn-success:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--success-dark), 0 2px 4px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Danger 3D Button (Red) */
+    .btn-danger {
+      background: var(--danger-gradient);
+      color: #ffffff;
+      box-shadow: 0 4px 0 var(--danger-dark), 0 6px 12px rgba(239, 68, 68, 0.35);
+      border: 1px solid #fca5a5;
+    }
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 var(--danger-dark), 0 10px 16px rgba(239, 68, 68, 0.45);
+    }
+    .btn-danger:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--danger-dark), 0 2px 4px rgba(239, 68, 68, 0.2);
+    }
+
+    /* Outline 3D Button */
+    .btn-outline {
+      background: #ffffff;
+      color: var(--text-main);
+      border: 1.5px solid var(--border-highlight);
+      box-shadow: 0 3px 0 #cbd5e1, 0 4px 8px rgba(0,0,0,0.05);
+    }
+    .btn-outline:hover {
+      background: #f8fafc;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 0 #cbd5e1, 0 6px 12px rgba(0,0,0,0.08);
+    }
+    .btn-outline:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #cbd5e1, 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    /* Google Button 3D */
+    .btn-google-3d {
+      background: #ffffff;
+      color: #1f2937;
+      border: 1.5px solid #d1d5db;
+      box-shadow: 0 4px 0 #9ca3af, 0 8px 16px rgba(0, 0, 0, 0.08);
+      font-size: 1rem;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .btn-google-3d:hover {
+      background: #f9fafb;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #9ca3af, 0 12px 20px rgba(0, 0, 0, 0.12);
+    }
+    .btn-google-3d:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #9ca3af, 0 2px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .full-width { width: 100%; }
+    .btn-sm { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+
+    /* ================= SECTION HEADERS & CARDS ================= */
     .section-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       flex-wrap: wrap;
       gap: 15px;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
     }
 
-    .section-header h2 { font-size: 1.35rem; font-weight: 700; color: var(--dark); }
-    .section-desc { font-size: 0.88rem; color: var(--text-muted); }
+    .section-header h2 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--dark);
+      letter-spacing: -0.5px;
+    }
 
-    /* Filters & Search */
+    .section-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    /* Filter & Search Bar */
     .filter-card {
       background-color: var(--surface);
       padding: 14px 18px;
       border-radius: var(--radius-md);
       border: 1px solid var(--border);
-      margin-bottom: 20px;
+      margin-bottom: 22px;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      box-shadow: var(--shadow-sm);
+      box-shadow: var(--shadow-3d-card);
     }
 
     .search-box {
       display: flex;
       align-items: center;
-      gap: 10px;
-      background: var(--surface-alt);
-      padding: 8px 14px;
+      gap: 12px;
+      background: #f8fafc;
+      padding: 10px 16px;
       border-radius: var(--radius-sm);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
     }
 
     .search-box input {
@@ -221,70 +598,74 @@
       outline: none;
       width: 100%;
       font-size: 0.95rem;
+      color: var(--text-main);
     }
 
     .geo-sort-info {
-      font-size: 0.82rem;
+      font-size: 0.85rem;
       color: var(--primary);
-      font-weight: 600;
+      font-weight: 700;
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    /* Cards Grid */
+    /* 3D CARDS GRID */
     .cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 20px;
+      gap: 22px;
     }
 
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 18px;
-      box-shadow: var(--shadow-sm);
+      padding: 22px;
+      box-shadow: var(--shadow-3d-card);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       position: relative;
       transition: var(--transition);
+      overflow: hidden;
     }
 
     .card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-3d-card-hover);
     }
 
     .card-badge {
       position: absolute;
-      top: 14px;
-      right: 14px;
-      padding: 4px 10px;
+      top: 16px;
+      right: 16px;
+      padding: 5px 12px;
       border-radius: var(--radius-full);
-      font-size: 0.72rem;
-      font-weight: 700;
+      font-size: 0.74rem;
+      font-weight: 800;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.06);
     }
 
-    .badge-open { background: #dcfce7; color: #166534; }
-    .badge-filled { background: #fee2e2; color: #991b1b; }
-    .badge-approved { background: #dbeafe; color: #1e40af; }
-    .badge-pending { background: #fef3c7; color: #92400e; }
-    .badge-rejected { background: #fee2e2; color: #b91c1c; }
-    .badge-hidden { background: #f1f5f9; color: #64748b; }
+    .badge-open { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-filled { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .badge-approved { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+    .badge-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .badge-rejected { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .badge-hidden { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
 
     .card-title {
-      font-size: 1.15rem;
-      font-weight: 700;
+      font-size: 1.2rem;
+      font-weight: 800;
       color: var(--dark);
       margin-bottom: 6px;
       padding-right: 70px;
     }
 
     .card-subtext {
-      font-size: 0.85rem;
+      font-size: 0.86rem;
       color: var(--text-muted);
       display: flex;
       align-items: center;
@@ -294,47 +675,50 @@
 
     .card-details-list {
       list-style: none;
-      margin: 12px 0;
+      margin: 14px 0;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      font-size: 0.88rem;
+      gap: 10px;
+      font-size: 0.9rem;
     }
 
     .card-details-list li {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       color: #334155;
     }
 
     .card-details-list li i {
-      width: 18px;
+      width: 20px;
       color: var(--primary);
       text-align: center;
     }
 
     .highlight-pay {
-      background-color: #ecfdf5;
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
       color: #065f46;
-      padding: 6px 10px;
+      border: 1px solid #a7f3d0;
+      padding: 8px 14px;
       border-radius: var(--radius-sm);
-      font-weight: 700;
-      font-size: 0.95rem;
+      font-weight: 800;
+      font-size: 1rem;
       display: inline-block;
-      margin: 6px 0;
+      margin: 8px 0;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
     }
 
     .distance-pill {
       background: #eff6ff;
       color: #1e40af;
-      padding: 3px 8px;
+      padding: 4px 10px;
       border-radius: var(--radius-full);
       font-size: 0.78rem;
-      font-weight: 600;
+      font-weight: 700;
       display: inline-flex;
       align-items: center;
       gap: 4px;
+      border: 1px solid #bfdbfe;
     }
 
     .maps-link-btn {
@@ -343,8 +727,8 @@
       gap: 5px;
       color: var(--primary);
       text-decoration: none;
-      font-weight: 600;
-      font-size: 0.85rem;
+      font-weight: 700;
+      font-size: 0.88rem;
     }
 
     .maps-link-btn:hover { text-decoration: underline; }
@@ -353,57 +737,99 @@
       display: flex;
       gap: 14px;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
     .worker-avatar {
-      width: 64px;
-      height: 64px;
+      width: 70px;
+      height: 70px;
       border-radius: var(--radius-full);
       object-fit: cover;
-      border: 2px solid var(--border);
+      border: 3px solid #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     }
 
     .card-footer-actions {
-      margin-top: 14px;
-      padding-top: 14px;
+      margin-top: 16px;
+      padding-top: 16px;
       border-top: 1px solid var(--border);
       display: flex;
       gap: 10px;
     }
 
-    /* Buttons */
-    .btn {
-      padding: 9px 16px;
-      border-radius: var(--radius-sm);
-      font-size: 0.88rem;
-      font-weight: 600;
+    /* ================= FILE UPLOAD ZONE ================= */
+    .file-upload-box {
+      border: 2px dashed #818cf8;
+      background: #f5f7ff;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: center;
       cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
       transition: var(--transition);
-      border: 1px solid transparent;
-      text-decoration: none;
+      position: relative;
     }
 
-    .btn-primary { background-color: var(--primary); color: #fff; }
-    .btn-primary:hover { background-color: var(--primary-hover); }
-    .btn-outline { background-color: transparent; border-color: var(--border); color: var(--text-main); }
-    .btn-outline:hover { background-color: var(--surface-alt); }
-    .btn-danger { background-color: var(--danger); color: #fff; }
-    .btn-success { background-color: var(--success); color: #fff; }
-    .btn-admin { background-color: #475569; color: #fff; }
-    .btn-google { background-color: #ffffff; color: #374151; border-color: #d1d5db; width: 100%; padding: 12px; }
-    .full-width { width: 100%; }
-    .btn-sm { padding: 5px 10px; font-size: 0.78rem; }
+    .file-upload-box:hover {
+      background: #eef2ff;
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
 
-    /* Dashboard */
+    .upload-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary);
+    }
+
+    .upload-placeholder i {
+      font-size: 2rem;
+    }
+
+    .upload-placeholder span {
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .upload-placeholder small {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .preview-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .preview-container img {
+      width: 100px;
+      height: 100px;
+      border-radius: var(--radius-full);
+      object-fit: cover;
+      border: 3px solid #ffffff;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-change-photo {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+
+    /* ================= USER DASHBOARD ================= */
     .dashboard-grid {
       display: grid;
       grid-template-columns: 1fr 2fr;
-      gap: 20px;
+      gap: 22px;
     }
 
     @media (max-width: 840px) {
@@ -414,8 +840,8 @@
       background: var(--surface);
       border-radius: var(--radius-lg);
       border: 1px solid var(--border);
-      padding: 20px;
-      box-shadow: var(--shadow-sm);
+      padding: 24px;
+      box-shadow: var(--shadow-3d-card);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -423,32 +849,33 @@
     }
 
     .dash-avatar {
-      width: 90px;
-      height: 90px;
+      width: 100px;
+      height: 100px;
       border-radius: var(--radius-full);
       object-fit: cover;
-      margin-bottom: 12px;
-      border: 3px solid var(--primary-light);
+      margin-bottom: 14px;
+      border: 4px solid #ffffff;
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.2);
     }
 
     .dash-status-banner {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       border-radius: var(--radius-sm);
-      margin: 14px 0;
-      font-size: 0.85rem;
-      font-weight: 600;
+      margin: 16px 0;
+      font-size: 0.88rem;
+      font-weight: 700;
     }
 
     .dash-details-table {
       width: 100%;
       text-align: left;
-      margin: 15px 0;
-      font-size: 0.86rem;
+      margin: 16px 0;
+      font-size: 0.88rem;
     }
 
     .dash-details-table td {
-      padding: 6px 0;
+      padding: 8px 0;
       border-bottom: 1px solid #f1f5f9;
     }
 
@@ -461,11 +888,11 @@
       width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-top: 15px;
+      gap: 12px;
+      margin-top: 16px;
     }
 
-    /* Chat Layout */
+    /* ================= CHAT VIEW ================= */
     .chat-layout {
       display: grid;
       grid-template-columns: 320px 1fr;
@@ -474,6 +901,7 @@
       border-radius: var(--radius-lg);
       height: 75vh;
       overflow: hidden;
+      box-shadow: var(--shadow-3d-card);
     }
 
     @media (max-width: 768px) {
@@ -488,34 +916,37 @@
     }
 
     .chat-sidebar-header {
-      padding: 14px 18px;
+      padding: 16px 20px;
       border-bottom: 1px solid var(--border);
       background: var(--surface);
+      font-weight: 800;
     }
 
     .chat-threads-list { flex: 1; overflow-y: auto; }
 
     .chat-thread-item {
-      padding: 12px 16px;
+      padding: 14px 18px;
       display: flex;
       align-items: center;
       gap: 12px;
       cursor: pointer;
       border-bottom: 1px solid var(--border);
+      transition: var(--transition);
     }
 
-    .chat-thread-item:hover, .chat-thread-item.active { background-color: #e2e8f0; }
+    .chat-thread-item:hover, .chat-thread-item.active { background-color: #eef2ff; }
 
     .chat-thread-avatar {
-      width: 44px;
-      height: 44px;
+      width: 46px;
+      height: 46px;
       border-radius: var(--radius-full);
       object-fit: cover;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     .chat-thread-info { flex: 1; overflow: hidden; }
-    .chat-thread-name { font-weight: 700; font-size: 0.9rem; display: flex; justify-content: space-between; }
-    .chat-thread-last { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-thread-name { font-weight: 800; font-size: 0.92rem; display: flex; justify-content: space-between; }
+    .chat-thread-last { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     .chat-main { display: flex; flex-direction: column; background: #ffffff; }
 
@@ -526,90 +957,113 @@
       align-items: center;
       justify-content: center;
       color: var(--text-muted);
-      gap: 10px;
+      gap: 12px;
     }
 
-    .chat-empty-state i { font-size: 3rem; color: #cbd5e1; }
+    .chat-empty-state i { font-size: 3.5rem; color: #cbd5e1; }
     .chat-active-box { display: flex; flex-direction: column; height: 100%; }
 
     .chat-header {
-      padding: 12px 18px;
+      padding: 14px 20px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      background: #fafafa;
     }
 
-    .chat-partner-info { display: flex; align-items: center; gap: 10px; }
-    .chat-partner-info img { width: 38px; height: 38px; border-radius: var(--radius-full); object-fit: cover; }
+    .chat-partner-info { display: flex; align-items: center; gap: 12px; }
+    .chat-partner-info img { width: 42px; height: 42px; border-radius: var(--radius-full); object-fit: cover; }
 
     .badge-role {
-      font-size: 0.72rem;
-      padding: 2px 6px;
+      font-size: 0.74rem;
+      padding: 3px 8px;
       border-radius: var(--radius-full);
       background: var(--primary-light);
       color: var(--primary);
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .chat-messages-body {
       flex: 1;
       overflow-y: auto;
-      padding: 16px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       background: #f8fafc;
     }
 
     .message-bubble {
       max-width: 75%;
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-size: 0.88rem;
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 0.92rem;
       word-break: break-word;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
 
-    .msg-sent { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 2px; }
-    .msg-received { align-self: flex-start; background: #e2e8f0; color: var(--text-main); border-bottom-left-radius: 2px; }
-    .msg-timestamp { font-size: 0.68rem; opacity: 0.75; display: block; text-align: right; margin-top: 4px; }
+    .msg-sent { 
+      align-self: flex-end; 
+      background: var(--primary-gradient); 
+      color: #fff; 
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+    }
+    .msg-received { 
+      align-self: flex-start; 
+      background: #ffffff; 
+      color: var(--text-main); 
+      border-bottom-left-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    .msg-timestamp { font-size: 0.7rem; opacity: 0.8; display: block; text-align: right; margin-top: 5px; }
 
     .chat-composer {
-      padding: 12px;
+      padding: 14px;
       border-top: 1px solid var(--border);
       display: flex;
-      gap: 10px;
+      gap: 12px;
       background: var(--surface);
     }
 
     .chat-composer input {
       flex: 1;
-      padding: 10px 14px;
-      border: 1px solid var(--border);
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
       border-radius: var(--radius-md);
       outline: none;
+      font-size: 0.95rem;
     }
 
-    /* Admin Panel Tables */
+    /* ================= ADMIN TABLES ================= */
     .admin-tab-group {
       display: flex;
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 12px;
+      margin-bottom: 20px;
       border-bottom: 1px solid var(--border);
-      padding-bottom: 10px;
+      padding-bottom: 12px;
     }
 
     .admin-nav-btn {
       background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 8px 16px;
+      border: 1.5px solid var(--border);
+      padding: 10px 18px;
       border-radius: var(--radius-md);
-      font-weight: 600;
-      font-size: 0.85rem;
+      font-weight: 700;
+      font-size: 0.88rem;
       cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+      transition: var(--transition);
     }
 
-    .admin-nav-btn.active { background: var(--dark); color: #fff; border-color: var(--dark); }
+    .admin-nav-btn.active { 
+      background: var(--dark); 
+      color: #fff; 
+      border-color: var(--dark);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+    }
+
     .admin-tab-panel { display: none; }
     .admin-tab-panel.active { display: block; }
 
@@ -618,18 +1072,20 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
       overflow-x: auto;
+      box-shadow: var(--shadow-3d-card);
     }
 
-    .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    .data-table th, .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    .data-table th { background: #f8fafc; color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .data-table th, .data-table td { padding: 14px 18px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .data-table th { background: #f8fafc; color: var(--text-muted); font-weight: 800; text-transform: uppercase; font-size: 0.78rem; }
     .admin-action-btn-group { display: flex; gap: 6px; }
 
-    /* Modals */
+    /* ================= MODALS & POPUPS ================= */
     .modal-backdrop {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.65);
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(5px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -651,6 +1107,14 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      animation: modalSlide 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes modalSlide {
+      from { transform: scale(0.95) translateY(10px); }
+      to { transform: scale(1) translateY(0); }
     }
 
     .form-modal-card { max-width: 640px; }
@@ -658,75 +1122,138 @@
     .role-choice-card { max-width: 700px; }
 
     .modal-header {
-      padding: 16px 20px;
+      padding: 18px 22px;
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: #fafafa;
     }
 
-    .modal-header h3 { font-size: 1.15rem; font-weight: 700; }
-    .close-btn { background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
-    .modal-body { padding: 20px; overflow-y: auto; }
-    .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: var(--surface-alt); }
-    .modal-divider { border: 0; border-top: 1px solid var(--border); margin: 18px 0; }
+    .modal-header h3 { font-size: 1.2rem; font-weight: 800; color: var(--dark); }
+    .close-btn { background: none; border: none; font-size: 1.6rem; color: var(--text-muted); cursor: pointer; }
+    .modal-body { padding: 22px; overflow-y: auto; }
+    .modal-footer { padding: 16px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; background: var(--surface-alt); }
+    
+    /* Clean Google Auth Card */
+    .auth-modal-clean {
+      text-align: center;
+      padding: 30px 24px;
+    }
 
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .google-auth-hero {
+      margin-bottom: 24px;
+    }
+
+    .auth-lock-icon {
+      width: 60px;
+      height: 60px;
+      background: #e0e7ff;
+      color: var(--primary);
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin: 0 auto 14px auto;
+      box-shadow: 0 6px 16px rgba(79, 70, 229, 0.2);
+    }
+
+    .google-auth-hero h4 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--dark);
+      margin-bottom: 6px;
+    }
+
+    .auth-security-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
 
-    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
     .form-group.full-width { grid-column: 1 / -1; }
-    .form-group label { font-size: 0.82rem; font-weight: 600; color: #334155; }
-    .form-group input { padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.9rem; }
+    .form-group label { font-size: 0.85rem; font-weight: 700; color: #334155; }
+    .form-group input { 
+      padding: 10px 14px; 
+      border: 1.5px solid var(--border); 
+      border-radius: var(--radius-sm); 
+      font-size: 0.92rem;
+      outline: none;
+      transition: var(--transition);
+    }
+    .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
     .required { color: var(--danger); }
-    .alert-info { background: #eff6ff; border-left: 4px solid var(--primary); padding: 12px; font-size: 0.85rem; color: #1e3a8a; border-radius: 4px; margin-bottom: 16px; }
+    .alert-info { background: #eff6ff; border-left: 4px solid var(--primary); padding: 14px; font-size: 0.88rem; color: #1e3a8a; border-radius: 6px; margin-bottom: 18px; }
 
-    .role-cards-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .role-cards-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
     @media (max-width: 580px) { .role-cards-wrapper { grid-template-columns: 1fr; } }
 
     .role-selection-box {
       border: 2px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 20px;
+      padding: 24px;
       text-align: center;
       cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      transition: var(--transition);
+      box-shadow: var(--shadow-3d-card);
     }
 
-    .role-selection-box:hover { border-color: var(--primary); background: var(--primary-light); }
-    .role-icon { font-size: 2.5rem; }
-    .quick-user-selector { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .role-selection-box:hover { 
+      border-color: var(--primary); 
+      background: var(--primary-light); 
+      transform: translateY(-3px);
+    }
+
+    .role-icon { font-size: 2.8rem; }
 
     /* Toast Notifications */
     #toast-container {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 24px;
+      right: 24px;
       z-index: 9999;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       pointer-events: none;
     }
 
     .toast {
       background: var(--dark);
       color: #fff;
-      padding: 12px 18px;
+      padding: 14px 20px;
       border-radius: var(--radius-md);
-      font-size: 0.88rem;
+      font-size: 0.9rem;
+      font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
       pointer-events: auto;
+      animation: slideInToast 0.25s ease;
     }
 
-    .toast.success { border-left: 5px solid var(--success); }
-    .toast.error { border-left: 5px solid var(--danger); }
-    .toast.info { border-left: 5px solid var(--primary); }
+    @keyframes slideInToast {
+      from { transform: translateX(50px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .toast.success { border-left: 6px solid var(--success); }
+    .toast.error { border-left: 6px solid var(--danger); }
+    .toast.info { border-left: 6px solid var(--primary); }
   </style>
 </head>
 <body>
@@ -780,22 +1307,50 @@
 
       <!-- ================= 1. WORK POSTS VIEW ================= -->
       <section id="jobs-view" class="view-panel active">
+
+        <!-- Prominent Hero 2-Way Entry Points -->
+        <div class="hero-entry-banner" id="hero-entry-banner">
+          <div class="hero-header">
+            <span class="hero-badge"><i class="fa-solid fa-bolt"></i> Instant Event Staffing</span>
+            <h2>Connecting Caterers & Event Crew in Real-Time</h2>
+            <p>Select your role below to get started immediately</p>
+          </div>
+          <div class="entry-cta-grid">
+            <div class="entry-cta-card worker-cta" onclick="startWorkerDirectFlow()">
+              <div class="cta-card-top">
+                <div class="cta-icon-wrap"><i class="fa-solid fa-person-walking-luggage"></i></div>
+                <div class="cta-info">
+                  <h3>Join as a Boy</h3>
+                  <p>Get event shifts, set your rate & get hired</p>
+                </div>
+              </div>
+              <button class="btn btn-worker-3d full-width"><i class="fa-solid fa-user-plus"></i> Join as a Boy</button>
+            </div>
+
+            <div class="entry-cta-card employer-cta" onclick="startEmployerDirectFlow()">
+              <div class="cta-card-top">
+                <div class="cta-icon-wrap"><i class="fa-solid fa-bullhorn"></i></div>
+                <div class="cta-info">
+                  <h3>Post Your Work</h3>
+                  <p>Hire verified catering crew for banquets & weddings</p>
+                </div>
+              </div>
+              <button class="btn btn-employer-3d full-width"><i class="fa-solid fa-plus-circle"></i> Post Your Work</button>
+            </div>
+          </div>
+        </div>
+
         <div class="section-header">
           <div>
-            <h2>Available Catering Work</h2>
-            <p class="section-desc">Browse upcoming events, wedding receptions, and catering shifts.</p>
-          </div>
-          <div class="header-action-group">
-            <button class="btn btn-primary" onclick="handlePostWorkClick()">
-              <i class="fa-solid fa-plus"></i> Post Work
-            </button>
+            <h2>Available Catering Shifts</h2>
+            <p class="section-desc">Browse upcoming banquets, wedding receptions, and catering slots.</p>
           </div>
         </div>
 
         <div class="filter-card">
           <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="job-search-input" placeholder="Search by event title, location..." oninput="renderJobs()" />
+            <input type="text" id="job-search-input" placeholder="Search shifts by title, venue, or city..." oninput="renderJobs()" />
           </div>
           <div class="geo-sort-info" id="worker-distance-context" style="display: none;">
             <i class="fa-solid fa-location-crosshairs"></i>
@@ -811,14 +1366,14 @@
         <div class="section-header">
           <div>
             <h2>Verified Worker Directory</h2>
-            <p class="section-desc">Browse verified catering crew members ready for direct contact.</p>
+            <p class="section-desc">Browse verified catering crew members ready for direct hire.</p>
           </div>
         </div>
 
         <div class="filter-card">
           <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="worker-search-input" placeholder="Search workers by name, area, or rate..." oninput="renderWorkersDirectory()" />
+            <input type="text" id="worker-search-input" placeholder="Search workers by name, area, rate..." oninput="renderWorkersDirectory()" />
           </div>
         </div>
 
@@ -835,7 +1390,7 @@
         <div class="chat-layout">
           <div class="chat-sidebar">
             <div class="chat-sidebar-header">
-              <h3>Messages</h3>
+              <h3>Direct Messages</h3>
             </div>
             <div class="chat-threads-list" id="chat-threads-container"></div>
           </div>
@@ -873,7 +1428,7 @@
         <div class="section-header">
           <div>
             <h2>Admin Management Console</h2>
-            <p class="section-desc">Review registrations, manage statuses, and audit platform activities.</p>
+            <p class="section-desc">Review registrations, manage approvals, and audit platform activity.</p>
           </div>
         </div>
 
@@ -945,37 +1500,28 @@
 
     <!-- ================= MODALS ================= -->
 
-    <!-- Auth Simulation Modal -->
+    <!-- Clean Google Auth Modal -->
     <div id="auth-modal" class="modal-backdrop">
       <div class="modal-card">
         <div class="modal-header">
           <h3>Sign in to CaterMatch</h3>
           <button class="close-btn" onclick="closeAuthModal()">&times;</button>
         </div>
-        <div class="modal-body" id="auth-modal-body">
-          <p class="text-muted">Simulate signing in with a demo profile or register fresh:</p>
-          <div class="quick-user-selector">
-            <button class="btn btn-outline" onclick="mockSignIn('worker_1')">
-              <i class="fa-solid fa-person-walking"></i> Rahul Sharma (Approved Worker)
-            </button>
-            <button class="btn btn-outline" onclick="mockSignIn('worker_pending')">
-              <i class="fa-solid fa-clock"></i> Amit Kumar (Pending Worker)
-            </button>
-            <button class="btn btn-outline" onclick="mockSignIn('emp_1')">
-              <i class="fa-solid fa-briefcase"></i> Royal Feast Caterers (Approved Employer)
-            </button>
-            <button class="btn btn-outline" onclick="mockSignIn('emp_pending')">
-              <i class="fa-solid fa-user-clock"></i> Priya Verma (Pending Employer)
-            </button>
-            <button class="btn btn-admin" onclick="mockSignIn('admin_user')">
-              <i class="fa-solid fa-shield-halved"></i> Platform Admin
-            </button>
+        <div class="modal-body auth-modal-clean">
+          <div class="google-auth-hero">
+            <div class="auth-lock-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <h4>Welcome to CaterMatch</h4>
+            <p class="text-muted">Sign in with your Google account to access bookings, messaging, and event management.</p>
           </div>
-          <hr class="modal-divider" />
-          <button class="btn btn-google" onclick="initiateFirstTimeRegistration()">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" width="18" />
-            Sign in as New Google User (First-Time Flow)
+
+          <button class="btn btn-google-3d full-width" onclick="handleGoogleSignInButtonClick()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="22" height="22" />
+            <span>Continue with Google</span>
           </button>
+
+          <div class="auth-security-note">
+            <i class="fa-solid fa-lock"></i> Secure Google OAuth 2.0
+          </div>
         </div>
       </div>
     </div>
@@ -989,27 +1535,27 @@
         <div class="modal-body">
           <div class="alert-info">
             <i class="fa-solid fa-triangle-exclamation"></i>
-            <strong>Important:</strong> Role selection is permanent for your Google Account. Workers cannot post work, and Employers cannot apply for jobs.
+            <strong>Important:</strong> Role selection is permanent for your account. Workers cannot post work, and Employers cannot apply for jobs.
           </div>
           <div class="role-cards-wrapper">
             <div class="role-selection-box" onclick="selectInitialRole('worker')">
               <div class="role-icon">🧑‍🍳</div>
               <h4>Register as Worker</h4>
-              <p>Find catering jobs, set your event rates, get hired, and chat directly with organizers.</p>
-              <button class="btn btn-primary full-width">Continue as Worker</button>
+              <p>Find catering shifts, set your per-event rates, get hired, and chat directly with employers.</p>
+              <button class="btn btn-worker-3d full-width">Continue as Worker</button>
             </div>
             <div class="role-selection-box" onclick="selectInitialRole('employer')">
               <div class="role-icon">🏢</div>
               <h4>Register as Employer</h4>
-              <p>Post events, specify headcount, check applicants, and browse available catering boys.</p>
-              <button class="btn btn-primary full-width">Continue as Employer</button>
+              <p>Post events, specify headcount, review applicants, and hire verified catering boys.</p>
+              <button class="btn btn-employer-3d full-width">Continue as Employer</button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Worker Registration / Edit Modal -->
+    <!-- Worker Registration / Edit Modal with Device Image Upload -->
     <div id="worker-reg-modal" class="modal-backdrop">
       <div class="modal-card form-modal-card">
         <div class="modal-header">
@@ -1018,10 +1564,27 @@
         </div>
         <form id="worker-reg-form" onsubmit="handleWorkerRegistrationSubmit(event)">
           <div class="modal-body form-grid">
+            
+            <!-- File Upload Input with Live Preview -->
             <div class="form-group full-width">
-              <label>Profile Photo URL <span class="required">*</span></label>
-              <input type="url" id="worker-form-photo" placeholder="https://images.unsplash.com/..." required />
+              <label>Worker Profile Photo <span class="required">*</span></label>
+              <div class="file-upload-box" onclick="document.getElementById('worker-file-input').click()">
+                <input type="file" id="worker-file-input" accept="image/*" style="display: none;" onchange="handleImageFileSelected(event, 'worker')" />
+                <div id="worker-upload-placeholder" class="upload-placeholder">
+                  <i class="fa-solid fa-cloud-arrow-up"></i>
+                  <span>Tap to choose photo from device</span>
+                  <small>JPG, PNG, JPEG up to 5MB</small>
+                </div>
+                <div id="worker-preview-container" class="preview-container" style="display: none;">
+                  <img id="worker-img-preview" src="" alt="Worker Preview" />
+                  <button type="button" class="btn-change-photo" onclick="event.stopPropagation(); document.getElementById('worker-file-input').click();">
+                    <i class="fa-solid fa-camera"></i> Change Photo
+                  </button>
+                </div>
+              </div>
+              <input type="hidden" id="worker-form-photo-data" />
             </div>
+
             <div class="form-group">
               <label>Full Name <span class="required">*</span></label>
               <input type="text" id="worker-form-name" placeholder="e.g. Sunil Yadav" required />
@@ -1040,7 +1603,7 @@
             </div>
             <div class="form-group full-width">
               <label>Google Maps Location Link <span class="required">*</span></label>
-              <input type="url" id="worker-form-maps-link" placeholder="Paste Google Maps URL (e.g., https://maps.app.goo.gl/... or ?q=19.11,72.86)" required />
+              <input type="url" id="worker-form-maps-link" placeholder="Paste Google Maps URL (e.g. https://maps.app.goo.gl/... or ?q=19.11,72.86)" required />
             </div>
             <div class="form-group full-width">
               <label>Location Text / Address <span class="required">*</span></label>
@@ -1053,13 +1616,13 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline" onclick="closeWorkerRegModal()">Cancel</button>
-            <button type="submit" class="btn btn-primary" id="worker-submit-btn">Submit Profile</button>
+            <button type="submit" class="btn btn-worker-3d" id="worker-submit-btn">Submit Profile</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- Employer Registration Modal -->
+    <!-- Employer Registration Modal with Device Image Upload -->
     <div id="employer-reg-modal" class="modal-backdrop">
       <div class="modal-card form-modal-card">
         <div class="modal-header">
@@ -1068,13 +1631,30 @@
         </div>
         <form id="employer-reg-form" onsubmit="handleEmployerRegistrationSubmit(event)">
           <div class="modal-body form-grid">
+            
+            <!-- File Upload Input with Live Preview -->
             <div class="form-group full-width">
-              <label>Company / Profile Photo URL <span class="required">*</span></label>
-              <input type="url" id="emp-form-photo" placeholder="https://images.unsplash.com/..." required />
+              <label>Company / Organizer Photo <span class="required">*</span></label>
+              <div class="file-upload-box" onclick="document.getElementById('emp-file-input').click()">
+                <input type="file" id="emp-file-input" accept="image/*" style="display: none;" onchange="handleImageFileSelected(event, 'employer')" />
+                <div id="emp-upload-placeholder" class="upload-placeholder">
+                  <i class="fa-solid fa-cloud-arrow-up"></i>
+                  <span>Tap to choose photo from device</span>
+                  <small>JPG, PNG, JPEG up to 5MB</small>
+                </div>
+                <div id="emp-preview-container" class="preview-container" style="display: none;">
+                  <img id="emp-img-preview" src="" alt="Employer Preview" />
+                  <button type="button" class="btn-change-photo" onclick="event.stopPropagation(); document.getElementById('emp-file-input').click();">
+                    <i class="fa-solid fa-camera"></i> Change Photo
+                  </button>
+                </div>
+              </div>
+              <input type="hidden" id="emp-form-photo-data" />
             </div>
+
             <div class="form-group">
               <label>Employer / Company Name <span class="required">*</span></label>
-              <input type="text" id="emp-form-name" placeholder="e.g. Grand Feast Organizers" required />
+              <input type="text" id="emp-form-name" placeholder="e.g. Grand Feast Caterers" required />
             </div>
             <div class="form-group">
               <label>Age <span class="required">*</span></label>
@@ -1095,7 +1675,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline" onclick="closeEmployerRegModal()">Cancel</button>
-            <button type="submit" class="btn btn-primary">Submit Profile</button>
+            <button type="submit" class="btn btn-employer-3d">Submit Profile</button>
           </div>
         </form>
       </div>
@@ -1193,6 +1773,7 @@
     // Initial Mock Repository
     const INITIAL_STATE = {
       currentUser: null,
+      pendingAuthTargetRole: null, // Track direct CTA clicks ('worker' | 'employer' | null)
       workers: [
         {
           id: 'worker_1',
@@ -1221,20 +1802,6 @@
           timings: 'Fri-Sun evening receptions',
           status: 'approved',
           appliedJobs: []
-        },
-        {
-          id: 'worker_pending',
-          name: 'Amit Kumar',
-          age: 22,
-          phone: '+91 97654 11223',
-          photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=60',
-          mapsLink: 'https://maps.google.com/?q=19.1970,72.8273',
-          locationText: 'Borivali West, Mumbai',
-          coords: { lat: 19.1970, lng: 72.8273 },
-          rate: '₹800 / shift',
-          timings: 'All 7 Days (After 2:00 PM)',
-          status: 'pending',
-          appliedJobs: []
         }
       ],
       employers: [
@@ -1248,17 +1815,6 @@
           locationText: 'BKC, Mumbai',
           coords: { lat: 19.0760, lng: 72.8777 },
           status: 'approved'
-        },
-        {
-          id: 'emp_pending',
-          name: 'Priya Verma',
-          age: 35,
-          phone: '+91 99887 66554',
-          photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=60',
-          mapsLink: 'https://maps.google.com/?q=19.1363,72.8277',
-          locationText: 'Lokhandwala, Mumbai',
-          coords: { lat: 19.1363, lng: 72.8277 },
-          status: 'pending'
         }
       ],
       jobs: [
@@ -1306,7 +1862,7 @@
         }
       ],
       auditLogs: [
-        { id: 'log_1', eventType: 'System Started', userInvolved: 'System', timestamp: 'Initial Load', details: 'Platform environment initialized.' }
+        { id: 'log_1', eventType: 'System Started', userInvolved: 'System', timestamp: 'Initial Load', details: 'CaterMatch platform initialized.' }
       ]
     };
 
@@ -1346,6 +1902,52 @@
       toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${message}</span>`;
       container.appendChild(toast);
       setTimeout(() => toast.remove(), 3500);
+    }
+
+    // ================= DEVICE FILE UPLOAD & PREVIEW =================
+    // Note: Converted to local Base64/Object Data for mock state.
+    // In Phase 14, this will be swapped for direct Firebase Storage upload.
+    function handleImageFileSelected(event, type) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        showToast('Please select a valid image file.', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64Data = e.target.result;
+        if (type === 'worker') {
+          document.getElementById('worker-form-photo-data').value = base64Data;
+          document.getElementById('worker-img-preview').src = base64Data;
+          document.getElementById('worker-upload-placeholder').style.display = 'none';
+          document.getElementById('worker-preview-container').style.display = 'flex';
+        } else if (type === 'employer') {
+          document.getElementById('emp-form-photo-data').value = base64Data;
+          document.getElementById('emp-img-preview').src = base64Data;
+          document.getElementById('emp-upload-placeholder').style.display = 'none';
+          document.getElementById('emp-preview-container').style.display = 'flex';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function resetUploadPreview(type) {
+      if (type === 'worker') {
+        document.getElementById('worker-file-input').value = '';
+        document.getElementById('worker-form-photo-data').value = '';
+        document.getElementById('worker-img-preview').src = '';
+        document.getElementById('worker-upload-placeholder').style.display = 'flex';
+        document.getElementById('worker-preview-container').style.display = 'none';
+      } else {
+        document.getElementById('emp-file-input').value = '';
+        document.getElementById('emp-form-photo-data').value = '';
+        document.getElementById('emp-img-preview').src = '';
+        document.getElementById('emp-upload-placeholder').style.display = 'flex';
+        document.getElementById('emp-preview-container').style.display = 'none';
+      }
     }
 
     // Map Coordinate Parsing & Haversine Distance
@@ -1388,6 +1990,39 @@
       if (viewId === 'dashboard-view') renderDashboard();
       if (viewId === 'chat-view') renderChatList();
       if (viewId === 'admin-view') renderAdminTables();
+    }
+
+    // ================= DIRECT ENTRY-POINT FLOWS =================
+    function startWorkerDirectFlow() {
+      if (appState.currentUser) {
+        if (appState.currentUser.role === 'worker') {
+          navigateTo('dashboard-view');
+        } else {
+          showToast('You are currently signed in as an Employer.', 'info');
+        }
+        return;
+      }
+      appState.pendingAuthTargetRole = 'worker';
+      openAuthModal();
+    }
+
+    function startEmployerDirectFlow() {
+      if (appState.currentUser) {
+        if (appState.currentUser.role === 'employer') {
+          if (appState.currentUser.data.status === 'approved') {
+            document.getElementById('post-form-name').value = appState.currentUser.data.name;
+            document.getElementById('work-post-modal').classList.add('show');
+          } else {
+            showToast('Your Employer account is pending admin approval.', 'error');
+            navigateTo('dashboard-view');
+          }
+        } else {
+          showToast('You are currently signed in as a Worker.', 'info');
+        }
+        return;
+      }
+      appState.pendingAuthTargetRole = 'employer';
+      openAuthModal();
     }
 
     // Render Work Posts
@@ -1492,9 +2127,9 @@
             <div class="worker-card-header">
               <img src="${w.photo}" alt="${w.name}" class="worker-avatar" />
               <div class="worker-meta">
-                <h3>${w.name}</h3>
-                <p><i class="fa-solid fa-cake-candles"></i> Age: ${w.age} yrs</p>
-                <span class="badge-approved" style="font-size: 0.72rem; padding: 2px 6px; border-radius: 4px;">Verified</span>
+                <h3 style="font-size: 1.15rem; font-weight:800;">${w.name}</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-solid fa-cake-candles"></i> Age: ${w.age} yrs</p>
+                <span class="card-badge badge-approved" style="position:static; display:inline-block; margin-top:4px;">Verified</span>
               </div>
             </div>
             <div class="highlight-pay">${w.rate}</div>
@@ -1539,13 +2174,13 @@
       if (isWorker) {
         const applied = appState.jobs.filter(j => j.applicants.some(a => a.workerId === u.id));
         activityHtml = `
-          <div style="background:var(--surface); padding:20px; border-radius:var(--radius-lg); border:1px solid var(--border);">
-            <h3>Your Job Bookings (${applied.length})</h3>
-            <div style="margin-top:14px; display:flex; flex-direction:column; gap:10px;">
+          <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card);">
+            <h3 style="font-weight:800;">Your Job Bookings (${applied.length})</h3>
+            <div style="margin-top:16px; display:flex; flex-direction:column; gap:12px;">
               ${applied.length === 0 ? '<p class="text-muted">No applications submitted yet.</p>' : applied.map(j => `
-                <div style="padding:10px; border:1px solid var(--border); border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center;">
+                <div style="padding:12px 16px; border:1px solid var(--border); border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center;">
                   <div><strong>${j.title}</strong><br><small class="text-muted">${j.date} | ₹${j.perHeadAmount}</small></div>
-                  <span class="card-badge badge-approved">Applied</span>
+                  <span class="card-badge badge-approved" style="position:static;">Applied</span>
                 </div>
               `).join('')}
             </div>
@@ -1554,19 +2189,19 @@
       } else {
         const myJobs = appState.jobs.filter(j => j.employerId === u.id);
         activityHtml = `
-          <div style="background:var(--surface); padding:20px; border-radius:var(--radius-lg); border:1px solid var(--border);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-              <h3>Your Posted Events (${myJobs.length})</h3>
-              <button class="btn btn-primary btn-sm" onclick="handlePostWorkClick()"><i class="fa-solid fa-plus"></i> Post Event</button>
+          <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+              <h3 style="font-weight:800;">Your Posted Events (${myJobs.length})</h3>
+              <button class="btn btn-employer-3d btn-sm" onclick="handlePostWorkClick()"><i class="fa-solid fa-plus"></i> Post Event</button>
             </div>
-            <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="display:flex; flex-direction:column; gap:12px;">
               ${myJobs.length === 0 ? '<p class="text-muted">No events posted yet.</p>' : myJobs.map(j => `
-                <div style="padding:12px; border:1px solid var(--border); border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div style="padding:14px 18px; border:1px solid var(--border); border-radius:var(--radius-sm); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                   <div>
-                    <strong>${j.title}</strong><br>
+                    <strong style="font-size:1rem;">${j.title}</strong><br>
                     <small class="text-muted">${j.date} | Needed: ${j.boysNeeded} | Rate: ₹${j.perHeadAmount}</small>
                   </div>
-                  <div style="display:flex; gap:6px;">
+                  <div style="display:flex; gap:8px;">
                     <button class="btn btn-outline btn-sm" onclick="viewJobApplicants('${j.id}')"><i class="fa-solid fa-users"></i> Applicants (${j.applicants.length})</button>
                     <button class="btn btn-danger btn-sm" onclick="deleteJobPost('${j.id}')"><i class="fa-solid fa-trash"></i></button>
                   </div>
@@ -1581,15 +2216,15 @@
         <div class="dashboard-grid">
           <div class="dash-profile-card">
             <img src="${u.photo}" alt="${u.name}" class="dash-avatar" />
-            <h3>${u.name}</h3>
+            <h3 style="font-size:1.3rem; font-weight:800;">${u.name}</h3>
             <p class="text-muted">${isWorker ? 'Catering Crew Profile' : 'Event Organizer / Employer'}</p>
             <div class="dash-status-banner ${bannerClass}">${bannerText}</div>
             <table class="dash-details-table">
-              <tr><td>Phone</td><td>${u.phone}</td></tr>
+              <tr><td>Phone</td><td><strong>${u.phone}</strong></td></tr>
               <tr><td>Age</td><td>${u.age} yrs</td></tr>
               <tr><td>Location</td><td>${u.locationText}</td></tr>
-              ${isWorker ? `<tr><td>Rate</td><td>${u.rate}</td></tr><tr><td>Timings</td><td>${u.timings}</td></tr>` : ''}
-              <tr><td>Maps Link</td><td><a href="${u.mapsLink}" target="_blank" class="maps-link-btn">📍 View</a></td></tr>
+              ${isWorker ? `<tr><td>Rate</td><td><strong>${u.rate}</strong></td></tr><tr><td>Timings</td><td>${u.timings}</td></tr>` : ''}
+              <tr><td>Maps Link</td><td><a href="${u.mapsLink}" target="_blank" class="maps-link-btn">📍 View Map</a></td></tr>
             </table>
             <div class="dash-actions-panel">
               ${isWorker ? `<button class="btn btn-outline full-width" onclick="openWorkerEditModal()"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>` : ''}
@@ -1644,7 +2279,7 @@
     // Employer Work Post Flow
     function handlePostWorkClick() {
       if (!appState.currentUser) {
-        openAuthModal();
+        startEmployerDirectFlow();
         return;
       }
       if (appState.currentUser.role !== 'employer') {
@@ -1714,12 +2349,12 @@
         container.innerHTML = job.applicants.map(app => {
           const worker = appState.workers.find(w => w.id === app.workerId) || { name: 'Deleted Worker', photo: '', phone: '-' };
           return `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid var(--border);">
-              <div style="display:flex; align-items:center; gap:10px;">
-                <img src="${worker.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" />
-                <div><strong>${worker.name}</strong><br><small class="text-muted">${worker.phone} | Rate: ${worker.rate}</small></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid var(--border);">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <img src="${worker.photo}" style="width:44px; height:44px; border-radius:50%; object-fit:cover;" />
+                <div><strong style="font-size:0.95rem;">${worker.name}</strong><br><small class="text-muted">${worker.phone} | Rate: ${worker.rate}</small></div>
               </div>
-              <div style="display:flex; gap:6px;">
+              <div style="display:flex; gap:8px;">
                 <button class="btn btn-primary btn-sm" onclick="closeApplicantsModal(); startChatWithWorker('${worker.id}')"><i class="fa-solid fa-comments"></i> Chat</button>
               </div>
             </div>
@@ -1858,15 +2493,15 @@
       wBody.innerHTML = appState.workers.map(w => `
         <tr>
           <td>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <img src="${w.photo}" style="width:36px; height:36px; border-radius:50%; object-fit:cover;" />
+            <div style="display:flex; align-items:center; gap:10px;">
+              <img src="${w.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" />
               <strong>${w.name}</strong>
             </div>
           </td>
           <td>${w.phone}<br><small class="text-muted">${w.age} yrs</small></td>
           <td>${w.locationText}<br><a href="${w.mapsLink}" target="_blank" class="maps-link-btn">📍 Maps</a></td>
           <td>${w.rate}<br><small class="text-muted">${w.timings}</small></td>
-          <td><span class="card-badge badge-${w.status}">${w.status}</span></td>
+          <td><span class="card-badge badge-${w.status}" style="position:static;">${w.status}</span></td>
           <td>
             <div class="admin-action-btn-group">
               <button class="btn btn-success btn-sm" title="Approve" onclick="adminUpdateWorkerStatus('${w.id}', 'approved')"><i class="fa-solid fa-check"></i></button>
@@ -1883,14 +2518,14 @@
       eBody.innerHTML = appState.employers.map(e => `
         <tr>
           <td>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <img src="${e.photo}" style="width:36px; height:36px; border-radius:50%; object-fit:cover;" />
+            <div style="display:flex; align-items:center; gap:10px;">
+              <img src="${e.photo}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" />
               <strong>${e.name}</strong>
             </div>
           </td>
           <td>${e.phone}<br><small class="text-muted">${e.age} yrs</small></td>
           <td>${e.locationText}<br><a href="${e.mapsLink}" target="_blank" class="maps-link-btn">📍 Maps</a></td>
-          <td><span class="card-badge badge-${e.status}">${e.status}</span></td>
+          <td><span class="card-badge badge-${e.status}" style="position:static;">${e.status}</span></td>
           <td>
             <div class="admin-action-btn-group">
               <button class="btn btn-success btn-sm" title="Approve" onclick="adminUpdateEmployerStatus('${e.id}', 'approved')"><i class="fa-solid fa-check"></i></button>
@@ -1956,7 +2591,6 @@
       }
     }
 
-    // Fixed Admin User Deletion with Full Cascade Cleanup (including Chats & Bookings)
     function adminDeleteUser(type, id) {
       if (!confirm(`Are you sure you want to permanently delete this ${type}?`)) return;
 
@@ -1970,10 +2604,10 @@
         appState.jobs = appState.jobs.filter(j => j.employerId !== id);
       }
 
-      // Cascade cleanup: remove any chat threads the deleted user was part of
+      // Cascade chat cleanup
       appState.chats = appState.chats.filter(c => !c.participants.includes(id));
 
-      logPlatformActivity('Admin Deleted User', `${type}: ${id}`, `Admin wiped ${type}, associated posts/bookings, and chat threads.`);
+      logPlatformActivity('Admin Deleted User', `${type}: ${id}`, `Admin wiped user and associated data.`);
       saveState();
       renderAdminTables();
       showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} and associated data deleted.`, 'info');
@@ -2020,46 +2654,43 @@
       navigateTo('jobs-view');
     }
 
-    // Auth & Role Setup Simulation
+    // ================= GOOGLE AUTH FLOW SIMULATION =================
     function openAuthModal() {
       document.getElementById('auth-modal').classList.add('show');
     }
 
     function closeAuthModal() {
       document.getElementById('auth-modal').classList.remove('show');
+      appState.pendingAuthTargetRole = null;
     }
 
-    function mockSignIn(presetId) {
-      if (presetId === 'admin_user') {
-        appState.currentUser = { role: 'admin', data: { name: 'Admin Officer', id: 'admin_1' } };
-      } else if (presetId.startsWith('worker')) {
-        const w = appState.workers.find(x => x.id === presetId);
-        appState.currentUser = { role: 'worker', data: w };
+    function handleGoogleSignInButtonClick() {
+      closeAuthModal();
+
+      // Check if user clicked a direct entry point (Join as Boy or Post Work)
+      if (appState.pendingAuthTargetRole === 'worker') {
+        selectInitialRole('worker');
+      } else if (appState.pendingAuthTargetRole === 'employer') {
+        selectInitialRole('employer');
       } else {
-        const e = appState.employers.find(x => x.id === presetId);
-        appState.currentUser = { role: 'employer', data: e };
+        // Generic sign-in clicked: ask for fixed role choice
+        document.getElementById('role-selection-modal').classList.add('show');
       }
-
-      closeAuthModal();
-      updateAuthUI();
-      showToast(`Signed in as ${appState.currentUser.data.name}`, 'success');
-      navigateTo('dashboard-view');
-    }
-
-    function initiateFirstTimeRegistration() {
-      closeAuthModal();
-      document.getElementById('role-selection-modal').classList.add('show');
     }
 
     function selectInitialRole(role) {
       document.getElementById('role-selection-modal').classList.remove('show');
+      appState.pendingAuthTargetRole = null;
+
       if (role === 'worker') {
         currentWorkerEditId = null;
         document.getElementById('worker-reg-form').reset();
+        resetUploadPreview('worker');
         document.getElementById('worker-reg-modal-title').textContent = 'Worker Profile Registration';
         document.getElementById('worker-reg-modal').classList.add('show');
       } else {
         document.getElementById('employer-reg-form').reset();
+        resetUploadPreview('employer');
         document.getElementById('employer-reg-modal').classList.add('show');
       }
     }
@@ -2072,39 +2703,40 @@
       document.getElementById('employer-reg-modal').classList.remove('show');
     }
 
-    // Worker Profile Submission & Edit (Resets status to 'pending' for re-review on edit)
+    // Worker Registration / Edit Submission
     function handleWorkerRegistrationSubmit(e) {
       e.preventDefault();
       const mapsLink = document.getElementById('worker-form-maps-link').value;
       const coords = parseCoordinatesFromMapsUrl(mapsLink);
+      const photoData = document.getElementById('worker-form-photo-data').value || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&auto=format&fit=crop&q=60';
 
       if (currentWorkerEditId) {
-        // Edit existing worker — reset status to 'pending' for re-verification
+        // Edit existing worker — status resets to 'pending' for re-verification
         const worker = appState.workers.find(w => w.id === currentWorkerEditId);
         if (worker) {
           worker.name = document.getElementById('worker-form-name').value;
           worker.age = parseInt(document.getElementById('worker-form-age').value, 10);
           worker.phone = document.getElementById('worker-form-phone').value;
-          worker.photo = document.getElementById('worker-form-photo').value;
+          worker.photo = photoData;
           worker.rate = document.getElementById('worker-form-rate').value;
           worker.locationText = document.getElementById('worker-form-location-text').value;
           worker.timings = document.getElementById('worker-form-timings').value;
           worker.mapsLink = mapsLink;
           worker.coords = coords;
-          worker.status = 'pending'; // Reset to pending for admin re-verification
+          worker.status = 'pending'; // Reset for moderation
 
           appState.currentUser.data = worker;
           logPlatformActivity('Worker Profile Edited', `${worker.name} (${worker.id})`, 'Updated profile fields. Resubmitted for admin review.');
           showToast('Profile updated! Changes submitted for admin re-review.', 'info');
         }
       } else {
-        // Create new worker
+        // New Worker
         const newWorker = {
           id: 'worker_' + Date.now(),
           name: document.getElementById('worker-form-name').value,
           age: parseInt(document.getElementById('worker-form-age').value, 10),
           phone: document.getElementById('worker-form-phone').value,
-          photo: document.getElementById('worker-form-photo').value,
+          photo: photoData,
           rate: document.getElementById('worker-form-rate').value,
           locationText: document.getElementById('worker-form-location-text').value,
           timings: document.getElementById('worker-form-timings').value,
@@ -2116,7 +2748,7 @@
 
         appState.workers.push(newWorker);
         appState.currentUser = { role: 'worker', data: newWorker };
-        logPlatformActivity('Worker Registered', `${newWorker.name} (${newWorker.id})`, 'Submitted new registration for review.');
+        logPlatformActivity('Worker Registered', `${newWorker.name} (${newWorker.id})`, 'Submitted registration for approval.');
         showToast('Registration submitted for admin approval!', 'success');
       }
 
@@ -2135,7 +2767,11 @@
       document.getElementById('worker-form-name').value = w.name;
       document.getElementById('worker-form-age').value = w.age;
       document.getElementById('worker-form-phone').value = w.phone;
-      document.getElementById('worker-form-photo').value = w.photo;
+      document.getElementById('worker-form-photo-data').value = w.photo;
+      document.getElementById('worker-img-preview').src = w.photo;
+      document.getElementById('worker-upload-placeholder').style.display = 'none';
+      document.getElementById('worker-preview-container').style.display = 'flex';
+      
       document.getElementById('worker-form-rate').value = w.rate;
       document.getElementById('worker-form-location-text').value = w.locationText;
       document.getElementById('worker-form-timings').value = w.timings;
@@ -2144,17 +2780,19 @@
       document.getElementById('worker-reg-modal').classList.add('show');
     }
 
+    // Employer Registration Submission
     function handleEmployerRegistrationSubmit(e) {
       e.preventDefault();
       const mapsLink = document.getElementById('emp-form-maps-link').value;
       const coords = parseCoordinatesFromMapsUrl(mapsLink);
+      const photoData = document.getElementById('emp-form-photo-data').value || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&auto=format&fit=crop&q=60';
 
       const newEmployer = {
         id: 'emp_' + Date.now(),
         name: document.getElementById('emp-form-name').value,
         age: parseInt(document.getElementById('emp-form-age').value, 10),
         phone: document.getElementById('emp-form-phone').value,
-        photo: document.getElementById('emp-form-photo').value,
+        photo: photoData,
         locationText: document.getElementById('emp-form-location-text').value,
         mapsLink: mapsLink,
         coords: coords,
@@ -2192,11 +2830,11 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'catermatch-single-cache-v1';
+          const CACHE_NAME = 'catermatch-v3-cache';
           self.addEventListener('install', (e) => self.skipWaiting());
           self.addEventListener('activate', (e) => self.clients.claim());
           self.addEventListener('push', (event) => {
-            let data = { title: 'CaterMatch Alert', body: 'New catering event posted near you!' };
+            let data = { title: 'CaterMatch Alert', body: 'New catering shift available in your area!' };
             if (event.data) {
               try { data = event.data.json(); } catch(e) { data.body = event.data.text(); }
             }
@@ -2221,7 +2859,7 @@
         `;
         const blob = new Blob([swCode], { type: 'application/javascript' });
         navigator.serviceWorker.register(URL.createObjectURL(blob))
-          .catch(err => console.log('SW registration skipped or unsupported in environment:', err));
+          .catch(err => console.log('SW registration skipped:', err));
       });
     }
 
