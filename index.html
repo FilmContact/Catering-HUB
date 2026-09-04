@@ -1874,7 +1874,7 @@
       </div>
     </div>
 
-    <!-- 4. Worker Registration / Edit Modal (With Grooming & Uniform Readiness Section) -->
+    <!-- 4. Worker Registration / Edit Modal -->
     <div id="worker-reg-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'worker-reg-modal')">
       <div class="modal-card form-modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
@@ -1890,7 +1890,7 @@
                 <div id="worker-upload-placeholder" class="upload-placeholder">
                   <i class="fa-solid fa-cloud-arrow-up"></i>
                   <span>Tap to choose photo from device</span>
-                  <small>JPG, PNG, JPEG up to 5MB</small>
+                  <small>JPG, PNG, JPEG (auto-compressed)</small>
                 </div>
                 <div id="worker-preview-container" class="preview-container" style="display: none;">
                   <img id="worker-img-preview" src="" alt="Worker Preview" />
@@ -1920,14 +1920,14 @@
             </div>
             <div class="form-group full-width">
               <label>Google Maps Location Link <span class="required">*</span></label>
-              <input type="url" id="worker-form-maps-link" placeholder="Paste Google Maps URL (e.g. https://maps.app.goo.gl/... or ?q=19.11,72.86)" required />
+              <input type="text" id="worker-form-maps-link" placeholder="Paste Google Maps URL or Location link" required />
             </div>
             <div class="form-group full-width">
               <label>Location Text / Address <span class="required">*</span></label>
               <input type="text" id="worker-form-location-text" placeholder="e.g. Andheri East, Mumbai" required />
             </div>
 
-            <!-- Grooming & Uniform Readiness Section -->
+            <!-- Grooming Section -->
             <div class="form-section-divider">
               <h4><i class="fa-solid fa-shirt"></i> Grooming & Uniform Readiness</h4>
               <p class="section-subtitle">Confirm which of these you have ready. Workers who are well-groomed and properly dressed get hired faster — employers prefer this at a glance.</p>
@@ -1993,7 +1993,7 @@
                 <div id="emp-upload-placeholder" class="upload-placeholder">
                   <i class="fa-solid fa-cloud-arrow-up"></i>
                   <span>Tap to choose photo from device</span>
-                  <small>JPG, PNG, JPEG up to 5MB</small>
+                  <small>JPG, PNG, JPEG (auto-compressed)</small>
                 </div>
                 <div id="emp-preview-container" class="preview-container" style="display: none;">
                   <img id="emp-img-preview" src="" alt="Employer Preview" />
@@ -2019,7 +2019,7 @@
             </div>
             <div class="form-group full-width">
               <label>Google Maps Location Link <span class="required">*</span></label>
-              <input type="url" id="emp-form-maps-link" placeholder="Paste Google Maps URL" required />
+              <input type="text" id="emp-form-maps-link" placeholder="Paste Google Maps URL or Location link" required />
             </div>
             <div class="form-group full-width">
               <label>Base Location / Address <span class="required">*</span></label>
@@ -2073,7 +2073,7 @@
             </div>
             <div class="form-group full-width">
               <label>Work Location Link (Google Maps) <span class="required">*</span></label>
-              <input type="url" id="post-form-maps-link" placeholder="Paste Google Maps URL" required />
+              <input type="text" id="post-form-maps-link" placeholder="Paste Google Maps URL or Place link" required />
             </div>
           </div>
           <div class="modal-footer">
@@ -2408,7 +2408,11 @@
     }
 
     function saveState() {
-      localStorage.setItem('catermatch_db_v8', JSON.stringify(appState));
+      try {
+        localStorage.setItem('catermatch_db_v8', JSON.stringify(appState));
+      } catch (err) {
+        console.warn('LocalStorage save quota warning handled:', err);
+      }
     }
 
     function logPlatformActivity(eventType, userInvolved, details) {
@@ -2456,6 +2460,50 @@
       }
     }
 
+    // Canvas Auto Image Resizer & Compressor to prevent LocalStorage Quota Crashes
+    function resizeAndCompressImage(file, maxWidth, maxHeight, quality, callback) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          callback(dataUrl);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // URL Sanitizer (Auto-prefixes https:// if missing so form never gets blocked)
+    function sanitizeMapsLink(url) {
+      if (!url || typeof url !== 'string') return '';
+      url = url.trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      return url;
+    }
+
     // Geolocation & Math
     function parseCoordinatesFromMapsUrl(url) {
       if (!url || typeof url !== 'string') return { lat: 19.0760, lng: 72.8777 };
@@ -2490,7 +2538,7 @@
       return { avg, count: worker.ratings.length };
     }
 
-    // Grooming badges rendering helper
+    // Grooming badges helper
     function renderGroomingBadgesHtml(grooming) {
       if (!grooming) {
         return '<span class="groom-badge unstated"><i class="fa-solid fa-circle-question"></i> Uniform unconfirmed</span>';
@@ -2852,7 +2900,7 @@
       const u = appState.currentUser.data;
       const isWorker = appState.currentUser.role === 'worker';
 
-      // Code-Level Privacy Guard: Job history is only processed and rendered for the authenticated profile owner
+      // Strict privacy guard
       const isOwner = appState.currentUser && appState.currentUser.data && appState.currentUser.data.id === u.id;
       if (!isOwner) {
         container.innerHTML = `<div style="text-align:center; padding:30px;"><p class="text-muted">Access restricted.</p></div>`;
@@ -2879,12 +2927,7 @@
 
       if (isWorker) {
         const activeJobs = appState.jobs.filter(j => j.status !== 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted'));
-        
-        // Private worker job history
         const completedJobs = appState.jobs.filter(j => j.status === 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted'));
-
-        const ratingSummary = getWorkerRatingSummary(u);
-        const groomingBadgesHtml = renderGroomingBadgesHtml(u.grooming);
 
         mainActivityHtml = `
           <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card);">
@@ -2926,7 +2969,7 @@
           </div>
         `;
 
-        // Strict Private Job History (Visible only to the worker on their own dashboard)
+        // Strict Private Job History (Visible exclusively to profile owner)
         historySectionHtml = `
           <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card); margin-top:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -3011,7 +3054,7 @@
           </div>
         `;
 
-        // Strict Private Employer Job History
+        // Strict Private Employer History
         historySectionHtml = `
           <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow: var(--shadow-3d-card); margin-top:20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -3151,7 +3194,8 @@
 
     function handleOpenWorkPostConfirm(e) {
       e.preventDefault();
-      const mapsLink = document.getElementById('post-form-maps-link').value;
+      const rawMapsLink = document.getElementById('post-form-maps-link').value;
+      const mapsLink = sanitizeMapsLink(rawMapsLink);
       const coords = parseCoordinatesFromMapsUrl(mapsLink);
 
       if (appState.currentJobEditId) {
@@ -3165,17 +3209,17 @@
 
           const acceptedCount = getJobFilledSlotsCount(existingJob);
           if (acceptedCount > 0) {
-            const proceed = confirm(`${acceptedCount} worker(s) have already booked this slot based on the current details. Editing may affect their booking — consider notifying them via chat. Proceed to save changes?`);
+            const proceed = confirm(`${acceptedCount} worker(s) have already booked this slot based on current details. Editing may affect their booking — consider notifying them via chat. Proceed to save?`);
             if (!proceed) return;
           }
 
-          existingJob.title = document.getElementById('post-form-title').value;
-          existingJob.employerName = document.getElementById('post-form-name').value;
+          existingJob.title = document.getElementById('post-form-title').value.trim();
+          existingJob.employerName = document.getElementById('post-form-name').value.trim();
           existingJob.boysNeeded = parseInt(document.getElementById('post-form-boys').value, 10);
           existingJob.date = document.getElementById('post-form-date').value;
-          existingJob.time = document.getElementById('post-form-time').value;
+          existingJob.time = document.getElementById('post-form-time').value.trim();
           existingJob.perHeadAmount = parseFloat(document.getElementById('post-form-amount').value);
-          existingJob.venueName = document.getElementById('post-form-venue').value;
+          existingJob.venueName = document.getElementById('post-form-venue').value.trim();
           existingJob.mapsLink = mapsLink;
           existingJob.coords = coords;
 
@@ -3195,13 +3239,13 @@
       }
 
       appState.pendingWorkPostDraft = {
-        title: document.getElementById('post-form-title').value,
-        employerName: document.getElementById('post-form-name').value,
+        title: document.getElementById('post-form-title').value.trim(),
+        employerName: document.getElementById('post-form-name').value.trim(),
         boysNeeded: parseInt(document.getElementById('post-form-boys').value, 10),
         date: document.getElementById('post-form-date').value,
-        time: document.getElementById('post-form-time').value,
+        time: document.getElementById('post-form-time').value.trim(),
         perHeadAmount: parseFloat(document.getElementById('post-form-amount').value),
-        venueName: document.getElementById('post-form-venue').value,
+        venueName: document.getElementById('post-form-venue').value.trim(),
         mapsLink: mapsLink,
         coords: coords
       };
@@ -3455,18 +3499,19 @@
 
     function handleEmployerRegistrationSubmit(e) {
       e.preventDefault();
-      const mapsLink = document.getElementById('emp-form-maps-link').value;
+      const rawMapsLink = document.getElementById('emp-form-maps-link').value;
+      const mapsLink = sanitizeMapsLink(rawMapsLink);
       const coords = parseCoordinatesFromMapsUrl(mapsLink);
       const photoData = document.getElementById('emp-form-photo-data').value || 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&auto=format&fit=crop&q=60';
 
       if (currentEmployerEditId) {
         const emp = appState.employers.find(x => x.id === currentEmployerEditId);
         if (emp) {
-          emp.name = document.getElementById('emp-form-name').value;
+          emp.name = document.getElementById('emp-form-name').value.trim();
           emp.age = parseInt(document.getElementById('emp-form-age').value, 10);
-          emp.phone = document.getElementById('emp-form-phone').value;
+          emp.phone = document.getElementById('emp-form-phone').value.trim();
           emp.photo = photoData;
-          emp.locationText = document.getElementById('emp-form-location-text').value;
+          emp.locationText = document.getElementById('emp-form-location-text').value.trim();
           emp.mapsLink = mapsLink;
           emp.coords = coords;
 
@@ -3483,11 +3528,11 @@
       } else {
         const newEmployer = {
           id: 'emp_' + Date.now(),
-          name: document.getElementById('emp-form-name').value,
+          name: document.getElementById('emp-form-name').value.trim(),
           age: parseInt(document.getElementById('emp-form-age').value, 10),
-          phone: document.getElementById('emp-form-phone').value,
+          phone: document.getElementById('emp-form-phone').value.trim(),
           photo: photoData,
-          locationText: document.getElementById('emp-form-location-text').value,
+          locationText: document.getElementById('emp-form-location-text').value.trim(),
           mapsLink: mapsLink,
           coords: coords,
           status: 'pending'
@@ -3505,7 +3550,7 @@
       navigateTo('dashboard-view');
     }
 
-    // ================= 8. WORKER REGISTRATION, GROOMING & RESUBMISSION =================
+    // ================= 8. WORKER REGISTRATION & RESUBMISSION =================
     function openWorkerEditModal() {
       if (!appState.currentUser || appState.currentUser.role !== 'worker') return;
       const w = appState.currentUser.data;
@@ -3524,7 +3569,6 @@
       document.getElementById('worker-form-location-text').value = w.locationText;
       document.getElementById('worker-form-maps-link').value = w.mapsLink;
 
-      // Grooming fields
       const grooming = w.grooming || {};
       document.getElementById('worker-grooming-white-shirt').checked = !!grooming.whiteShirt;
       document.getElementById('worker-grooming-black-pant').checked = !!grooming.blackPant;
@@ -3543,7 +3587,8 @@
 
     function handleWorkerRegistrationSubmit(e) {
       e.preventDefault();
-      const mapsLink = document.getElementById('worker-form-maps-link').value;
+      const rawMapsLink = document.getElementById('worker-form-maps-link').value;
+      const mapsLink = sanitizeMapsLink(rawMapsLink);
       const coords = parseCoordinatesFromMapsUrl(mapsLink);
       const photoData = document.getElementById('worker-form-photo-data').value || 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300&auto=format&fit=crop&q=60';
 
@@ -3558,12 +3603,12 @@
       if (currentWorkerEditId) {
         const worker = appState.workers.find(w => w.id === currentWorkerEditId);
         if (worker) {
-          worker.name = document.getElementById('worker-form-name').value;
+          worker.name = document.getElementById('worker-form-name').value.trim();
           worker.age = parseInt(document.getElementById('worker-form-age').value, 10);
-          worker.phone = document.getElementById('worker-form-phone').value;
+          worker.phone = document.getElementById('worker-form-phone').value.trim();
           worker.photo = photoData;
-          worker.rate = document.getElementById('worker-form-rate').value;
-          worker.locationText = document.getElementById('worker-form-location-text').value;
+          worker.rate = document.getElementById('worker-form-rate').value.trim();
+          worker.locationText = document.getElementById('worker-form-location-text').value.trim();
           worker.mapsLink = mapsLink;
           worker.coords = coords;
           worker.grooming = groomingData;
@@ -3576,12 +3621,12 @@
       } else {
         const newWorker = {
           id: 'worker_' + Date.now(),
-          name: document.getElementById('worker-form-name').value,
+          name: document.getElementById('worker-form-name').value.trim(),
           age: parseInt(document.getElementById('worker-form-age').value, 10),
-          phone: document.getElementById('worker-form-phone').value,
+          phone: document.getElementById('worker-form-phone').value.trim(),
           photo: photoData,
-          rate: document.getElementById('worker-form-rate').value,
-          locationText: document.getElementById('worker-form-location-text').value,
+          rate: document.getElementById('worker-form-rate').value.trim(),
+          locationText: document.getElementById('worker-form-location-text').value.trim(),
           mapsLink: mapsLink,
           coords: coords,
           status: 'pending',
@@ -3841,22 +3886,20 @@
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const base64Data = e.target.result;
+      // Automatically resize & compress on canvas to prevent LocalStorage Quota Crashes
+      resizeAndCompressImage(file, 300, 300, 0.75, function(compressedBase64) {
         if (type === 'worker') {
-          document.getElementById('worker-form-photo-data').value = base64Data;
-          document.getElementById('worker-img-preview').src = base64Data;
+          document.getElementById('worker-form-photo-data').value = compressedBase64;
+          document.getElementById('worker-img-preview').src = compressedBase64;
           document.getElementById('worker-upload-placeholder').style.display = 'none';
           document.getElementById('worker-preview-container').style.display = 'flex';
         } else if (type === 'employer') {
-          document.getElementById('emp-form-photo-data').value = base64Data;
-          document.getElementById('emp-img-preview').src = base64Data;
+          document.getElementById('emp-form-photo-data').value = compressedBase64;
+          document.getElementById('emp-img-preview').src = compressedBase64;
           document.getElementById('emp-upload-placeholder').style.display = 'none';
           document.getElementById('emp-preview-container').style.display = 'flex';
         }
-      };
-      reader.readAsDataURL(file);
+      });
     }
 
     function resetUploadPreview(type) {
@@ -4210,6 +4253,7 @@
         document.getElementById('worker-reg-form').reset();
         resetUploadPreview('worker');
         document.getElementById('worker-reg-modal-title').textContent = 'Worker Profile Registration';
+        document.getElementById('worker-submit-btn').textContent = 'Submit Profile';
         toggleGroomingOthersInput(false);
         showModal('worker-reg-modal');
       } else {
@@ -4217,6 +4261,7 @@
         document.getElementById('employer-reg-form').reset();
         resetUploadPreview('employer');
         document.getElementById('employer-reg-modal-title').textContent = 'Employer Profile Registration';
+        document.getElementById('emp-submit-btn').textContent = 'Submit Profile';
         showModal('employer-reg-modal');
       }
     }
@@ -4253,7 +4298,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         const swCode = `
-          const CACHE_NAME = 'catermatch-v8-cache';
+          const CACHE_NAME = 'catermatch-v9-cache';
           self.addEventListener('install', (e) => self.skipWaiting());
           self.addEventListener('activate', (e) => self.clients.claim());
           self.addEventListener('push', (event) => {
