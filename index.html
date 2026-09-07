@@ -118,6 +118,17 @@
     .location-mode-card p{font-size:.76rem;color:var(--text-muted);line-height:1.35;}
     .distance-unavailable { color:#b45309;font-weight:700; }
     .support-card { background:linear-gradient(135deg,#eef2ff 0%,#ffffff 100%); border:1.5px solid #c7d2fe; border-radius:18px; padding:16px; box-shadow:0 10px 24px rgba(79,70,229,.10); margin-top:16px; }
+    .booking-mode-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+    @media (max-width:700px){ .booking-mode-grid{grid-template-columns:1fr;} }
+    .booking-mode-option { border:1.5px solid var(--border); border-radius:14px; padding:12px; cursor:pointer; background:#fff; box-shadow:0 4px 10px rgba(15,23,42,.04); transition:var(--transition); }
+    .booking-mode-option:hover { transform:translateY(-2px); border-color:#818cf8; box-shadow:0 8px 16px rgba(79,70,229,.12); }
+    .booking-mode-option input { margin-right:7px; accent-color:var(--primary); }
+    .booking-mode-option strong { display:block; font-size:.88rem; margin-bottom:4px; }
+    .booking-mode-option span { font-size:.75rem; color:var(--text-muted); line-height:1.35; }
+    .notification-card { padding:12px 14px; border-radius:14px; border:1.5px solid var(--border); background:linear-gradient(135deg,#ffffff,#f8fafc); box-shadow:0 6px 14px rgba(15,23,42,.05); }
+    .privacy-trigger { font-size:.74rem; padding:6px 10px; }
+    .privacy-list { margin:10px 0 0 18px; color:var(--text-muted); font-size:.85rem; line-height:1.55; }
+    .helpdesk-label { color:#4338ca; font-weight:800; }
     /* Top Navbar */
     .navbar {
       background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
@@ -1817,7 +1828,7 @@
         <div id="admin-helpdesk-tab" class="admin-tab-panel">
           <div class="support-card">
             <h3 style="margin-bottom:6px;"><i class="fa-solid fa-headset"></i> Help Desk Inbox</h3>
-            <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:12px;">Reply to worker and employer support conversations.</p>
+            <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:12px;">Reply to worker and employer Help Desk conversations.</p>
             <div id="admin-helpdesk-thread-list"></div>
           </div>
           <div class="support-card" id="admin-helpdesk-chat-box" style="display:none;">
@@ -1842,44 +1853,62 @@
 
     <!-- ================= MODALS ================= -->
 
-    <!-- 1. Booking Modal (Friends Booking) -->
+    <!-- 1. Booking Modal -->
     <div id="booking-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'booking-modal')">
       <div class="modal-card form-modal-card" onclick="event.stopPropagation()">
         <div class="modal-header">
-          <h3 id="booking-modal-title">Confirm Shift Booking</h3>
+          <h3 id="booking-modal-title">Request Shift Booking</h3>
           <button class="close-btn" onclick="hideModal('booking-modal')">&times;</button>
         </div>
         <form id="booking-form" onsubmit="handleConfirmBookingSubmit(event)">
           <div class="modal-body">
-            <div id="booking-modal-job-summary" style="margin-bottom: 16px;"></div>
-
-            <div class="friends-summary-bar">
-              <span><strong>Primary Booker:</strong> You (1 slot)</span>
-              <span id="booking-slots-indicator">Remaining Slots: 0</span>
+            <div id="booking-modal-job-summary" style="margin-bottom:16px;"></div>
+            <div class="alert-info" style="font-size:.82rem; margin-bottom:14px;">
+              <i class="fa-solid fa-hourglass-half"></i> Your request is sent to the employer for approval. Your booking becomes confirmed only after the employer accepts it.
             </div>
-
-            <div style="margin: 14px 0;">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <label style="font-weight:700; font-size:0.9rem; color:var(--text-main);">
-                  <i class="fa-solid fa-user-group"></i> Book for Friends (Optional)
+            <div class="form-group full-width">
+              <label style="font-weight:800;">Who are you booking for?</label>
+              <div class="booking-mode-grid" style="margin-top:8px;">
+                <label class="booking-mode-option">
+                  <input type="radio" name="booking-mode" value="self" checked onchange="handleBookingModeChange()" />
+                  <strong>Book for Myself</strong>
+                  <span>You are requesting one slot for yourself.</span>
                 </label>
-                <button type="button" class="btn btn-outline btn-sm" id="btn-add-friend" onclick="handleAddFriendRow()">
+                <label class="booking-mode-option">
+                  <input type="radio" name="booking-mode" value="friend" onchange="handleBookingModeChange()" />
+                  <strong>Book for Friend Only</strong>
+                  <span>You are not booking yourself. The slot is for your friend.</span>
+                </label>
+                <label class="booking-mode-option">
+                  <input type="radio" name="booking-mode" value="self_friends" onchange="handleBookingModeChange()" />
+                  <strong>Myself + Friends</strong>
+                  <span>Book your own slot and additional slots for friends.</span>
+                </label>
+              </div>
+            </div>
+            <div class="friends-summary-bar">
+              <span><strong id="booking-primary-label">Your Slot:</strong> <span id="booking-primary-slot-text">1 slot</span></span>
+              <span id="booking-slots-indicator">Available Slots: 0</span>
+            </div>
+            <div style="margin:14px 0;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label id="booking-friends-label" style="font-weight:700; font-size:.9rem; color:var(--text-main);">
+                  <i class="fa-solid fa-user-group"></i> Friends (Optional)
+                </label>
+                <button type="button" class="btn btn-3d-orange btn-sm" id="btn-add-friend" onclick="handleAddFriendRow()">
                   <i class="fa-solid fa-plus"></i> Add a Friend
                 </button>
               </div>
-              <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom: 12px;">
-                Each friend added reserves an extra slot under your group booking. Name and phone number are mandatory.
-              </p>
+              <p id="booking-friends-help" style="font-size:.78rem; color:var(--text-muted); margin-bottom:12px;">Add friends when you want to reserve extra slots.</p>
               <div id="booking-friends-container"></div>
             </div>
-
-            <div class="alert-info" style="font-size:0.82rem; margin-top:14px;">
-              <i class="fa-solid fa-circle-info"></i> <strong>Cancellation Policy:</strong> You can cancel this booking up to 4 hours before the event start time.
+            <div class="alert-info" style="font-size:.82rem; margin-top:14px;">
+              <i class="fa-solid fa-circle-info"></i> <strong>Booking policy:</strong> Submit a request first. You can cancel a pending request before it is accepted. Once accepted, worker cancellation remains subject to the 4-hour safety rule.
             </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline" onclick="hideModal('booking-modal')">Cancel</button>
-            <button type="submit" class="btn btn-primary" id="btn-confirm-booking-submit">Confirm Booking (1 Slot)</button>
+            <button type="submit" class="btn btn-primary" id="btn-confirm-booking-submit">Send Booking Request (1 Slot)</button>
           </div>
         </form>
       </div>
@@ -1986,11 +2015,15 @@
               <input type="text" id="worker-form-rate" placeholder="e.g. ₹850 / shift" required />
             </div>
             <div class="form-group full-width">
-              <label>Google Maps Link <span style="color:var(--text-muted);font-weight:600;">(Optional if coordinates are provided)</span></label>
+              <label>Google Maps Link <span style="color:var(--text-muted);font-weight:600;">(Optional)</span></label>
               <input type="url" id="worker-form-maps-link" placeholder="Paste Google Maps or location link" />
             </div>
+            <details class="location-help-card">
+              <summary>How to get coordinates for distance matching?</summary>
+              <p>Open Google Maps → Long-press the exact location → Copy the two numbers shown, for example <strong>17.3850, 78.4867</strong> → Paste them below. If the link cannot provide coordinates, distance will not be shown until you add coordinates.</p>
+            </details>
             <div class="form-group full-width">
-              <label>Location Coordinates (Optional)</label>
+              <label>Location Coordinates (Recommended)</label>
               <input type="text" id="worker-form-coordinates" placeholder="e.g. 17.3850, 78.4867" inputmode="decimal" />
             </div>
             <div class="location-mode-grid">
@@ -2098,11 +2131,15 @@
               <input type="tel" id="emp-form-phone" placeholder="9876543210" inputmode="numeric" maxlength="10" minlength="10" pattern="[6-9][0-9]{9}" autocomplete="tel" required />
             </div>
             <div class="form-group full-width">
-              <label>Google Maps Link <span style="color:var(--text-muted);font-weight:600;">(Optional if coordinates are provided)</span></label>
+              <label>Google Maps Link <span style="color:var(--text-muted);font-weight:600;">(Optional)</span></label>
               <input type="url" id="emp-form-maps-link" placeholder="Paste Google Maps or location link" />
             </div>
+            <details class="location-help-card">
+              <summary>How to get coordinates for distance matching?</summary>
+              <p>Open Google Maps → Long-press the exact location → Copy the two numbers shown, for example <strong>17.3850, 78.4867</strong> → Paste them below. If the link cannot provide coordinates, distance will not be shown until you add coordinates.</p>
+            </details>
             <div class="form-group full-width">
-              <label>Location Coordinates (Optional)</label>
+              <label>Location Coordinates (Recommended)</label>
               <input type="text" id="emp-form-coordinates" placeholder="e.g. 17.3850, 78.4867" inputmode="decimal" />
             </div>
             <div class="location-mode-grid">
@@ -2172,12 +2209,16 @@
               <input type="text" id="post-form-venue" placeholder="e.g. Sahara Star Banquet, Vile Parle" required />
             </div>
             <div class="form-group full-width">
-              <label>Location Coordinates (Optional)</label>
-              <input type="text" id="post-form-coordinates" placeholder="e.g. 17.3850, 78.4867" inputmode="decimal" />
-            </div>
-            <div class="form-group full-width">
-              <label>Google Maps Link <span style="color:var(--text-muted);font-weight:600;">(Optional if coordinates are provided)</span></label>
+              <label>Google Maps Link <span style="color:var(--text-muted);font-weight:600;">(Optional)</span></label>
               <input type="url" id="post-form-maps-link" placeholder="Paste Google Maps or location link" />
+            </div>
+            <details class="location-help-card">
+              <summary>How to get coordinates for distance matching?</summary>
+              <p>Open Google Maps → Long-press the exact location → Copy the two numbers shown, for example <strong>17.3850, 78.4867</strong> → Paste them below. If the link cannot provide coordinates, distance will not be shown until you add coordinates.</p>
+            </details>
+            <div class="form-group full-width">
+              <label>Location Coordinates (Recommended)</label>
+              <input type="text" id="post-form-coordinates" placeholder="e.g. 17.3850, 78.4867" inputmode="decimal" />
             </div>
             <div class="location-mode-grid">
               <div class="location-mode-card"><h5>1. Coordinates</h5><p>Paste latitude and longitude directly. Nearby workers are sorted by distance.</p></div>
@@ -2284,7 +2325,7 @@
               <textarea id="report-reason-input" rows="4" placeholder="Please describe the issue (e.g. fake profile, inappropriate behavior, fraudulent listing)..." required></textarea>
             </div>
             <p style="font-size:0.75rem; color:var(--text-muted); margin-top:8px;">
-              Reports are sent directly to Platform Administrators for audit and review.
+              Reports are sent to the CaterMatch review team for audit and action.
             </p>
           </div>
           <div class="modal-footer">
@@ -2339,7 +2380,7 @@
           <p id="profile-created-success-text">Your profile has been created successfully.</p>
           <div class="profile-review-card">
             <i class="fa-solid fa-shield-halved"></i>
-            <span><strong>Wait for Admin Review.</strong><br />Your profile will become visible to other users after the administrator approves it.<br /><strong>Need help?</strong> Use the Help Desk from your dashboard to chat with CaterMatch Admin.</span>
+            <span><strong>Wait for Admin Review.</strong><br />Your profile will become visible to other users after the administrator approves it.<br /><strong>Need help?</strong> Use the Help Desk from your dashboard to contact support.</span>
           </div>
           <button type="button" class="btn btn-primary full-width" style="margin-top:20px;" onclick="hideModal('profile-created-success-modal')">
             <i class="fa-solid fa-thumbs-up"></i> Okay
@@ -2347,6 +2388,38 @@
         </div>
       </div>
     </div>
+
+    <!-- Privacy Policy Modal -->
+    <div id="privacy-policy-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'privacy-policy-modal')">
+      <div class="modal-card large-modal-card" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-shield-halved"></i> Privacy Policy</h3>
+          <button class="close-btn" onclick="hideModal('privacy-policy-modal')">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p><strong>CaterMatch</strong> helps connect catering workers and event employers. We collect profile and booking information needed to operate the platform.</p>
+          <ul class="privacy-list">
+            <li>Profiles are reviewed before they are made available for platform use.</li>
+            <li>Users should provide accurate contact, location and profile information.</li>
+            <li>Location coordinates are used to show approximate distance for nearby matching.</li>
+            <li>Messages and booking information are used to support communication and platform coordination.</li>
+            <li><strong>Payments are strictly between the Worker and the Employer.</strong> CaterMatch does not collect or process work payments.</li>
+            <li>CaterMatch does not charge brokerage or commission on work arranged directly between workers and employers through the platform.</li>
+          </ul>
+          <div class="alert-info" style="margin-top:16px;">
+            <i class="fa-solid fa-handshake"></i> Use CaterMatch to connect directly and avoid brokerage/commission charges. Agree on payment, timing and other work terms directly with the other party before accepting an event.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" onclick="hideModal('privacy-policy-modal')">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <footer style="padding:14px 22px; text-align:center; background:#ffffff; border-top:1px solid var(--border); color:var(--text-muted);">
+      <span style="font-size:.76rem;">© CaterMatch • Direct worker-employer connection</span>
+      <button type="button" class="btn btn-outline privacy-trigger" onclick="showModal('privacy-policy-modal')"><i class="fa-solid fa-shield-halved"></i> Privacy Policy</button>
+    </footer>
 
   </div>
 
@@ -2394,7 +2467,8 @@
       'chats',
       'reports',
       'auditLogs',
-      'workerNotifications'
+      'workerNotifications',
+      'employerNotifications'
     ];
 
     let firebaseHydrated = false;
@@ -2437,6 +2511,8 @@
     function restoreSectionIntoState(section, data) {
       if (section === 'workerNotifications') {
         appState.workerNotifications = data || {};
+      } else if (section === 'employerNotifications') {
+        appState.employerNotifications = data || {};
       } else if (section === 'workers') {
         appState.workers = Array.isArray(data) ? data : [];
       } else if (section === 'employers') {
@@ -2602,6 +2678,7 @@
       activeRatingContext: null,
       activeReportTarget: null,
       workerNotifications: {},
+      employerNotifications: {},
       workers: [],
       employers: [],
       jobs: [],
@@ -2715,12 +2792,20 @@
 
     // Geolocation & Math
     function parseCoordinatesFromMapsUrl(url) {
-      if (!url || typeof url !== 'string') return { lat: 19.0760, lng: 72.8777 };
-      const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
-      const queryMatch = url.match(/[?&](?:q|ll)=(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (queryMatch) return { lat: parseFloat(queryMatch[1]), lng: parseFloat(queryMatch[2]) };
-      return { lat: 19.0760, lng: 72.8777 };
+      if (!url || typeof url !== 'string') return null;
+      const patterns = [
+        /@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,
+        /[?&](?:q|ll|query)=(-?\d+(?:\.\d+)?)[,%20]+(-?\d+(?:\.\d+)?)/,
+        /!3d(-?\d+(?:\.\d+)?).*?!4d(-?\d+(?:\.\d+)?)/
+      ];
+      for (const re of patterns) {
+        const m = url.match(re);
+        if (!m) continue;
+        const lat = parseFloat(m[1]);
+        const lng = parseFloat(m[2]);
+        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) return {lat, lng};
+      }
+      return null;
     }
 
     function calculateHaversineDistanceKm(coords1, coords2) {
@@ -2777,20 +2862,32 @@
     }
 
     // Slot Counters
+    function getApplicantSlotCount(app) {
+      if (!app) return 0;
+      const friends = Array.isArray(app.friends) ? app.friends.length : 0;
+      const mode = app.bookedFor || 'self';
+      if (mode === 'friend') return friends;
+      return 1 + friends;
+    }
+
     function getJobFilledSlotsCount(job) {
       if (!job || !job.applicants) return 0;
-      return job.applicants.reduce((sum, app) => {
-        if (app.status === 'accepted') {
-          const friendCount = (app.friends && Array.isArray(app.friends)) ? app.friends.length : 0;
-          return sum + 1 + friendCount;
-        }
-        return sum;
-      }, 0);
+      return job.applicants.reduce((sum, app) => sum + (app.status === 'accepted' ? getApplicantSlotCount(app) : 0), 0);
+    }
+
+    function getJobReservedSlotsCount(job) {
+      if (!job || !job.applicants) return 0;
+      return job.applicants.reduce((sum, app) => sum + ((app.status === 'pending' || app.status === 'accepted') ? getApplicantSlotCount(app) : 0), 0);
     }
 
     function getJobRemainingSlotsCount(job) {
-      const filled = getJobFilledSlotsCount(job);
-      return Math.max(0, job.boysNeeded - filled);
+      const reserved = getJobReservedSlotsCount(job);
+      return Math.max(0, job.boysNeeded - reserved);
+    }
+
+    function getWorkerApplication(job, workerId) {
+      if (!job?.applicants || !workerId) return null;
+      return job.applicants.find(a => a.workerId === workerId && (a.status === 'pending' || a.status === 'accepted'));
     }
 
     function getWorkerActiveBooking(workerId) {
@@ -2798,7 +2895,7 @@
       return appState.jobs.find(job => 
         job.status !== 'completed' &&
         job.applicants && 
-        job.applicants.some(app => app.workerId === workerId && app.status === 'accepted')
+        job.applicants.some(app => app.workerId === workerId && app.status === 'accepted' && (app.bookedFor || 'self') !== 'friend')
       );
     }
 
@@ -2998,8 +3095,16 @@
       if (isWorker && appState.workerNotifications && appState.workerNotifications[appState.currentUser.data.id]) {
         const notes = appState.workerNotifications[appState.currentUser.data.id];
         if (notes.length > 0) {
-          notes.forEach(msg => showToast(msg, 'warning'));
+          notes.forEach(msg => showToast(msg, 'info'));
           appState.workerNotifications[appState.currentUser.data.id] = [];
+          saveState();
+        }
+      }
+      if (!isWorker && appState.currentUser?.role === 'employer' && appState.employerNotifications?.[appState.currentUser.data.id]) {
+        const notes = appState.employerNotifications[appState.currentUser.data.id];
+        if (notes.length > 0) {
+          notes.forEach(msg => showToast(msg, 'info'));
+          appState.employerNotifications[appState.currentUser.data.id] = [];
           saveState();
         }
       }
@@ -3069,33 +3174,42 @@
         distanceBadge = `<span class="distance-pill"><i class="fa-solid fa-location-arrow"></i> ${dist} km away</span>`;
       }
 
-      const hasApplied = isWorker && job.applicants.some(a => a.workerId === appState.currentUser.data.id && a.status === 'accepted');
+      const myApplication = isWorker ? getWorkerApplication(job, appState.currentUser.data.id) : null;
+      const hasAccepted = !!myApplication && myApplication.status === 'accepted';
+      const hasPending = !!myApplication && myApplication.status === 'pending';
 
       let actionSection = '';
       if (!appState.currentUser) {
         actionSection = `<button class="btn btn-outline full-width" onclick="openAuthModal()"><i class="fa-solid fa-lock"></i> Sign in to Apply</button>`;
       } else if (isWorker) {
         if (appState.currentUser.data.status !== 'approved') {
-          actionSection = `<button class="btn btn-outline full-width btn-disabled" disabled><i class="fa-solid fa-clock"></i> Approval Pending</button>`;
-        } else if (hasApplied) {
+          actionSection = `<button class="btn btn-outline full-width btn-disabled" disabled><i class="fa-solid fa-clock"></i> Profile Approval Pending</button>`;
+        } else if (hasPending) {
+          actionSection = `
+            <div style="background:#fff7ed; border:1px solid #fed7aa; padding:10px; border-radius:var(--radius-sm); text-align:center; margin-bottom:6px;">
+              <strong style="color:#9a3412;"><i class="fa-solid fa-hourglass-half"></i> Request Pending — Waiting for Employer Approval</strong>
+              <div style="font-size:.78rem;color:#7c2d12;margin-top:3px;">${myApplication.bookedFor === 'friend' ? 'Friend booking request' : 'Your booking request'}${getApplicantSlotCount(myApplication) > 1 ? ` • ${getApplicantSlotCount(myApplication)} slots requested` : ''}</div>
+            </div>
+            <button class="btn btn-3d-red full-width" onclick="cancelWorkerRequest('${job.id}')"><i class="fa-solid fa-ban"></i> Cancel Request</button>
+          `;
+        } else if (hasAccepted) {
           const cancelEvaluation = evaluateCancellationEligibility(job);
-          let cancelBtn = cancelEvaluation.canCancel
+          const cancelBtn = cancelEvaluation.canCancel
             ? `<button class="btn btn-danger full-width" onclick="cancelWorkerBooking('${job.id}')"><i class="fa-solid fa-ban"></i> Cancel Booking</button>`
-            : `<button class="btn btn-disabled full-width" title="Locked within 4 hours" onclick="showToast('Cancellation locked within 4 hours of event start.', 'error')"><i class="fa-solid fa-lock"></i> Cancellation Locked (< 4h)</button>`;
-
+            : `<button class="btn btn-disabled full-width" title="Locked within 4 hours" onclick="showToast('Cancellation is locked within 4 hours of event start.', 'error')"><i class="fa-solid fa-lock"></i> Cancellation Locked (&lt; 4h)</button>`;
+          const friendOnlyText = (myApplication.bookedFor || 'self') === 'friend' ? 'Friend booking accepted' : 'Your booking has been accepted';
           actionSection = `
             <div style="background:#ecfdf5; border:1px solid #a7f3d0; padding:10px; border-radius:var(--radius-sm); text-align:center; margin-bottom:6px;">
-              <strong style="color:#065f46;"><i class="fa-solid fa-circle-check"></i> Booked Active Shift</strong>
+              <strong style="color:#065f46;"><i class="fa-solid fa-circle-check"></i> ${friendOnlyText}</strong>
+              <div style="font-size:.78rem;color:#047857;margin-top:3px;">All the best for the event!</div>
             </div>
             ${cancelBtn}
-            <div class="cancellation-policy-note">
-              <i class="fa-solid fa-clock-rotate-left"></i> Slots can only be cancelled at least 4 hours before event start.
-            </div>
+            <div class="cancellation-policy-note"><i class="fa-solid fa-clock-rotate-left"></i> Accepted bookings can be cancelled only at least 4 hours before event start.</div>
           `;
         } else if (remainingSlots === 0) {
-          actionSection = `<button class="btn btn-disabled full-width" disabled><i class="fa-solid fa-circle-xmark"></i> Slot Full</button>`;
+          actionSection = `<button class="btn btn-disabled full-width" disabled><i class="fa-solid fa-circle-xmark"></i> All Slots Reserved</button>`;
         } else {
-          actionSection = `<button class="btn btn-primary full-width" onclick="openBookingModal('${job.id}')"><i class="fa-solid fa-hand-pointer"></i> Book / Apply Slot</button>`;
+          actionSection = `<button class="btn btn-primary full-width" onclick="openBookingModal('${job.id}')"><i class="fa-solid fa-paper-plane"></i> Request Booking</button>`;
         }
       }
 
@@ -3113,8 +3227,8 @@
             </p>
             <div class="highlight-pay">₹${job.perHeadAmount} / per head</div>
             <ul class="card-details-list">
-              <li><i class="fa-solid fa-user-check"></i> Boys Needed: <strong>${job.boysNeeded}</strong> (Accepted: ${filledSlots})</li>
-              <li><i class="fa-solid fa-layer-group"></i> <strong>Remaining Slots: ${remainingSlots}</strong></li>
+              <li><i class="fa-solid fa-user-check"></i> Boys Needed: <strong>${job.boysNeeded}</strong> (Approved: ${filledSlots})</li>
+              <li><i class="fa-solid fa-layer-group"></i> <strong>Available Slots: ${remainingSlots}</strong></li>
               <li><i class="fa-solid fa-calendar-days"></i> ${job.date} | ${job.time}</li>
               <li><i class="fa-solid fa-map-pin"></i> ${job.venueName}</li>
               <li><i class="fa-solid fa-location-dot"></i> <a href="${job.mapsLink}" target="_blank" rel="noopener" class="maps-link-btn">📍 View Location</a></li>
@@ -3225,7 +3339,9 @@
       let historySectionHtml = '';
 
       if (isWorker) {
-        const activeJobs = appState.jobs.filter(j => j.status !== 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted'));
+        const activeJobs = appState.jobs.filter(j => j.status !== 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted' && (a.bookedFor || 'self') !== 'friend'));
+        const friendAcceptedJobs = appState.jobs.filter(j => j.status !== 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted' && a.bookedFor === 'friend'));
+        const pendingRequestJobs = appState.jobs.filter(j => j.status !== 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'pending'));
         const completedJobs = appState.jobs.filter(j => j.status === 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted'));
 
         mainActivityHtml = `
@@ -3267,6 +3383,30 @@
             </div>
           </div>
         `;
+
+        mainActivityHtml += `
+          <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid var(--border); box-shadow:var(--shadow-3d-card); margin-top:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <h3 style="font-weight:800;"><i class="fa-solid fa-hourglass-half"></i> Pending Booking Requests (${pendingRequestJobs.length})</h3>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              ${pendingRequestJobs.length===0 ? '<p class="text-muted">No pending booking requests.</p>' : pendingRequestJobs.map(j=>{
+                const a=j.applicants.find(x=>x.workerId===u.id && x.status==='pending');
+                return `<div class="notification-card"><strong>${escapeHtml(j.title)}</strong><br><small class="text-muted">${escapeHtml(j.date)} • ${escapeHtml(j.time)} • ${getApplicantSlotCount(a)} slot${getApplicantSlotCount(a)!==1?'s':''}</small><br><span style="font-size:.8rem;color:#92400e;">Waiting for employer approval.</span><div class="action-3d-row"><button class="btn btn-3d-red btn-sm" onclick="cancelWorkerRequest('${j.id}')"><i class="fa-solid fa-ban"></i> Cancel Request</button></div></div>`;
+              }).join('')}
+            </div>
+          </div>
+        `;
+
+        if (friendAcceptedJobs.length > 0) {
+          mainActivityHtml += `
+            <div style="background:var(--surface); padding:22px; border-radius:var(--radius-lg); border:1px solid #bae6fd; box-shadow:var(--shadow-3d-card); margin-top:20px;">
+              <h3 style="font-weight:800;"><i class="fa-solid fa-user-group"></i> Friend Bookings (${friendAcceptedJobs.length})</h3>
+              <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px;">
+                ${friendAcceptedJobs.map(j=>{ const a=j.applicants.find(x=>x.workerId===u.id && x.status==='accepted' && x.bookedFor==='friend'); return `<div class="notification-card"><strong>${escapeHtml(j.title)}</strong><br><small class="text-muted">${escapeHtml(j.date)} • ${escapeHtml(j.time)} • ${getApplicantSlotCount(a)} slot${getApplicantSlotCount(a)!==1?'s':''}</small><div style="margin-top:6px;color:#0369a1;font-size:.8rem;">Your friend booking was accepted. All the best!</div></div>`; }).join('')}
+              </div>
+            </div>`;
+        }
 
         // Strict Private Job History (Visible exclusively to profile owner)
         historySectionHtml = `
@@ -4022,50 +4162,70 @@
     }
 
     // ================= 9. BOOKINGS, FRIENDS & CANCELLATION =================
+    function getSelectedBookingMode() {
+      return document.querySelector('input[name="booking-mode"]:checked')?.value || 'self';
+    }
+
+    function handleBookingModeChange() {
+      const mode = getSelectedBookingMode();
+      const friendOnly = mode === 'friend';
+      const selfAndFriends = mode === 'self_friends';
+      const label = document.getElementById('booking-primary-label');
+      const text = document.getElementById('booking-primary-slot-text');
+      const friendHelp = document.getElementById('booking-friends-help');
+      const addBtn = document.getElementById('btn-add-friend');
+      if (label) label.textContent = friendOnly ? 'Friend Only:' : 'Your Slot:';
+      if (text) text.textContent = friendOnly ? '0 personal slots' : '1 personal slot';
+      if (friendHelp) friendHelp.textContent = friendOnly ? 'Add at least one friend. You do not reserve a slot for yourself.' : (selfAndFriends ? 'Add one or more friends to reserve additional slots.' : 'Add friends only when you want to reserve extra slots.');
+      if (addBtn) addBtn.textContent = friendOnly ? 'Add Friend' : 'Add a Friend';
+      updateBookingModalFriendsUI();
+    }
+
     function openBookingModal(jobId) {
       if (!appState.currentUser || appState.currentUser.role !== 'worker') {
-        showToast('Only workers can book slots.', 'error');
+        showToast('Only approved workers can request a booking.', 'error');
         return;
       }
       if (appState.currentUser.data.status !== 'approved') {
-        showToast('Your profile must be approved by admin before applying.', 'error');
+        showToast('Your profile must be approved before sending booking requests.', 'error');
         return;
       }
       const job = appState.jobs.find(j => j.id === jobId);
       if (!job) return;
-
-      const remainingSlots = getJobRemainingSlotsCount(job);
-      if (remainingSlots <= 0) {
-        showToast('This shift has no remaining slots.', 'error');
+      const existing = getWorkerApplication(job, appState.currentUser.data.id);
+      if (existing) {
+        showToast(existing.status === 'pending' ? 'You already have a pending request for this shift.' : 'This booking is already accepted.', 'info');
         return;
       }
-
+      const remainingSlots = getJobRemainingSlotsCount(job);
+      if (remainingSlots <= 0) {
+        showToast('All available slots are already reserved.', 'error');
+        return;
+      }
       appState.activeBookingJobId = jobId;
       bookingFriendList = [];
-
+      document.querySelector('input[name="booking-mode"][value="self"]').checked = true;
       document.getElementById('booking-modal-job-summary').innerHTML = `
         <div style="background:#f8fafc; border:1px solid var(--border); padding:12px; border-radius:var(--radius-sm);">
-          <h4 style="font-size:1.1rem; color:var(--dark); margin-bottom:4px;">${job.title}</h4>
-          <p style="font-size:0.85rem; color:var(--text-muted);"><i class="fa-solid fa-calendar"></i> ${job.date} | <i class="fa-solid fa-clock"></i> ${job.time} | <strong>₹${job.perHeadAmount} / head</strong></p>
-        </div>
-      `;
-
-      updateBookingModalFriendsUI();
+          <h4 style="font-size:1.1rem;color:var(--dark);margin-bottom:4px;">${escapeHtml(job.title)}</h4>
+          <p style="font-size:.85rem;color:var(--text-muted);"><i class="fa-solid fa-calendar"></i> ${escapeHtml(job.date)} | <i class="fa-solid fa-clock"></i> ${escapeHtml(job.time)} | <strong>₹${job.perHeadAmount} / head</strong></p>
+          <p style="font-size:.78rem;color:#475569;margin-top:5px;"><i class="fa-solid fa-building"></i> ${escapeHtml(job.employerName)}</p>
+        </div>`;
+      handleBookingModeChange();
       showModal('booking-modal');
     }
 
     function handleAddFriendRow() {
       const job = appState.jobs.find(j => j.id === appState.activeBookingJobId);
       if (!job) return;
+      const mode = getSelectedBookingMode();
       const remainingSlots = getJobRemainingSlotsCount(job);
-      const currentRequested = 1 + bookingFriendList.length;
-
+      const currentRequested = (mode === 'friend' ? 0 : 1) + bookingFriendList.length;
       if (currentRequested >= remainingSlots) {
-        showToast(`Cannot add more friends. Only ${remainingSlots} slots remaining on this event.`, 'warning');
+        showToast(`Cannot add another friend. Only ${remainingSlots} reserved slot(s) remain.`, 'warning');
         return;
       }
-
-      bookingFriendList.push({ name: '', phone: '' });
+      bookingFriendList.push({ name:'', phone:'' });
       updateBookingModalFriendsUI();
     }
 
@@ -4078,94 +4238,101 @@
       const container = document.getElementById('booking-friends-container');
       const job = appState.jobs.find(j => j.id === appState.activeBookingJobId);
       if (!job) return;
-
+      const mode = getSelectedBookingMode();
       const remainingSlots = getJobRemainingSlotsCount(job);
-      const totalRequested = 1 + bookingFriendList.length;
-
-      document.getElementById('booking-slots-indicator').textContent = `Remaining on Event: ${remainingSlots}`;
-      document.getElementById('btn-confirm-booking-submit').textContent = `Confirm Booking (${totalRequested} Slot${totalRequested > 1 ? 's' : ''})`;
-
+      const personalSlots = mode === 'friend' ? 0 : 1;
+      const totalRequested = personalSlots + bookingFriendList.length;
+      document.getElementById('booking-slots-indicator').textContent = `Available Slots: ${remainingSlots}`;
+      document.getElementById('btn-confirm-booking-submit').textContent = `Send Booking Request (${totalRequested} Slot${totalRequested !== 1 ? 's' : ''})`;
       const btnAddFriend = document.getElementById('btn-add-friend');
-      if (totalRequested >= remainingSlots) {
-        btnAddFriend.classList.add('btn-disabled');
-        btnAddFriend.disabled = true;
-      } else {
-        btnAddFriend.classList.remove('btn-disabled');
-        btnAddFriend.disabled = false;
+      const needsFriend = mode === 'friend';
+      const disableAdd = totalRequested >= remainingSlots;
+      if (btnAddFriend) {
+        btnAddFriend.classList.toggle('btn-disabled', disableAdd);
+        btnAddFriend.disabled = disableAdd;
       }
-
       if (bookingFriendList.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-muted); font-size:0.85rem; background:#f8fafc; border-radius:var(--radius-sm);">No friends added. Booking 1 slot for yourself.</div>`;
+        container.innerHTML = `<div style="text-align:center;padding:12px;color:var(--text-muted);font-size:.85rem;background:#f8fafc;border-radius:var(--radius-sm);">${needsFriend ? 'Add at least one friend for a friend-only booking.' : 'No friends added.'}</div>`;
         return;
       }
-
-      container.innerHTML = bookingFriendList.map((f, i) => `
+      container.innerHTML = bookingFriendList.map((f,i)=>`
         <div class="friend-row">
-          <div class="friend-row-header">
-            <span>Friend #${i + 1}</span>
-            <button type="button" class="btn-remove-friend" onclick="handleRemoveFriendRow(${i})" title="Remove">&times;</button>
-          </div>
+          <div class="friend-row-header"><span>Friend #${i+1}</span><button type="button" class="btn-remove-friend" onclick="handleRemoveFriendRow(${i})" title="Remove">&times;</button></div>
           <div class="form-grid" style="gap:10px;">
-            <div class="form-group">
-              <label style="font-size:0.78rem;">Full Name <span class="required">*</span></label>
-              <input type="text" placeholder="Friend's Name" value="${f.name}" oninput="bookingFriendList[${i}].name = this.value" required />
-            </div>
-            <div class="form-group">
-              <label style="font-size:0.78rem;">Phone Number <span class="required">*</span></label>
-              <input type="tel" placeholder="Friend's Phone" value="${f.phone}" oninput="bookingFriendList[${i}].phone = this.value" required />
-            </div>
+            <div class="form-group"><label style="font-size:.78rem;">Full Name <span class="required">*</span></label><input type="text" placeholder="Friend's Name" value="${escapeHtml(f.name)}" oninput="bookingFriendList[${i}].name=this.value" required /></div>
+            <div class="form-group"><label style="font-size:.78rem;">Phone Number <span class="required">*</span></label><input type="tel" placeholder="9876543210" value="${escapeHtml(f.phone)}" oninput="bookingFriendList[${i}].phone=this.value" maxlength="10" inputmode="numeric" required /></div>
           </div>
-        </div>
-      `).join('');
+        </div>`).join('');
     }
 
     function handleConfirmBookingSubmit(e) {
       e.preventDefault();
       const job = appState.jobs.find(j => j.id === appState.activeBookingJobId);
-      if (!job) return;
-
+      if (!job || !appState.currentUser || appState.currentUser.role !== 'worker') return;
+      const mode = getSelectedBookingMode();
       const worker = appState.currentUser.data;
+      const currentApplication = getWorkerApplication(job, worker.id);
+      if (currentApplication) { showToast('You already have a request for this shift.', 'error'); return; }
+      const personalSlots = mode === 'friend' ? 0 : 1;
+      if (mode === 'friend' && bookingFriendList.length === 0) { showToast('Add at least one friend for a friend-only booking.', 'error'); return; }
+      const totalSlotsToBook = personalSlots + bookingFriendList.length;
       const remainingSlots = getJobRemainingSlotsCount(job);
-      const totalSlotsToBook = 1 + bookingFriendList.length;
+      if (totalSlotsToBook <= 0) { showToast('Please select a valid booking option.', 'error'); return; }
+      if (totalSlotsToBook > remainingSlots) { showToast(`Cannot request ${totalSlotsToBook} slots. Only ${remainingSlots} remain available.`, 'error'); return; }
 
-      if (totalSlotsToBook > remainingSlots) {
-        showToast(`Cannot book ${totalSlotsToBook} slots. Only ${remainingSlots} slots remain!`, 'error');
-        return;
+      for (let i=0;i<bookingFriendList.length;i++) {
+        const name = bookingFriendList[i].name.trim();
+        const phone = validateIndianMobileInput(bookingFriendList[i].phone, `Friend #${i+1} mobile number`);
+        if (!name || !phone) { if (!name) showToast(`Please enter the name for Friend #${i+1}.`, 'error'); return; }
+        bookingFriendList[i] = {name, phone};
       }
 
-      for (let i = 0; i < bookingFriendList.length; i++) {
-        if (!bookingFriendList[i].name.trim() || !bookingFriendList[i].phone.trim()) {
-          showToast(`Please enter name and phone number for Friend #${i + 1}.`, 'error');
-          return;
-        }
-        const friendPhone = normalizeIndianMobile(bookingFriendList[i].phone);
-        if (!friendPhone) {
-          showToast(`Friend #${i + 1} phone number must be exactly 10 digits and start with 6-9.`, 'error');
-          return;
-        }
-        bookingFriendList[i].phone = friendPhone;
-      }
-
-      job.applicants.push({
+      const request = {
         workerId: worker.id,
-        status: 'accepted',
-        appliedAt: new Date().toLocaleTimeString(),
-        friends: JSON.parse(JSON.stringify(bookingFriendList))
-      });
-
-      if (!worker.appliedJobs.includes(job.id)) {
-        worker.appliedJobs.push(job.id);
-      }
-
-      if (getJobRemainingSlotsCount(job) === 0) {
-        job.status = 'filled';
-      }
-
-      logPlatformActivity('Slot Booked', `${worker.name} (${worker.id})`, `Booked ${totalSlotsToBook} slot(s) on ${job.title}`);
+        status: 'pending',
+        bookedFor: mode === 'friend' ? 'friend' : (mode === 'self_friends' ? 'self_friends' : 'self'),
+        requestedAt: new Date().toISOString(),
+        friends: JSON.parse(JSON.stringify(bookingFriendList)),
+        slotCount: totalSlotsToBook
+      };
+      job.applicants = job.applicants || [];
+      job.applicants.push(request);
+      if (!Array.isArray(worker.appliedJobs)) worker.appliedJobs=[];
+      if (!worker.appliedJobs.includes(job.id)) worker.appliedJobs.push(job.id);
+      if (!appState.employerNotifications) appState.employerNotifications = {};
+      if (!appState.employerNotifications[job.employerId]) appState.employerNotifications[job.employerId]=[];
+      appState.employerNotifications[job.employerId].unshift(`New booking request received for "${job.title}".`);
+      logPlatformActivity('Booking Request Sent', `${worker.name} (${worker.id})`, `Requested ${totalSlotsToBook} slot(s) for ${job.title}.`);
       saveState();
       hideModal('booking-modal');
-      showToast(`Successfully booked ${totalSlotsToBook} slot(s)!`, 'success');
+      showToast('Booking request sent. Waiting for employer approval.', 'success');
       renderJobs();
+      renderDashboard();
+    }
+
+    function cancelWorkerRequest(jobId) {
+      const job = appState.jobs.find(j=>j.id===jobId);
+      const worker = appState.currentUser?.data;
+      if (!job || !worker) return;
+      const app = job.applicants?.find(a=>a.workerId===worker.id && a.status==='pending');
+      if (!app) { showToast('No pending request found.', 'error'); return; }
+      showInlineActionConfirm(`Cancel your pending booking request for "${job.title}"? The reserved slots will be released.`, () => cancelWorkerRequestConfirmed(jobId), 'Cancel Request', true);
+    }
+
+    function cancelWorkerRequestConfirmed(jobId) {
+      const job = appState.jobs.find(j=>j.id===jobId);
+      const worker = appState.currentUser?.data;
+      if (!job || !worker) return;
+      const before = job.applicants?.length || 0;
+      job.applicants = (job.applicants||[]).filter(a=>!(a.workerId===worker.id && a.status==='pending'));
+      worker.appliedJobs = (worker.appliedJobs||[]).filter(id=>id!==jobId);
+      if (job.applicants.length===before) { showToast('No pending request found.', 'info'); return; }
+      logPlatformActivity('Booking Request Cancelled', `${worker.name} (${worker.id})`, `Cancelled pending request for ${job.title}.`);
+      saveState();
+      hideModal('booking-modal');
+      showToast('Booking request cancelled. You can explore other work.', 'info');
+      renderJobs();
+      renderDashboard();
     }
 
     function cancelWorkerBooking(jobId) {
@@ -4197,62 +4364,96 @@
 
     function viewJobApplicants(jobId) {
       const job = appState.jobs.find(j => j.id === jobId);
-      if (!appState.currentUser || appState.currentUser.role !== 'employer' || job?.employerId !== appState.currentUser.data.id) {
-        showToast('You can only view applicants for your own jobs.', 'error');
+      if (!appState.currentUser || appState.currentUser.role !== 'employer' || !job || job.employerId !== appState.currentUser.data.id) {
+        showToast('You can only manage applicants for your own jobs.', 'error');
         return;
       }
-      if (!job) return;
-
       const remaining = getJobRemainingSlotsCount(job);
       const filled = getJobFilledSlotsCount(job);
-
-      document.getElementById('applicants-modal-title').textContent = `Applicants for: ${job.title} (${filled}/${job.boysNeeded} Filled — ${remaining} Remaining)`;
+      const pending = (job.applicants || []).filter(a=>a.status==='pending');
+      document.getElementById('applicants-modal-title').textContent = `Booking Requests: ${job.title} (${filled}/${job.boysNeeded} Approved • ${pending.length} Pending • ${remaining} Slots Available)`;
       const container = document.getElementById('applicants-list-container');
-
-      if (!job.applicants || job.applicants.length === 0) {
-        container.innerHTML = '<p class="text-muted" style="text-align:center; padding:20px;">No workers have booked this shift yet.</p>';
+      if (!job.applicants || job.applicants.length===0) {
+        container.innerHTML='<p class="text-muted" style="text-align:center;padding:20px;">No booking requests yet.</p>';
       } else {
-        container.innerHTML = job.applicants.map(app => {
-          const worker = appState.workers.find(w => w.id === app.workerId) || { name: 'Deleted Worker', photo: '', phone: '-' };
-          const friends = app.friends || [];
-          const totalGroupSlots = 1 + friends.length;
-
+        container.innerHTML = job.applicants.map(app=>{
+          const worker = appState.workers.find(w=>w.id===app.workerId) || {name:'Deleted Worker', photo:'', phone:'-', rate:'-'};
+          const friends = Array.isArray(app.friends) ? app.friends : [];
+          const totalGroupSlots = getApplicantSlotCount(app);
+          const statusClass = app.status==='pending'?'badge-pending':(app.status==='accepted'?'badge-approved':'badge-rejected');
+          const statusLabel = app.status==='pending'?'Pending Approval':(app.status==='accepted'?'Accepted':'Rejected');
+          const actions = app.status==='pending' ? `
+            <div class="action-3d-row" style="justify-content:flex-end;">
+              <button class="btn btn-3d-green btn-sm" onclick="acceptJobApplication('${job.id}','${worker.id}')"><i class="fa-solid fa-check"></i> Accept Request</button>
+              <button class="btn btn-3d-red btn-sm" onclick="rejectJobApplication('${job.id}','${worker.id}')"><i class="fa-solid fa-xmark"></i> Reject Request</button>
+            </div>` : '';
+          const bookingType = app.bookedFor==='friend' ? 'Friend Only' : (app.bookedFor==='self_friends' ? 'Self + Friends' : 'Self');
           return `
             <div class="applicant-group-card">
               <div class="applicant-main-row">
-                <div style="display:flex; align-items:center; gap:12px;">
-                  <img src="${worker.photo}" style="width:48px; height:48px; border-radius:50%; object-fit:cover;" />
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <img src="${escapeHtml(worker.photo)}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;" />
                   <div>
-                    <strong style="font-size:1rem;">${worker.name}</strong> 
-                    <span class="card-badge badge-approved" style="position:static; margin-left:6px; font-size:0.7rem;">Primary Booker (${totalGroupSlots} Slots)</span>
-                    <br><small class="text-muted"><i class="fa-solid fa-phone"></i> ${worker.phone} | Rate: ${worker.rate}</small>
+                    <strong style="font-size:1rem;">${escapeHtml(worker.name)}</strong>
+                    <span class="card-badge ${statusClass}" style="position:static;margin-left:6px;font-size:.7rem;">${statusLabel}</span>
+                    <br><small class="text-muted"><i class="fa-solid fa-phone"></i> ${escapeHtml(worker.phone)} | Rate: ${escapeHtml(worker.rate)} | ${escapeHtml(bookingType)} | ${totalGroupSlots} slot${totalGroupSlots!==1?'s':''}</small>
                   </div>
                 </div>
-                <button class="btn btn-primary btn-sm" onclick="closeApplicantsModal(); startChatWithWorker('${worker.id}')">
-                  <i class="fa-solid fa-comments"></i> Chat
-                </button>
+                <button class="btn btn-primary btn-sm" onclick="closeApplicantsModal(); startChatWithWorker('${worker.id}')"><i class="fa-solid fa-comments"></i> Message</button>
               </div>
-
-              ${friends.length > 0 ? `
-                <div class="applicant-friends-sublist">
-                  <span style="font-size:0.78rem; font-weight:700; color:var(--text-muted);">
-                    <i class="fa-solid fa-user-group"></i> Included Friends (${friends.length}):
-                  </span>
-                  <div style="display:flex; flex-direction:column; gap:4px;">
-                    ${friends.map((f, idx) => `
-                      <div class="friend-chip">
-                        <span><strong>#${idx + 1}</strong> ${f.name}</span>
-                        <span style="color:var(--text-muted); margin-left:auto;"><i class="fa-solid fa-phone"></i> ${f.phone}</span>
-                      </div>
-                    `).join('')}
-                  </div>
-                </div>
-              ` : ''}
-            </div>
-          `;
+              ${friends.length>0 ? `<div class="applicant-friends-sublist"><span style="font-size:.78rem;font-weight:700;color:var(--text-muted);"><i class="fa-solid fa-user-group"></i> Friend Details (${friends.length})</span><div style="display:flex;flex-direction:column;gap:4px;margin-top:6px;">${friends.map((f,idx)=>`<div class="friend-chip"><span><strong>#${idx+1}</strong> ${escapeHtml(f.name)}</span><span style="color:var(--text-muted);margin-left:auto;"><i class="fa-solid fa-phone"></i> ${escapeHtml(f.phone)}</span></div>`).join('')}</div></div>`:''}
+              ${app.status==='pending' ? `<div class="notification-card" style="margin-top:10px;"><strong>Action needed:</strong> Review this request and accept or reject it.</div>` : ''}
+              ${actions}
+            </div>`;
         }).join('');
       }
       showModal('applicants-modal');
+    }
+
+    function acceptJobApplication(jobId, workerId) {
+      if (!appState.currentUser || appState.currentUser.role!=='employer') return;
+      const job = appState.jobs.find(j=>j.id===jobId);
+      if (!job || job.employerId!==appState.currentUser.data.id) { showToast('You can only manage your own job requests.', 'error'); return; }
+      const app = (job.applicants||[]).find(a=>a.workerId===workerId && a.status==='pending');
+      if (!app) { showToast('This request is no longer pending.', 'info'); return; }
+      const acceptedOther = (job.applicants||[]).filter(a=>a.status==='accepted' && a.workerId!==workerId).reduce((sum,a)=>sum+getApplicantSlotCount(a),0);
+      const requestedSlots = getApplicantSlotCount(app);
+      if (acceptedOther + requestedSlots > job.boysNeeded) { showToast('Not enough slots remain to accept this request. Please reject or manage pending requests first.', 'error'); return; }
+      app.status='accepted';
+      app.respondedAt=new Date().toISOString();
+      const worker=appState.workers.find(w=>w.id===workerId);
+      if (worker) {
+        if (!appState.workerNotifications) appState.workerNotifications={};
+        if (!appState.workerNotifications[workerId]) appState.workerNotifications[workerId]=[];
+        appState.workerNotifications[workerId].unshift(`Your booking request for "${job.title}" has been accepted by the employer. All the best for the event!`);
+      }
+      if (getJobFilledSlotsCount(job) >= job.boysNeeded) job.status='filled';
+      logPlatformActivity('Booking Request Accepted', `${appState.currentUser.data.name} (${appState.currentUser.data.id})`, `Accepted ${worker?.name || workerId} for ${job.title}.`);
+      saveState();
+      renderDashboard(); renderJobs(); viewJobApplicants(jobId);
+      showToast('Request accepted. The worker has been notified.', 'success');
+    }
+
+    function rejectJobApplication(jobId, workerId) {
+      if (!appState.currentUser || appState.currentUser.role!=='employer') return;
+      const job = appState.jobs.find(j=>j.id===jobId);
+      if (!job || job.employerId!==appState.currentUser.data.id) { showToast('You can only manage your own job requests.', 'error'); return; }
+      const app = (job.applicants||[]).find(a=>a.workerId===workerId && a.status==='pending');
+      if (!app) { showToast('This request is no longer pending.', 'info'); return; }
+      app.status='rejected';
+      app.respondedAt=new Date().toISOString();
+      const worker=appState.workers.find(w=>w.id===workerId);
+      if (worker) {
+        worker.appliedJobs=(worker.appliedJobs||[]).filter(id=>id!==jobId);
+        if (!appState.workerNotifications) appState.workerNotifications={};
+        if (!appState.workerNotifications[workerId]) appState.workerNotifications[workerId]=[];
+        appState.workerNotifications[workerId].unshift(`Your booking request for "${job.title}" was not accepted. Please explore other available opportunities on CaterMatch.`);
+      }
+      if (job.status==='filled' && getJobRemainingSlotsCount(job)>0) job.status='open';
+      logPlatformActivity('Booking Request Rejected', `${appState.currentUser.data.name} (${appState.currentUser.data.id})`, `Rejected ${worker?.name || workerId} for ${job.title}.`);
+      saveState();
+      renderDashboard(); renderJobs(); viewJobApplicants(jobId);
+      showToast('Request rejected. The worker has been notified.', 'info');
     }
 
     function closeApplicantsModal() {
@@ -4345,7 +4546,7 @@
       activeChatThreadId=chat.id;
       const box=document.getElementById('admin-helpdesk-chat-box');
       document.getElementById('admin-helpdesk-partner-name').textContent=person?.name || 'User';
-      document.getElementById('admin-helpdesk-partner-role').textContent=appState.workers.includes(person)?'Worker':'Employer';
+      document.getElementById('admin-helpdesk-partner-role').textContent='Help Desk Conversation';
       const messages=document.getElementById('admin-helpdesk-messages');
       messages.innerHTML=(chat.messages||[]).map(m=>`<div class="message-bubble ${m.senderId === FIREBASE_AUTH.currentUser.uid ? 'msg-sent':'msg-received'}">${escapeHtml(m.text)}<span class="msg-timestamp">${escapeHtml(m.timestamp)}</span></div>`).join('');
       messages.scrollTop=messages.scrollHeight;
@@ -4402,7 +4603,7 @@
 
       container.innerHTML = userChats.map(c => {
         const partnerId = c.participants.find(p => p !== myId);
-        let partner = c.support ? (isCurrentAdmin() ? (appState.workers.find(w=>w.id===c.userId)||appState.employers.find(e=>e.id===c.userId)||{name:'User',photo:''}) : {name:'CaterMatch Help Desk',photo:'',role:'Support'}) : (appState.workers.find(w => w.id === partnerId) || appState.employers.find(e => e.id === partnerId) || { name: 'User', photo: '' });
+        let partner = c.support ? (isCurrentAdmin() ? (appState.workers.find(w=>w.id===c.userId)||appState.employers.find(e=>e.id===c.userId)||{name:'User',photo:''}) : {name:'CaterMatch Help Desk',photo:'',role:'Help Desk'}) : (appState.workers.find(w => w.id === partnerId) || appState.employers.find(e => e.id === partnerId) || { name: 'User', photo: '' });
         const lastMsg = c.messages.length > 0 ? c.messages[c.messages.length - 1].text : 'No messages yet';
 
         return `
@@ -4426,7 +4627,7 @@
       if (chat.support) {
         partner = appState.currentUser.role === 'admin'
           ? (appState.workers.find(w=>w.id===chat.userId)||appState.employers.find(e=>e.id===chat.userId)||{name:'User',photo:'',role:'User'})
-          : {name:'CaterMatch Help Desk',photo:'',role:'Support'};
+          : {name:'CaterMatch Help Desk',photo:'',role:'Help Desk'};
       } else {
         const partnerId = chat.participants.find(p => p !== myId);
         partner = appState.workers.find(w => w.id === partnerId) || appState.employers.find(e => e.id === partnerId) || { name: 'User', photo: '', role: 'User' };
@@ -4639,25 +4840,16 @@
     }
 
     function adminDeleteUserConfirmed(type, id) {
-      if (!isCurrentAdmin()) {
-        showToast('Administrator access required.', 'error');
-        return;
-      }
-      showInlineActionConfirm(`Permanently delete this ${type} and its associated data?`, () => adminDeleteUserConfirmed(type, id), 'Permanently Delete', true);
-      return;
-
+      if (!isCurrentAdmin()) { showToast('Administrator access required.', 'error'); return; }
       if (type === 'worker') {
         appState.workers = appState.workers.filter(w => w.id !== id);
-        appState.jobs.forEach(j => {
-          j.applicants = j.applicants.filter(a => a.workerId !== id);
-        });
+        appState.jobs.forEach(j => { j.applicants = (j.applicants || []).filter(a => a.workerId !== id); });
       } else if (type === 'employer') {
         appState.employers = appState.employers.filter(e => e.id !== id);
         appState.jobs = appState.jobs.filter(j => j.employerId !== id);
       }
-
-      appState.chats = appState.chats.filter(c => !c.participants.includes(id));
-      logPlatformActivity('Admin Deleted User', `${type}: ${id}`, `Admin wiped user and associated data.`);
+      appState.chats = (appState.chats || []).filter(c => c.userId !== id && !c.participants?.includes(id));
+      logPlatformActivity('Help Desk/Admin Deleted User', `${type}: ${id}`, `Deleted user and associated data.`);
       saveState();
       renderAdminTables();
       showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} and associated data deleted.`, 'info');
