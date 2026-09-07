@@ -94,6 +94,30 @@
       box-shadow: 0 0 50px rgba(0, 0, 0, 0.08);
     }
 
+    /* Enhanced 3D action controls */
+    .action-3d-row { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+    .btn-3d-blue { background:linear-gradient(135deg,#4f46e5 0%,#2563eb 100%); color:#fff; border:1px solid #93c5fd; box-shadow:0 5px 0 #1e3a8a,0 10px 20px rgba(37,99,235,.28); }
+    .btn-3d-green { background:linear-gradient(135deg,#10b981 0%,#059669 100%); color:#fff; border:1px solid #6ee7b7; box-shadow:0 5px 0 #047857,0 10px 20px rgba(5,150,105,.25); }
+    .btn-3d-orange { background:linear-gradient(135deg,#f59e0b 0%,#ea580c 100%); color:#fff; border:1px solid #fdba74; box-shadow:0 5px 0 #9a3412,0 10px 20px rgba(234,88,12,.24); }
+    .btn-3d-red { background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%); color:#fff; border:1px solid #fca5a5; box-shadow:0 5px 0 #991b1b,0 10px 20px rgba(220,38,38,.24); }
+    .btn-3d-blue:hover,.btn-3d-green:hover,.btn-3d-orange:hover,.btn-3d-red:hover { transform:translateY(-2px); }
+    .btn-3d-blue:active,.btn-3d-green:active,.btn-3d-orange:active,.btn-3d-red:active { transform:translateY(3px); box-shadow:0 1px 0 currentColor,0 4px 8px rgba(0,0,0,.12); }
+    .inline-action-bar { margin:14px 0; padding:14px 16px; border-radius:16px; background:linear-gradient(135deg,#eef2ff,#ffffff); border:1.5px solid #c7d2fe; box-shadow:0 8px 18px rgba(79,70,229,.10); }
+    .inline-action-bar strong { color:#1e1b4b; }
+    .inline-action-bar .message { font-size:.9rem; color:#334155; line-height:1.45; }
+    .inline-action-bar .action-3d-row { margin-top:10px; }
+    .time-preview-card { grid-column:1 / -1; padding:12px 14px; border-radius:14px; background:linear-gradient(135deg,#eff6ff,#ecfeff); border:1.5px solid #bae6fd; box-shadow:0 6px 14px rgba(14,116,144,.08); }
+    .time-preview-card strong { color:#0c4a6e; }
+    .location-help-card { grid-column:1 / -1; background:linear-gradient(135deg,#fff7ed,#fffbeb); border:1.5px solid #fed7aa; border-radius:14px; padding:12px 14px; }
+    .location-help-card summary { cursor:pointer; font-weight:800; color:#9a3412; }
+    .location-help-card p { margin-top:8px; font-size:.82rem; color:#7c2d12; line-height:1.5; }
+    .location-mode-grid { grid-column:1 / -1; display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    @media (max-width:700px){ .location-mode-grid{grid-template-columns:1fr;} }
+    .location-mode-card { padding:12px; border:1.5px solid var(--border); border-radius:12px; background:#fff; }
+    .location-mode-card h5{font-size:.86rem;margin-bottom:4px;}
+    .location-mode-card p{font-size:.76rem;color:var(--text-muted);line-height:1.35;}
+    .distance-unavailable { color:#b45309;font-weight:700; }
+    .support-card { background:linear-gradient(135deg,#eef2ff 0%,#ffffff 100%); border:1.5px solid #c7d2fe; border-radius:18px; padding:16px; box-shadow:0 10px 24px rgba(79,70,229,.10); margin-top:16px; }
     /* Top Navbar */
     .navbar {
       background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
@@ -1566,13 +1590,13 @@
       <button class="tab-btn" id="nav-chat-tab" data-target="chat-view" onclick="navigateTo('chat-view')" style="display: none;">
         <i class="fa-solid fa-comments"></i> Messages
       </button>
-      <button class="tab-btn" id="nav-admin-tab" data-target="admin-view" onclick="navigateTo('admin-view')">
+      <button class="tab-btn" id="nav-admin-tab" data-target="admin-view" onclick="navigateTo('admin-view')" style="display:none;">
         <i class="fa-solid fa-shield-halved"></i> Admin Panel
       </button>
     </nav>
 
     <!-- Toast Notification Container -->
-    <div id="toast-container"></div>
+    <div id="toast-container"></div><div id="inline-action-confirm-host"></div>
 
     <!-- MAIN VIEW AREA -->
     <main class="content-area">
@@ -1670,7 +1694,7 @@
           <div class="chat-main" id="chat-main-window">
             <div class="chat-empty-state" id="chat-placeholder">
               <i class="fa-regular fa-comments"></i>
-              <p>Select a message thread or start a chat from the worker directory.</p>
+              <p>Select a message thread or use <strong>Contact Help Desk</strong> from your dashboard to chat with CaterMatch support.</p>
             </div>
 
             <div class="chat-active-box" id="chat-active-box" style="display: none;">
@@ -1787,6 +1811,29 @@
               </thead>
               <tbody id="admin-logs-table-body"></tbody>
             </table>
+          </div>
+        </div>
+
+        <div id="admin-helpdesk-tab" class="admin-tab-panel">
+          <div class="support-card">
+            <h3 style="margin-bottom:6px;"><i class="fa-solid fa-headset"></i> Help Desk Inbox</h3>
+            <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:12px;">Reply to worker and employer support conversations.</p>
+            <div id="admin-helpdesk-thread-list"></div>
+          </div>
+          <div class="support-card" id="admin-helpdesk-chat-box" style="display:none;">
+            <div class="chat-header" style="border:0;padding:0 0 12px 0;background:transparent;">
+              <div class="chat-partner-info">
+                <div>
+                  <strong id="admin-helpdesk-partner-name">Support User</strong>
+                  <span id="admin-helpdesk-partner-role" class="badge-role">User</span>
+                </div>
+              </div>
+            </div>
+            <div class="chat-messages-body" id="admin-helpdesk-messages" style="height:360px;max-height:50vh;border-radius:14px;"></div>
+            <form class="chat-composer" onsubmit="handleAdminHelpdeskSend(event)" style="padding:12px 0 0 0;border-top:0;">
+              <input type="text" id="admin-helpdesk-input" placeholder="Reply to this user..." autocomplete="off" required />
+              <button type="submit" class="btn btn-3d-blue"><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
           </div>
         </div>
       </section>
@@ -1931,17 +1978,30 @@
               <input type="number" id="worker-form-age" min="18" max="70" placeholder="e.g. 23" required />
             </div>
             <div class="form-group">
-              <label>Phone Number <span class="required">*</span></label>
-              <input type="tel" id="worker-form-phone" placeholder="e.g. +91 98765 43210" required />
+              <label>Indian Mobile Number <span class="required">*</span></label>
+              <input type="tel" id="worker-form-phone" placeholder="9876543210" inputmode="numeric" maxlength="10" minlength="10" pattern="[6-9][0-9]{9}" autocomplete="tel" required />
             </div>
             <div class="form-group">
               <label>Expected Charge Per Event (₹) <span class="required">*</span></label>
               <input type="text" id="worker-form-rate" placeholder="e.g. ₹850 / shift" required />
             </div>
             <div class="form-group full-width">
-              <label>Google Maps Location Link <span class="required">*</span></label>
-              <input type="text" id="worker-form-maps-link" placeholder="Paste Google Maps URL or Location link" required />
+              <label>Google Maps Link <span style="color:var(--text-muted);font-weight:600;">(Optional if coordinates are provided)</span></label>
+              <input type="url" id="worker-form-maps-link" placeholder="Paste Google Maps or location link" />
             </div>
+            <div class="form-group full-width">
+              <label>Location Coordinates (Optional)</label>
+              <input type="text" id="worker-form-coordinates" placeholder="e.g. 17.3850, 78.4867" inputmode="decimal" />
+            </div>
+            <div class="location-mode-grid">
+              <div class="location-mode-card"><h5>1. Coordinates</h5><p>Paste latitude and longitude directly for distance-based matching.</p></div>
+              <div class="location-mode-card"><h5>2. Location Link</h5><p>If coordinates can be extracted, distance matching will work automatically.</p></div>
+              <div class="location-mode-card"><h5>3. Google Maps Link Only</h5><p>If coordinates cannot be extracted, the map works but distance will be unavailable.</p></div>
+            </div>
+            <details class="location-help-card">
+              <summary>How to find coordinates?</summary>
+              <p>Open Google Maps → Long-press the exact location → Two numbers will appear, for example <strong>17.3850, 78.4867</strong> → Copy them → Paste the coordinates here.</p>
+            </details>
             <div class="form-group full-width">
               <label>Location Text / Address <span class="required">*</span></label>
               <input type="text" id="worker-form-location-text" placeholder="e.g. Andheri East, Mumbai" required />
@@ -2034,13 +2094,26 @@
               <input type="number" id="emp-form-age" min="18" max="99" placeholder="e.g. 35" required />
             </div>
             <div class="form-group full-width">
-              <label>Phone Number <span class="required">*</span></label>
-              <input type="tel" id="emp-form-phone" placeholder="e.g. +91 98111 22334" required />
+              <label>Indian Mobile Number <span class="required">*</span></label>
+              <input type="tel" id="emp-form-phone" placeholder="9876543210" inputmode="numeric" maxlength="10" minlength="10" pattern="[6-9][0-9]{9}" autocomplete="tel" required />
             </div>
             <div class="form-group full-width">
-              <label>Google Maps Location Link <span class="required">*</span></label>
-              <input type="text" id="emp-form-maps-link" placeholder="Paste Google Maps URL or Location link" required />
+              <label>Google Maps Link <span style="color:var(--text-muted);font-weight:600;">(Optional if coordinates are provided)</span></label>
+              <input type="url" id="emp-form-maps-link" placeholder="Paste Google Maps or location link" />
             </div>
+            <div class="form-group full-width">
+              <label>Location Coordinates (Optional)</label>
+              <input type="text" id="emp-form-coordinates" placeholder="e.g. 17.3850, 78.4867" inputmode="decimal" />
+            </div>
+            <div class="location-mode-grid">
+              <div class="location-mode-card"><h5>1. Coordinates</h5><p>Paste latitude and longitude directly for distance-based matching.</p></div>
+              <div class="location-mode-card"><h5>2. Location Link</h5><p>If coordinates can be extracted, distance matching will work automatically.</p></div>
+              <div class="location-mode-card"><h5>3. Google Maps Link Only</h5><p>If coordinates cannot be extracted, the map works but distance will be unavailable.</p></div>
+            </div>
+            <details class="location-help-card">
+              <summary>How to find coordinates?</summary>
+              <p>Open Google Maps → Long-press the exact location → Two numbers will appear, for example <strong>17.3850, 78.4867</strong> → Copy them → Paste the coordinates here.</p>
+            </details>
             <div class="form-group full-width">
               <label>Base Location / Address <span class="required">*</span></label>
               <input type="text" id="emp-form-location-text" placeholder="e.g. Bandra West, Mumbai" required />
@@ -2080,8 +2153,15 @@
               <input type="date" id="post-form-date" required />
             </div>
             <div class="form-group">
-              <label>Time & Shift <span class="required">*</span></label>
-              <input type="text" id="post-form-time" placeholder="e.g. 05:00 PM – 11:30 PM" required />
+              <label>Start Time <span class="required">*</span></label>
+              <input type="time" id="post-form-start-time" required />
+            </div>
+            <div class="form-group">
+              <label>End Time <span class="required">*</span></label>
+              <input type="time" id="post-form-end-time" required />
+            </div>
+            <div class="time-preview-card" id="post-time-preview">
+              <i class="fa-solid fa-clock"></i> <strong>Shift Duration:</strong> <span id="post-duration-text">Select start and end times.</span>
             </div>
             <div class="form-group">
               <label>Per Head Amount (₹) <span class="required">*</span></label>
@@ -2092,9 +2172,22 @@
               <input type="text" id="post-form-venue" placeholder="e.g. Sahara Star Banquet, Vile Parle" required />
             </div>
             <div class="form-group full-width">
-              <label>Work Location Link (Google Maps) <span class="required">*</span></label>
-              <input type="text" id="post-form-maps-link" placeholder="Paste Google Maps URL or Place link" required />
+              <label>Location Coordinates (Optional)</label>
+              <input type="text" id="post-form-coordinates" placeholder="e.g. 17.3850, 78.4867" inputmode="decimal" />
             </div>
+            <div class="form-group full-width">
+              <label>Google Maps Link <span style="color:var(--text-muted);font-weight:600;">(Optional if coordinates are provided)</span></label>
+              <input type="url" id="post-form-maps-link" placeholder="Paste Google Maps or location link" />
+            </div>
+            <div class="location-mode-grid">
+              <div class="location-mode-card"><h5>1. Coordinates</h5><p>Paste latitude and longitude directly. Nearby workers are sorted by distance.</p></div>
+              <div class="location-mode-card"><h5>2. Location Link</h5><p>If the link contains coordinates, CaterMatch will detect them and enable distance sorting.</p></div>
+              <div class="location-mode-card"><h5>3. Google Maps Link Only</h5><p>Map opens normally, but distance cannot be calculated when coordinates cannot be extracted.</p></div>
+            </div>
+            <details class="location-help-card">
+              <summary>How to find coordinates?</summary>
+              <p>Open Google Maps → Long-press the exact location → Two numbers will appear, for example <strong>17.3850, 78.4867</strong> → Copy them → Paste the coordinates here.</p>
+            </details>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline" onclick="closeWorkPostModal()">Cancel</button>
@@ -2246,7 +2339,7 @@
           <p id="profile-created-success-text">Your profile has been created successfully.</p>
           <div class="profile-review-card">
             <i class="fa-solid fa-shield-halved"></i>
-            <span><strong>Wait for Admin Review.</strong><br />Your profile will become visible to other users after the administrator approves it.</span>
+            <span><strong>Wait for Admin Review.</strong><br />Your profile will become visible to other users after the administrator approves it.<br /><strong>Need help?</strong> Use the Help Desk from your dashboard to chat with CaterMatch Admin.</span>
           </div>
           <button type="button" class="btn btn-primary full-width" style="margin-top:20px;" onclick="hideModal('profile-created-success-modal')">
             <i class="fa-solid fa-thumbs-up"></i> Okay
@@ -2433,7 +2526,7 @@
             renderWorkersDirectory();
             renderDashboard();
             renderChatList();
-            if (appState.currentUser && appState.currentUser.role === 'admin') renderAdminTables();
+            if (appState.currentUser && appState.currentUser.role === 'admin') { renderAdminTables(); renderAdminHelpdesk(); }
           } finally {
             firebaseApplyingSnapshot = false;
           }
@@ -2484,6 +2577,10 @@
 
       await loadStateFromFirebase();
       appState.currentUser = resolveFirebaseUserAsAppUser(firebaseUser);
+      if (appState.currentUser && appState.currentUser.role !== 'admin') {
+        ensureSupportChatForProfile(appState.currentUser.data.id);
+        scheduleFirebaseSync();
+      }
 
       updateAuthUI();
       renderJobs();
@@ -2708,8 +2805,8 @@
     function getJobHoursRemaining(job) {
       if (!job || !job.date) return 999;
       try {
-        let startTimeStr = '00:00';
-        if (job.time) {
+        let startTimeStr = job.startTime || '00:00';
+        if (!job.startTime && job.time) {
           startTimeStr = job.time.split('–')[0].split('-')[0].trim();
         }
         const match = startTimeStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
@@ -2734,6 +2831,91 @@
       }
     }
 
+    let pendingInlineAction = null;
+
+    function showInlineActionConfirm(message, onConfirm, confirmLabel = 'Continue', danger = false) {
+      const host = document.getElementById('inline-action-confirm-host') || document.body;
+      let bar = document.getElementById('inline-action-confirm-host');
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'inline-action-confirm-host';
+        document.body.appendChild(bar);
+      }
+      bar.innerHTML = `<div class="inline-action-bar"><div class="message"><strong>Action confirmation</strong><br>${escapeHtml(message)}</div><div class="action-3d-row"><button type="button" class="btn ${danger ? 'btn-3d-red' : 'btn-3d-blue'}" id="inline-action-confirm-btn">${escapeHtml(confirmLabel)}</button><button type="button" class="btn btn-outline" id="inline-action-cancel-btn">Keep / Go Back</button></div></div>`;
+      document.getElementById('inline-action-confirm-btn').onclick = () => { const fn = onConfirm; bar.innerHTML=''; if (typeof fn === 'function') fn(); };
+      document.getElementById('inline-action-cancel-btn').onclick = () => { bar.innerHTML=''; };
+      bar.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[ch]));
+    }
+
+    function normalizeIndianMobile(value) {
+      const digits = String(value || '').replace(/\D/g, '');
+      return digits.length === 10 && /^[6-9]\d{9}$/.test(digits) ? digits : '';
+    }
+
+    function validateIndianMobileInput(value, fieldLabel = 'Mobile number') {
+      const normalized = normalizeIndianMobile(value);
+      if (!normalized) {
+        showToast(`${fieldLabel} must be exactly 10 digits and start with 6, 7, 8, or 9.`, 'error');
+        return null;
+      }
+      return normalized;
+    }
+
+    function parseCoordinatesInput(value) {
+      if (!value) return null;
+      const m = String(value).trim().match(/^\s*(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)\s*$/);
+      if (!m) return null;
+      const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+      return {lat, lng};
+    }
+
+    function formatTime12h(value) {
+      if (!value) return '';
+      const [h,m] = value.split(':').map(Number);
+      const suffix = h >= 12 ? 'PM' : 'AM';
+      const hh = h % 12 || 12;
+      return `${String(hh).padStart(2,'0')}:${String(m).padStart(2,'0')} ${suffix}`;
+    }
+
+    function calculateShiftDuration(start, end) {
+      if (!start || !end) return null;
+      const [sh,sm]=start.split(':').map(Number), [eh,em]=end.split(':').map(Number);
+      let startMin=sh*60+sm, endMin=eh*60+em;
+      if (endMin <= startMin) endMin += 24*60;
+      return endMin-startMin;
+    }
+
+    function formatDuration(minutes) {
+      if (minutes == null) return '';
+      const h=Math.floor(minutes/60), m=minutes%60;
+      return m ? `${h} hr ${m} min` : `${h} hr`;
+    }
+
+    function updatePostDurationPreview() {
+      const start=document.getElementById('post-form-start-time')?.value;
+      const end=document.getElementById('post-form-end-time')?.value;
+      const el=document.getElementById('post-duration-text');
+      if (!el) return;
+      const mins=calculateShiftDuration(start,end);
+      el.textContent = mins == null ? 'Select start and end times.' : `${formatDuration(mins)} (${formatTime12h(start)} – ${formatTime12h(end)})`;
+    }
+
+    function parseCoordinatesFromMapsUrlLegacy(url) {
+      if (!url || typeof url !== 'string') return null;
+      const patterns=[/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,/[?&](?:q|ll|query)=(-?\d+(?:\.\d+)?)[,%20]+(-?\d+(?:\.\d+)?)/,/(?:!3d)(-?\d+(?:\.\d+)?)(?:!4d)(-?\d+(?:\.\d+)?)/];
+      for (const re of patterns){ const m=url.match(re); if(m){ const lat=parseFloat(m[1]),lng=parseFloat(m[2]); if(lat>=-90&&lat<=90&&lng>=-180&&lng<=180) return {lat,lng}; }}
+      return null;
+    }
+
+    function getLocationCoordinates(link, directInput) {
+      return parseCoordinatesInput(directInput) || parseCoordinatesFromMapsUrl(link);
+    }
+
     function evaluateCancellationEligibility(job) {
       const hoursRemaining = getJobHoursRemaining(job);
       return {
@@ -2745,7 +2927,7 @@
     function evaluateEmployerPostModificationEligibility(job) {
       const hoursRemaining = getJobHoursRemaining(job);
       return {
-        canModify: hoursRemaining > 24,
+        canModify: hoursRemaining >= 24,
         hoursRemaining: hoursRemaining.toFixed(1)
       };
     }
@@ -2769,7 +2951,7 @@
       if (viewId === 'directory-view') renderWorkersDirectory();
       if (viewId === 'dashboard-view') renderDashboard();
       if (viewId === 'chat-view') renderChatList();
-      if (viewId === 'admin-view') renderAdminTables();
+      if (viewId === 'admin-view') { renderAdminTables(); renderAdminHelpdesk(); }
     }
 
     function startWorkerDirectFlow() {
@@ -3245,6 +3427,7 @@
                 ? `<button class="btn btn-outline full-width" onclick="openWorkerEditModal()"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>`
                 : `<button class="btn btn-outline full-width" onclick="openEmployerEditModal()"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>`
               }
+              <button class="btn btn-3d-blue full-width" onclick="openHelpDesk()"><i class="fa-solid fa-headset"></i> Contact Help Desk</button>
               <button class="btn btn-danger full-width" onclick="openDeleteAccountModal()"><i class="fa-solid fa-trash"></i> Delete My Account</button>
             </div>
           </div>
@@ -3275,7 +3458,12 @@
       document.getElementById('work-post-form').reset();
       document.getElementById('work-post-modal-title').textContent = 'Post New Catering Work Slot';
       document.getElementById('post-form-name').value = appState.currentUser.data.name;
+      document.getElementById('post-form-date').min = new Date().toISOString().split('T')[0];
       document.getElementById('work-post-submit-btn').textContent = 'Review & Continue';
+      document.getElementById('post-form-start-time').value = '';
+      document.getElementById('post-form-end-time').value = '';
+      document.getElementById('post-form-coordinates').value = '';
+      updatePostDurationPreview();
       showModal('work-post-modal');
     }
 
@@ -3295,7 +3483,10 @@
       document.getElementById('post-form-name').value = job.employerName;
       document.getElementById('post-form-boys').value = job.boysNeeded;
       document.getElementById('post-form-date').value = job.date;
-      document.getElementById('post-form-time').value = job.time;
+      document.getElementById('post-form-start-time').value = job.startTime || '';
+      document.getElementById('post-form-end-time').value = job.endTime || '';
+      document.getElementById('post-form-coordinates').value = job.coords ? `${job.coords.lat}, ${job.coords.lng}` : '';
+      updatePostDurationPreview();
       document.getElementById('post-form-amount').value = job.perHeadAmount;
       document.getElementById('post-form-venue').value = job.venueName;
       document.getElementById('post-form-maps-link').value = job.mapsLink;
@@ -3313,74 +3504,92 @@
       e.preventDefault();
       const rawMapsLink = document.getElementById('post-form-maps-link').value;
       const mapsLink = sanitizeMapsLink(rawMapsLink);
-      const coords = parseCoordinatesFromMapsUrl(mapsLink);
+      const coords = getLocationCoordinates(mapsLink, document.getElementById('post-form-coordinates')?.value || '');
+      const startTime = document.getElementById('post-form-start-time').value;
+      const endTime = document.getElementById('post-form-end-time').value;
+      const durationMinutes = calculateShiftDuration(startTime, endTime);
+      if (!startTime || !endTime || durationMinutes == null) { showToast('Please select both start and end times.', 'error'); return; }
+      updatePostDurationPreview();
 
-      if (appState.currentJobEditId) {
-        const existingJob = appState.jobs.find(j => j.id === appState.currentJobEditId);
-        if (existingJob) {
-          const modEval = evaluateEmployerPostModificationEligibility(existingJob);
-          if (!modEval.canModify) {
-            showToast(`Cannot edit: Within 24 hours of event start (${modEval.hoursRemaining}h remaining).`, 'error');
-            return;
-          }
-
-          const acceptedCount = getJobFilledSlotsCount(existingJob);
-          if (acceptedCount > 0) {
-            const proceed = confirm(`${acceptedCount} worker(s) have already booked this slot based on current details. Editing may affect their booking — consider notifying them via chat. Proceed to save?`);
-            if (!proceed) return;
-          }
-
-          existingJob.title = document.getElementById('post-form-title').value.trim();
-          existingJob.employerName = document.getElementById('post-form-name').value.trim();
-          existingJob.boysNeeded = parseInt(document.getElementById('post-form-boys').value, 10);
-          existingJob.date = document.getElementById('post-form-date').value;
-          existingJob.time = document.getElementById('post-form-time').value.trim();
-          existingJob.perHeadAmount = parseFloat(document.getElementById('post-form-amount').value);
-          existingJob.venueName = document.getElementById('post-form-venue').value.trim();
-          existingJob.mapsLink = mapsLink;
-          existingJob.coords = coords;
-
-          if (getJobRemainingSlotsCount(existingJob) === 0) {
-            existingJob.status = 'filled';
-          } else if (existingJob.status === 'filled') {
-            existingJob.status = 'open';
-          }
-
-          logPlatformActivity('Work Post Edited', `${appState.currentUser.data.name}`, `Edited shift: "${existingJob.title}"`);
-          saveState();
-          closeWorkPostModal();
-          showToast('Work post updated successfully!', 'success');
-          renderDashboard();
-          return;
-        }
-      }
-
-      appState.pendingWorkPostDraft = {
+      const draftData = {
         title: document.getElementById('post-form-title').value.trim(),
         employerName: document.getElementById('post-form-name').value.trim(),
         boysNeeded: parseInt(document.getElementById('post-form-boys').value, 10),
         date: document.getElementById('post-form-date').value,
-        time: document.getElementById('post-form-time').value.trim(),
+        startTime,
+        endTime,
+        durationMinutes,
+        time: `${formatTime12h(startTime)} – ${formatTime12h(endTime)}`,
         perHeadAmount: parseFloat(document.getElementById('post-form-amount').value),
         venueName: document.getElementById('post-form-venue').value.trim(),
-        mapsLink: mapsLink,
-        coords: coords
+        mapsLink,
+        coords
       };
 
-      const draft = appState.pendingWorkPostDraft;
+      if (appState.currentJobEditId) {
+        const existingJob = appState.jobs.find(j => j.id === appState.currentJobEditId);
+        if (!existingJob) return;
+        const modEval = evaluateEmployerPostModificationEligibility(existingJob);
+        if (!modEval.canModify) { showToast(`This work post is locked because the event starts in ${modEval.hoursRemaining} hours. Posts inside 24 hours cannot be changed.`, 'error'); return; }
+        const acceptedCount = getJobFilledSlotsCount(existingJob);
+        if (acceptedCount > 0) {
+          showInlineActionConfirm(`${acceptedCount} worker(s) have already booked this slot. Editing may affect their booking. Proceed to save?`, () => continueSaveEditedJob(existingJob, draftData), 'Save Changes');
+          return;
+        }
+        continueSaveEditedJob(existingJob, draftData);
+        return;
+      }
+
+      appState.pendingWorkPostDraft = draftData;
+      const hoursUntil = getHoursUntilDraftStart(draftData);
+      const warning = hoursUntil < 24
+        ? `<div style="margin-top:10px;padding:12px;border-radius:12px;background:#fff1f2;border:1.5px solid #fda4af;color:#9f1239;"><strong>Cancellation locked:</strong> This event starts in ${Math.max(0, hoursUntil).toFixed(1)} hours. Once you publish a post this close to the event, <strong>you cannot cancel or edit it</strong>. Please post only when you are ready. Repeated last-minute posting/cancellation may affect your future experience on CaterMatch.</div>`
+        : `<div style="margin-top:10px;padding:12px;border-radius:12px;background:#fffbeb;border:1.5px solid #fcd34d;color:#92400e;"><strong>24-hour policy:</strong> You can edit or cancel this post until 24 hours before the event starts.</div>`;
+
       document.getElementById('confirm-post-summary-content').innerHTML = `
         <table>
-          <tr><td>Event Name:</td><td><strong>${draft.title}</strong></td></tr>
-          <tr><td>Organizer Name:</td><td>${draft.employerName}</td></tr>
-          <tr><td>Boys Needed:</td><td><strong>${draft.boysNeeded} crew members</strong></td></tr>
-          <tr><td>Date & Shift:</td><td>${draft.date} | ${draft.time}</td></tr>
-          <tr><td>Rate per Head:</td><td><strong>₹${draft.perHeadAmount}</strong></td></tr>
-          <tr><td>Venue Location:</td><td>${draft.venueName}</td></tr>
-        </table>
-      `;
+          <tr><td>Event</td><td><strong>${escapeHtml(draftData.title)}</strong></td></tr>
+          <tr><td>Date</td><td>${escapeHtml(draftData.date)}</td></tr>
+          <tr><td>Shift</td><td>${escapeHtml(draftData.time)}</td></tr>
+          <tr><td>Duration</td><td><strong>${formatDuration(draftData.durationMinutes)}</strong></td></tr>
+          <tr><td>Workers Needed</td><td>${draftData.boysNeeded}</td></tr>
+          <tr><td>Per Head</td><td>₹${draftData.perHeadAmount}</td></tr>
+          <tr><td>Venue</td><td>${escapeHtml(draftData.venueName)}</td></tr>
+          <tr><td>Location</td><td>${draftData.coords ? `<span class="badge-approved">Coordinates detected — distance matching enabled</span>` : `<span class="distance-unavailable">Coordinates unavailable — distance matching will not be shown</span>`}</td></tr>
+        </table>${warning}`;
 
       hideModal('work-post-modal');
       showModal('work-post-confirm-modal');
+    }
+
+    function getHoursUntilDraftStart(draft) {
+      if (!draft?.date || !draft?.startTime) return 999;
+      const [y,m,d]=draft.date.split('-').map(Number);
+      const [hh,mm]=draft.startTime.split(':').map(Number);
+      return (new Date(y,m-1,d,hh,mm).getTime() - Date.now())/(1000*60*60);
+    }
+
+    function continueSaveEditedJob(existingJob, draft) {
+      existingJob.title = draft.title;
+      existingJob.employerName = draft.employerName;
+      existingJob.boysNeeded = draft.boysNeeded;
+      existingJob.date = draft.date;
+      existingJob.startTime = draft.startTime;
+      existingJob.endTime = draft.endTime;
+      existingJob.durationMinutes = draft.durationMinutes;
+      existingJob.time = draft.time;
+      existingJob.perHeadAmount = draft.perHeadAmount;
+      existingJob.venueName = draft.venueName;
+      existingJob.mapsLink = draft.mapsLink;
+      existingJob.coords = draft.coords;
+      existingJob.cancellationLocked = getHoursUntilDraftStart(draft) < 24;
+      if (getJobRemainingSlotsCount(existingJob) === 0) existingJob.status = 'filled';
+      else if (existingJob.status === 'filled') existingJob.status = 'open';
+      logPlatformActivity('Work Post Edited', `${appState.currentUser.data.name}`, `Edited shift: "${existingJob.title}"`);
+      saveState();
+      closeWorkPostModal();
+      showToast('Work post updated successfully!', 'success');
+      renderDashboard();
     }
 
     function executeFinalPublishWorkPost() {
@@ -3395,6 +3604,9 @@
         title: draft.title,
         boysNeeded: draft.boysNeeded,
         date: draft.date,
+        startTime: draft.startTime,
+        endTime: draft.endTime,
+        durationMinutes: draft.durationMinutes,
         time: draft.time,
         perHeadAmount: draft.perHeadAmount,
         venueName: draft.venueName,
@@ -3418,38 +3630,32 @@
     function employerCancelWorkPost(jobId) {
       const job = appState.jobs.find(j => j.id === jobId);
       if (!job) return;
-
       const modEval = evaluateEmployerPostModificationEligibility(job);
       if (!modEval.canModify) {
-        showToast(`Cannot cancel: Event is in ${modEval.hoursRemaining} hours (minimum 24 hours required).`, 'error');
+        showToast(`No cancellation: this event starts in ${modEval.hoursRemaining} hours. Posts inside 24 hours cannot be cancelled. Please avoid last-minute posting next time.`, 'error');
         return;
       }
-
       const acceptedWorkers = job.applicants.filter(a => a.status === 'accepted');
       const affectedCount = acceptedWorkers.length;
+      const message = affectedCount > 0
+        ? `${affectedCount} worker(s) have already booked this slot. Cancelling will notify them and affect their planning. Continue?`
+        : `Cancel and remove "${job.title}"? This action cannot be undone.`;
+      showInlineActionConfirm(message, () => employerCancelWorkPostConfirmed(jobId), 'Cancel Work Post', true);
+    }
 
-      if (affectedCount > 0) {
-        const proceed = confirm(`${affectedCount} worker(s) have already booked this slot. Cancelling will notify them so they can find other work. Are you sure you want to proceed?`);
-        if (!proceed) return;
-      } else {
-        if (!confirm(`Are you sure you want to cancel and remove the post "${job.title}"?`)) return;
-      }
-
+    function employerCancelWorkPostConfirmed(jobId) {
+      const job = appState.jobs.find(j => j.id === jobId);
+      if (!job) return;
+      const acceptedWorkers = job.applicants.filter(a => a.status === 'accepted');
+      const affectedCount = acceptedWorkers.length;
       if (!appState.workerNotifications) appState.workerNotifications = {};
-
       acceptedWorkers.forEach(app => {
         const workerObj = appState.workers.find(w => w.id === app.workerId);
-        if (workerObj) {
-          workerObj.appliedJobs = (workerObj.appliedJobs || []).filter(id => id !== jobId);
-        }
-        if (!appState.workerNotifications[app.workerId]) {
-          appState.workerNotifications[app.workerId] = [];
-        }
+        if (workerObj) workerObj.appliedJobs = (workerObj.appliedJobs || []).filter(id => id !== jobId);
+        if (!appState.workerNotifications[app.workerId]) appState.workerNotifications[app.workerId] = [];
         appState.workerNotifications[app.workerId].push(`The job "${job.title}" you booked was cancelled by the employer. You're free to book other available work.`);
       });
-
       appState.jobs = appState.jobs.filter(j => j.id !== jobId);
-
       logPlatformActivity('Work Post Cancelled', `${job.employerName} (${job.employerId})`, `Cancelled "${job.title}" (${affectedCount} workers unlocked/notified)`);
       saveState();
       showToast(`Work post cancelled. ${affectedCount} booked worker(s) have been unlocked and notified.`, 'info');
@@ -3460,23 +3666,21 @@
     function markJobCompleted(jobId) {
       const job = appState.jobs.find(j => j.id === jobId);
       if (!job) return;
+      showInlineActionConfirm(`Mark "${job.title}" as completed? Workers can then be rated.`, () => markJobCompletedConfirmed(jobId), 'Mark Completed');
+    }
 
-      if (!confirm(`Confirm completion for "${job.title}"? This moves the shift to Job History and lets you submit feedback reviews for participating workers.`)) {
-        return;
-      }
-
+    function markJobCompletedConfirmed(jobId) {
+      const job = appState.jobs.find(j => j.id === jobId);
+      if (!job) return;
       job.status = 'completed';
       logPlatformActivity('Job Completed', `${job.employerName} (${job.employerId})`, `Marked "${job.title}" as completed.`);
       saveState();
       showToast('Event marked as completed! You can now rate your workers.', 'success');
       renderDashboard();
-
       const firstWorkerApp = job.applicants.find(a => a.status === 'accepted');
       if (firstWorkerApp) {
         const workerObj = appState.workers.find(w => w.id === firstWorkerApp.workerId);
-        if (workerObj) {
-          openRateWorkerModal(job.id, workerObj.id, workerObj.name);
-        }
+        if (workerObj) openRateWorkerModal(job.id, workerObj.id, workerObj.name);
       }
     }
 
@@ -3623,6 +3827,7 @@
 
       document.getElementById('emp-form-location-text').value = emp.locationText;
       document.getElementById('emp-form-maps-link').value = emp.mapsLink;
+      document.getElementById('emp-form-coordinates').value = emp.coords ? `${emp.coords.lat}, ${emp.coords.lng}` : '';
       document.getElementById('emp-submit-btn').textContent = emp.status === 'rejected' ? 'Resubmit for Review' : 'Save Changes';
 
       showModal('employer-reg-modal');
@@ -3631,8 +3836,15 @@
     function handleEmployerRegistrationSubmit(e) {
       e.preventDefault();
       const rawMapsLink = document.getElementById('emp-form-maps-link').value;
-      const mapsLink = sanitizeMapsLink(rawMapsLink);
-      const coords = parseCoordinatesFromMapsUrl(mapsLink);
+      let mapsLink = sanitizeMapsLink(rawMapsLink);
+      const coords = getLocationCoordinates(mapsLink, document.getElementById('emp-form-coordinates')?.value || '');
+      if (!coords && !mapsLink) {
+        showToast('Please provide either location coordinates or a Google Maps/location link.', 'error');
+        return;
+      }
+      if (coords && !mapsLink) mapsLink = `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
+      const phone = validateIndianMobileInput(document.getElementById('emp-form-phone').value, 'Employer mobile number');
+      if (!phone) return;
       const photoData = document.getElementById('emp-form-photo-data').value || '';
       if (!photoData && !currentEmployerEditId) { showToast('Please choose a company / organizer photo before submitting.', 'error'); return; }
 
@@ -3643,7 +3855,7 @@
           emp.email = emp.email || FIREBASE_AUTH.currentUser?.email || '';
           emp.name = document.getElementById('emp-form-name').value.trim();
           emp.age = parseInt(document.getElementById('emp-form-age').value, 10);
-          emp.phone = document.getElementById('emp-form-phone').value.trim();
+          emp.phone = phone;
           emp.photo = photoData;
           emp.locationText = document.getElementById('emp-form-location-text').value.trim();
           emp.mapsLink = mapsLink;
@@ -3666,15 +3878,16 @@
           email: FIREBASE_AUTH.currentUser?.email || '',
           name: document.getElementById('emp-form-name').value.trim(),
           age: parseInt(document.getElementById('emp-form-age').value, 10),
-          phone: document.getElementById('emp-form-phone').value.trim(),
+          phone,
           photo: photoData,
           locationText: document.getElementById('emp-form-location-text').value.trim(),
-          mapsLink: mapsLink,
-          coords: coords,
+          mapsLink,
+          coords,
           status: 'pending'
         };
 
         appState.employers.push(newEmployer);
+        ensureSupportChatForProfile(newEmployer.id);
         appState.currentUser = { role: 'employer', data: newEmployer };
         logPlatformActivity('Employer Registered', `${newEmployer.name} (${newEmployer.id})`, 'Submitted registration for approval.');
         showToast('Registration submitted for admin review.', 'success');
@@ -3709,6 +3922,7 @@
       document.getElementById('worker-form-rate').value = w.rate;
       document.getElementById('worker-form-location-text').value = w.locationText;
       document.getElementById('worker-form-maps-link').value = w.mapsLink;
+      document.getElementById('worker-form-coordinates').value = w.coords ? `${w.coords.lat}, ${w.coords.lng}` : '';
 
       const grooming = w.grooming || {};
       document.getElementById('worker-grooming-white-shirt').checked = !!grooming.whiteShirt;
@@ -3729,8 +3943,15 @@
     function handleWorkerRegistrationSubmit(e) {
       e.preventDefault();
       const rawMapsLink = document.getElementById('worker-form-maps-link').value;
-      const mapsLink = sanitizeMapsLink(rawMapsLink);
-      const coords = parseCoordinatesFromMapsUrl(mapsLink);
+      let mapsLink = sanitizeMapsLink(rawMapsLink);
+      const coords = getLocationCoordinates(mapsLink, document.getElementById('worker-form-coordinates')?.value || '');
+      if (!coords && !mapsLink) {
+        showToast('Please provide either location coordinates or a Google Maps/location link.', 'error');
+        return;
+      }
+      if (coords && !mapsLink) mapsLink = `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
+      const phone = validateIndianMobileInput(document.getElementById('worker-form-phone').value, 'Worker mobile number');
+      if (!phone) return;
       const photoData = document.getElementById('worker-form-photo-data').value || '';
       if (!photoData && !currentWorkerEditId) { showToast('Please choose a profile photo before submitting.', 'error'); return; }
 
@@ -3749,7 +3970,7 @@
           worker.email = worker.email || FIREBASE_AUTH.currentUser?.email || '';
           worker.name = document.getElementById('worker-form-name').value.trim();
           worker.age = parseInt(document.getElementById('worker-form-age').value, 10);
-          worker.phone = document.getElementById('worker-form-phone').value.trim();
+          worker.phone = phone;
           worker.photo = photoData;
           worker.rate = document.getElementById('worker-form-rate').value.trim();
           worker.locationText = document.getElementById('worker-form-location-text').value.trim();
@@ -3759,6 +3980,7 @@
           worker.status = 'pending';
 
           appState.currentUser.data = worker;
+          ensureSupportChatForProfile(worker.id);
           logPlatformActivity('Worker Profile Resubmitted', `${worker.name} (${worker.id})`, 'Updated profile fields & grooming readiness. Resubmitted for review.');
           showToast('Profile updated & submitted for admin review!', 'info');
         }
@@ -3769,12 +3991,12 @@
           email: FIREBASE_AUTH.currentUser?.email || '',
           name: document.getElementById('worker-form-name').value.trim(),
           age: parseInt(document.getElementById('worker-form-age').value, 10),
-          phone: document.getElementById('worker-form-phone').value.trim(),
+          phone,
           photo: photoData,
           rate: document.getElementById('worker-form-rate').value.trim(),
           locationText: document.getElementById('worker-form-location-text').value.trim(),
-          mapsLink: mapsLink,
-          coords: coords,
+          mapsLink,
+          coords,
           status: 'pending',
           grooming: groomingData,
           appliedJobs: [],
@@ -3782,6 +4004,7 @@
         };
 
         appState.workers.push(newWorker);
+        ensureSupportChatForProfile(newWorker.id);
         appState.currentUser = { role: 'worker', data: newWorker };
         logPlatformActivity('Worker Registered', `${newWorker.name} (${newWorker.id})`, 'Submitted registration with grooming details.');
         showToast('Registration submitted for admin approval!', 'success');
@@ -3915,6 +4138,12 @@
           showToast(`Please enter name and phone number for Friend #${i + 1}.`, 'error');
           return;
         }
+        const friendPhone = normalizeIndianMobile(bookingFriendList[i].phone);
+        if (!friendPhone) {
+          showToast(`Friend #${i + 1} phone number must be exactly 10 digits and start with 6-9.`, 'error');
+          return;
+        }
+        bookingFriendList[i].phone = friendPhone;
       }
 
       job.applicants.push({
@@ -3942,29 +4171,27 @@
     function cancelWorkerBooking(jobId) {
       const job = appState.jobs.find(j => j.id === jobId);
       if (!job) return;
-
       const worker = appState.currentUser.data;
       const evaluation = evaluateCancellationEligibility(job);
 
       if (!evaluation.canCancel) {
-        showToast(`Cannot cancel: Event is in ${evaluation.hoursRemaining} hours (minimum 4 hours required).`, 'error');
+        showToast(`Cannot cancel: this event starts in ${evaluation.hoursRemaining} hours. Worker cancellations are blocked inside the 4-hour safety window.`, 'error');
         return;
       }
+      showInlineActionConfirm(`Cancel your booking for "${job.title}"? This releases your slot and all grouped friends.`, () => cancelWorkerBookingConfirmed(jobId), 'Cancel Booking', true);
+    }
 
-      if (!confirm(`Are you sure you want to cancel your booking for "${job.title}"? This will release your slot and all grouped friends.`)) {
-        return;
-      }
-
+    function cancelWorkerBookingConfirmed(jobId) {
+      const job = appState.jobs.find(j => j.id === jobId);
+      if (!job || !appState.currentUser) return;
+      const worker = appState.currentUser.data;
       job.applicants = job.applicants.filter(a => a.workerId !== worker.id);
-      worker.appliedJobs = worker.appliedJobs.filter(id => id !== jobId);
-
-      if (getJobRemainingSlotsCount(job) > 0 && job.status !== 'completed') {
-        job.status = 'open';
-      }
-
+      worker.appliedJobs = (worker.appliedJobs || []).filter(id => id !== jobId);
+      if (getJobRemainingSlotsCount(job) > 0 && job.status !== 'completed') job.status = 'open';
       logPlatformActivity('Slot Cancelled', `${worker.name} (${worker.id})`, `Cancelled booking on ${job.title}`);
       saveState();
-      showToast('Booking cancelled. All other work posts are now unlocked!', 'info');
+      hideModal('booking-modal');
+      showToast('Booking cancelled successfully.', 'info');
       renderJobs();
     }
 
@@ -4073,6 +4300,70 @@
       }
     }
 
+    function openHelpDesk() {
+      if (!appState.currentUser || appState.currentUser.role === 'admin') return;
+      const myId = appState.currentUser.data.id;
+      let chat = appState.chats.find(c => c.support === true && c.userId === myId);
+      if (!chat) {
+        chat = { id:`support_${myId}`, support:true, userId:myId, participants:[myId,'ADMIN'], messages:[] };
+        appState.chats.unshift(chat);
+        saveState();
+      }
+      activeChatThreadId = chat.id;
+      navigateTo('chat-view');
+      renderChatList();
+      openChatWindow(chat.id);
+    }
+
+    function ensureSupportChatForProfile(userId) {
+      if (!userId) return;
+      const exists = appState.chats.some(c => c.support === true && c.userId === userId);
+      if (!exists) {
+        appState.chats.unshift({ id:`support_${userId}`, support:true, userId, participants:[userId,'ADMIN'], messages:[] });
+      }
+    }
+
+    function renderAdminHelpdesk() {
+      const list = document.getElementById('admin-helpdesk-thread-list');
+      if (!list) return;
+      const threads = (appState.chats || []).filter(c => c.support === true);
+      if (!threads.length) { list.innerHTML='<div style="padding:14px;color:var(--text-muted);">No help desk conversations yet.</div>'; return; }
+      list.innerHTML = threads.map(c => {
+        const person = appState.workers.find(w=>w.id===c.userId) || appState.employers.find(e=>e.id===c.userId);
+        const name=person?.name || 'User';
+        const role=person ? (appState.workers.includes(person)?'Worker':'Employer') : 'User';
+        const last=c.messages?.length ? c.messages[c.messages.length-1].text : 'No messages yet';
+        return `<button type="button" class="btn btn-outline full-width" style="justify-content:flex-start;margin-bottom:8px;" onclick="openAdminHelpdeskChat('${c.id}')"><i class="fa-solid fa-user-headset"></i><span style="flex:1;text-align:left;margin-left:8px;"><strong>${escapeHtml(name)}</strong> <small>(${role})</small><br><small>${escapeHtml(last)}</small></span></button>`;
+      }).join('');
+    }
+
+    function openAdminHelpdeskChat(chatId) {
+      if (!isCurrentAdmin()) return;
+      const chat = appState.chats.find(c=>c.id===chatId && c.support);
+      if (!chat) return;
+      const person=appState.workers.find(w=>w.id===chat.userId)||appState.employers.find(e=>e.id===chat.userId);
+      activeChatThreadId=chat.id;
+      const box=document.getElementById('admin-helpdesk-chat-box');
+      document.getElementById('admin-helpdesk-partner-name').textContent=person?.name || 'User';
+      document.getElementById('admin-helpdesk-partner-role').textContent=appState.workers.includes(person)?'Worker':'Employer';
+      const messages=document.getElementById('admin-helpdesk-messages');
+      messages.innerHTML=(chat.messages||[]).map(m=>`<div class="message-bubble ${m.senderId === FIREBASE_AUTH.currentUser.uid ? 'msg-sent':'msg-received'}">${escapeHtml(m.text)}<span class="msg-timestamp">${escapeHtml(m.timestamp)}</span></div>`).join('');
+      messages.scrollTop=messages.scrollHeight;
+      if(box) box.style.display='block';
+    }
+
+    function handleAdminHelpdeskSend(e) {
+      e.preventDefault();
+      if (!isCurrentAdmin() || !activeChatThreadId) return;
+      const chat=appState.chats.find(c=>c.id===activeChatThreadId && c.support);
+      if(!chat) return;
+      const input=document.getElementById('admin-helpdesk-input');
+      const text=input.value.trim(); if(!text) return;
+      chat.messages=chat.messages||[];
+      chat.messages.push({senderId:FIREBASE_AUTH.currentUser.uid,text,timestamp:new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})});
+      input.value=''; saveState(); renderAdminHelpdesk(); openAdminHelpdeskChat(chat.id);
+    }
+
     function startChatWithWorker(workerId) {
       if (!appState.currentUser) {
         openAuthModal();
@@ -4102,7 +4393,7 @@
       if (!appState.currentUser) return;
 
       const myId = appState.currentUser.data.id;
-      const userChats = appState.chats.filter(c => c.participants.includes(myId));
+      const userChats = isCurrentAdmin() ? appState.chats.filter(c => c.support === true) : appState.chats.filter(c => c.participants.includes(myId));
 
       if (userChats.length === 0) {
         container.innerHTML = '<div style="padding:15px; color:var(--text-muted); font-size:0.85rem;">No conversations yet.</div>';
@@ -4111,15 +4402,15 @@
 
       container.innerHTML = userChats.map(c => {
         const partnerId = c.participants.find(p => p !== myId);
-        let partner = appState.workers.find(w => w.id === partnerId) || appState.employers.find(e => e.id === partnerId) || { name: 'User', photo: '' };
+        let partner = c.support ? (isCurrentAdmin() ? (appState.workers.find(w=>w.id===c.userId)||appState.employers.find(e=>e.id===c.userId)||{name:'User',photo:''}) : {name:'CaterMatch Help Desk',photo:'',role:'Support'}) : (appState.workers.find(w => w.id === partnerId) || appState.employers.find(e => e.id === partnerId) || { name: 'User', photo: '' });
         const lastMsg = c.messages.length > 0 ? c.messages[c.messages.length - 1].text : 'No messages yet';
 
         return `
           <div class="chat-thread-item ${activeChatThreadId === c.id ? 'active' : ''}" onclick="openChatWindow('${c.id}')">
             <img src="${partner.photo}" class="chat-thread-avatar" />
             <div class="chat-thread-info">
-              <div class="chat-thread-name"><span>${partner.name}</span></div>
-              <div class="chat-thread-last">${lastMsg}</div>
+              <div class="chat-thread-name"><span>${escapeHtml(partner.name)}</span></div>
+              <div class="chat-thread-last">${escapeHtml(lastMsg)}</div>
             </div>
           </div>
         `;
@@ -4130,26 +4421,24 @@
       activeChatThreadId = chatId;
       const chat = appState.chats.find(c => c.id === chatId);
       if (!chat || !appState.currentUser) return;
-
-      const myId = appState.currentUser.data.id;
-      const partnerId = chat.participants.find(p => p !== myId);
-      const partner = appState.workers.find(w => w.id === partnerId) || appState.employers.find(e => e.id === partnerId) || { name: 'User', photo: '', role: 'User' };
-
-      document.getElementById('chat-placeholder').style.display = 'none';
-      document.getElementById('chat-active-box').style.display = 'flex';
-      document.getElementById('chat-partner-name').textContent = partner.name;
-      document.getElementById('chat-partner-avatar').src = partner.photo;
-      document.getElementById('chat-partner-role').textContent = partner.rate ? 'Worker' : 'Employer';
-
-      const msgsContainer = document.getElementById('chat-messages-container');
-      msgsContainer.innerHTML = chat.messages.map(m => `
-        <div class="message-bubble ${m.senderId === myId ? 'msg-sent' : 'msg-received'}">
-          ${m.text}
-          <span class="msg-timestamp">${m.timestamp}</span>
-        </div>
-      `).join('');
-
-      msgsContainer.scrollTop = msgsContainer.scrollHeight;
+      const myId = appState.currentUser.role === 'admin' ? FIREBASE_AUTH.currentUser.uid : appState.currentUser.data.id;
+      let partner;
+      if (chat.support) {
+        partner = appState.currentUser.role === 'admin'
+          ? (appState.workers.find(w=>w.id===chat.userId)||appState.employers.find(e=>e.id===chat.userId)||{name:'User',photo:'',role:'User'})
+          : {name:'CaterMatch Help Desk',photo:'',role:'Support'};
+      } else {
+        const partnerId = chat.participants.find(p => p !== myId);
+        partner = appState.workers.find(w => w.id === partnerId) || appState.employers.find(e => e.id === partnerId) || { name: 'User', photo: '', role: 'User' };
+      }
+      document.getElementById('chat-placeholder').style.display='none';
+      document.getElementById('chat-active-box').style.display='flex';
+      document.getElementById('chat-partner-name').textContent=partner.name;
+      document.getElementById('chat-partner-avatar').src=partner.photo || 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png';
+      document.getElementById('chat-partner-role').textContent=chat.support ? partner.role : (partner.role || (partner.rate ? 'Worker':'Employer'));
+      const msgs=document.getElementById('chat-messages-container');
+      msgs.innerHTML=(chat.messages||[]).map(m=>`<div class="message-bubble ${m.senderId === myId ? 'msg-sent' : 'msg-received'}">${escapeHtml(m.text)}<span class="msg-timestamp">${escapeHtml(m.timestamp)}</span></div>`).join('');
+      msgs.scrollTop=msgs.scrollHeight;
       renderChatList();
     }
 
@@ -4164,7 +4453,7 @@
 
       const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       chat.messages.push({
-        senderId: appState.currentUser.data.id,
+        senderId: appState.currentUser.role === 'admin' ? FIREBASE_AUTH.currentUser.uid : appState.currentUser.data.id,
         text: text,
         timestamp: timeString
       });
@@ -4187,6 +4476,10 @@
       } else if (tabName === 'reports-tab') {
         document.querySelectorAll('.admin-nav-btn')[2].classList.add('active');
         document.getElementById('admin-reports-tab').classList.add('active');
+      } else if (tabName === 'helpdesk-tab') {
+        document.querySelectorAll('.admin-nav-btn')[4].classList.add('active');
+        document.getElementById('admin-helpdesk-tab').classList.add('active');
+        renderAdminHelpdesk();
       } else {
         document.querySelectorAll('.admin-nav-btn')[3].classList.add('active');
         document.getElementById('admin-logs-tab').classList.add('active');
@@ -4341,11 +4634,17 @@
     }
 
     function adminDeleteUser(type, id) {
+      if (!isCurrentAdmin()) { showToast('Administrator access required.', 'error'); return; }
+      showInlineActionConfirm(`Permanently delete this ${type} and its associated data?`, () => adminDeleteUserConfirmed(type, id), 'Permanently Delete', true);
+    }
+
+    function adminDeleteUserConfirmed(type, id) {
       if (!isCurrentAdmin()) {
         showToast('Administrator access required.', 'error');
         return;
       }
-      if (!confirm(`Are you sure you want to permanently delete this ${type}?`)) return;
+      showInlineActionConfirm(`Permanently delete this ${type} and its associated data?`, () => adminDeleteUserConfirmed(type, id), 'Permanently Delete', true);
+      return;
 
       if (type === 'worker') {
         appState.workers = appState.workers.filter(w => w.id !== id);
@@ -4483,12 +4782,11 @@
     }
 
     async function handleAuthPillClick() {
-      if (!appState.currentUser) {
-        openAuthModal();
-        return;
-      }
-      const ok = confirm('Sign out of CaterMatch?');
-      if (!ok) return;
+      if (!appState.currentUser) { openAuthModal(); return; }
+      showInlineActionConfirm('Sign out of CaterMatch?', () => performSignOut(), 'Sign Out', true);
+    }
+
+    async function performSignOut() {
       try {
         await FIREBASE_AUTH.signOut();
         appState.currentUser = null;
@@ -4520,6 +4818,12 @@
         adminTab.style.display = 'none';
       }
     }
+
+    // Time controls
+    ['post-form-start-time','post-form-end-time'].forEach(id => {
+      document.addEventListener('input', (event) => { if (event.target && event.target.id === id) updatePostDurationPreview(); });
+      document.addEventListener('change', (event) => { if (event.target && event.target.id === id) updatePostDurationPreview(); });
+    });
 
     // Firebase-aware app initialization. Local cache remains a fast UI cache;
     // authenticated Firebase data becomes the shared source of truth.
