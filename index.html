@@ -203,6 +203,23 @@
       transform: translateY(-1px);
     }
 
+    .direct-connection-banner {
+      margin: 12px 18px 0;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #ecfdf5 0%, #eff6ff 55%, #fef3c7 100%);
+      border: 1.5px solid #bbf7d0;
+      box-shadow: 0 5px 14px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.9);
+      display:flex; align-items:flex-start; gap:10px; color:#164e63;
+      font-size:.82rem; line-height:1.35;
+    }
+    .direct-connection-banner i { color:#059669; margin-top:2px; }
+    .direct-connection-banner strong { color:#065f46; }
+    .direct-connection-banner span { color:#475569; }
+
+    .hire-job-card { background: linear-gradient(135deg,#eff6ff,#eef2ff); border:1.5px solid #c7d2fe; border-radius:14px; padding:12px; box-shadow:0 5px 12px rgba(79,70,229,.08); }
+    .hire-request-card { background: linear-gradient(135deg,#fff7ed,#fefce8); border:1.5px solid #fed7aa; border-radius:14px; padding:14px; box-shadow:0 7px 16px rgba(234,88,12,.08); }
+
     .icon-btn {
       background: rgba(255, 255, 255, 0.12);
       border: none;
@@ -1607,6 +1624,11 @@
       </button>
     </nav>
 
+    <div class="direct-connection-banner">
+      <i class="fa-solid fa-handshake"></i>
+      <div><strong>Connect Directly. Avoid Brokerage & Commission Charges.</strong><br><span>Use CaterMatch to connect Workers and Employers directly. Work payments and final terms are agreed between the two parties.</span></div>
+    </div>
+
     <!-- Toast Notification Container -->
     <div id="toast-container"></div><div id="inline-action-confirm-host"></div>
 
@@ -2255,6 +2277,10 @@
               <summary>How to find coordinates?</summary>
               <p>Open Google Maps → Long-press the exact location → Two numbers will appear, for example <strong>17.3850, 78.4867</strong> → Copy them → Paste the coordinates here.</p>
             </details>
+            <div class="form-group full-width">
+              <label>Work Instructions <span style="color:var(--text-muted);font-weight:600;">(Optional)</span></label>
+              <textarea id="post-form-instructions" rows="3" placeholder="Tell workers about dress code, reporting time, duties, parking, documents, or other important instructions..."></textarea>
+            </div>
           </div>
           <div style="margin:0 22px 16px;padding:13px 15px;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#fef3c7);border:1.5px solid #c7d2fe;color:#1e3a8a;box-shadow:0 5px 14px rgba(30,64,175,.08);font-size:.82rem;line-height:1.45;">
             <strong><i class="fa-solid fa-shield-heart"></i> Staffing safety note:</strong> CaterMatch helps you reach available event crew, but the exact number of workers you need may not always be available here. Please also keep other staffing options ready for your event.
@@ -3353,6 +3379,11 @@
         let actionBtn = '';
         if (!appState.currentUser) {
           actionBtn = `<button class="btn btn-outline full-width" onclick="openAuthModal()"><i class="fa-solid fa-comments"></i> Sign in to Chat</button>`;
+        } else if (appState.currentUser.role === 'employer' && appState.currentUser.data.status === 'approved') {
+          actionBtn = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button class="btn btn-employer-3d" onclick="openHireWorkerModal('${w.id}')"><i class="fa-solid fa-user-check"></i> Hire</button>
+            <button class="btn btn-primary" onclick="startChatWithWorker('${w.id}')"><i class="fa-solid fa-comment-dots"></i> Message</button>
+          </div>`;
         } else {
           actionBtn = `<button class="btn btn-primary full-width" onclick="startChatWithWorker('${w.id}')"><i class="fa-solid fa-comment-dots"></i> Message Worker</button>`;
         }
@@ -3437,6 +3468,7 @@
         const activeJobs = appState.jobs.filter(j => j.status !== 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted' && (a.bookedFor || 'self') !== 'friend'));
         const friendAcceptedJobs = appState.jobs.filter(j => j.status !== 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted' && a.bookedFor === 'friend'));
         const pendingRequestJobs = appState.jobs.filter(j => j.status !== 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'pending'));
+        const pendingHireJobs = appState.jobs.filter(j => j.status !== 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'pending' && a.source === 'employer_hire'));
         const completedJobs = appState.jobs.filter(j => j.status === 'completed' && j.applicants.some(a => a.workerId === u.id && a.status === 'accepted'));
 
         mainActivityHtml = `
@@ -3487,7 +3519,8 @@
             <div style="display:flex;flex-direction:column;gap:10px;">
               ${pendingRequestJobs.length===0 ? '<p class="text-muted">No pending booking requests.</p>' : pendingRequestJobs.map(j=>{
                 const a=j.applicants.find(x=>x.workerId===u.id && x.status==='pending');
-                return `<div class="notification-card"><strong>${escapeHtml(j.title)}</strong><br><small class="text-muted">${escapeHtml(j.date)} • ${escapeHtml(j.time)} • ${getApplicantSlotCount(a)} slot${getApplicantSlotCount(a)!==1?'s':''}</small><br><span style="font-size:.8rem;color:#92400e;">Waiting for employer approval.</span><div class="action-3d-row"><button class="btn btn-3d-red btn-sm" onclick="cancelWorkerRequest('${j.id}')"><i class="fa-solid fa-ban"></i> Cancel Request</button></div></div>`;
+                const isHire = a?.source === 'employer_hire';
+                return `<div class="${isHire ? 'hire-request-card' : 'notification-card'}"><strong>${escapeHtml(j.title)}</strong><br><small class="text-muted">${escapeHtml(j.date)} • ${escapeHtml(j.time)} • ${getApplicantSlotCount(a)} slot${getApplicantSlotCount(a)!==1?'s':''}</small><br><span style="font-size:.8rem;color:#92400e;">${isHire ? 'Employer sent you a direct Hire Request.' : 'Waiting for employer approval.'}</span><div class="action-3d-row">${isHire ? `<button class="btn btn-3d-green btn-sm" onclick="acceptHireRequest('${j.id}')"><i class="fa-solid fa-check"></i> Accept Hire</button><button class="btn btn-3d-red btn-sm" onclick="rejectHireRequest('${j.id}')"><i class="fa-solid fa-xmark"></i> Reject Hire</button>` : `<button class="btn btn-3d-red btn-sm" onclick="cancelWorkerRequest('${j.id}')"><i class="fa-solid fa-ban"></i> Cancel Request</button>`}</div></div>`;
               }).join('')}
             </div>
           </div>
@@ -3698,6 +3731,7 @@
       document.getElementById('post-form-start-time').value = '';
       document.getElementById('post-form-end-time').value = '';
       document.getElementById('post-form-coordinates').value = '';
+      document.getElementById('post-form-instructions').value = '';
       updatePostDurationPreview();
       showModal('work-post-modal');
     }
@@ -3725,6 +3759,7 @@
       document.getElementById('post-form-amount').value = job.perHeadAmount;
       document.getElementById('post-form-venue').value = job.venueName;
       document.getElementById('post-form-maps-link').value = job.mapsLink;
+      document.getElementById('post-form-instructions').value = job.instructions || '';
       document.getElementById('work-post-submit-btn').textContent = 'Save Changes';
 
       showModal('work-post-modal');
@@ -3758,7 +3793,8 @@
         perHeadAmount: parseFloat(document.getElementById('post-form-amount').value),
         venueName: document.getElementById('post-form-venue').value.trim(),
         mapsLink,
-        coords
+        coords,
+        instructions: document.getElementById('post-form-instructions')?.value.trim() || ''
       };
 
       if (appState.currentJobEditId) {
@@ -3791,6 +3827,7 @@
           <tr><td>Per Head</td><td>₹${draftData.perHeadAmount}</td></tr>
           <tr><td>Venue</td><td>${escapeHtml(draftData.venueName)}</td></tr>
           <tr><td>Location</td><td>${draftData.coords ? `<span class="badge-approved">Coordinates detected — distance matching enabled</span>` : `<span class="distance-unavailable">Coordinates unavailable — distance matching will not be shown</span>`}</td></tr>
+          ${draftData.instructions ? `<tr><td>Instructions</td><td>${escapeHtml(draftData.instructions).replace(/\n/g,'<br>')}</td></tr>` : ''}
         </table>${warning}`;
 
       hideModal('work-post-modal');
@@ -3817,6 +3854,7 @@
       existingJob.venueName = draft.venueName;
       existingJob.mapsLink = draft.mapsLink;
       existingJob.coords = draft.coords;
+      existingJob.instructions = draft.instructions || '';
       existingJob.cancellationLocked = getHoursUntilDraftStart(draft) < 24;
       if (getJobRemainingSlotsCount(existingJob) === 0) existingJob.status = 'filled';
       else if (existingJob.status === 'filled') existingJob.status = 'open';
@@ -3847,6 +3885,7 @@
         venueName: draft.venueName,
         mapsLink: draft.mapsLink,
         coords: draft.coords,
+        instructions: draft.instructions || '',
         status: 'open',
         applicants: []
       };
@@ -4482,6 +4521,89 @@
       hideModal('booking-modal');
       showToast('Booking cancelled. Overlapping work remains hidden until the event time has passed.', 'info');
       renderJobs();
+    }
+
+    function openHireWorkerModal(workerId) {
+      if (!appState.currentUser || appState.currentUser.role !== 'employer' || appState.currentUser.data.status !== 'approved') {
+        showToast('Only approved Employers can hire workers.', 'error');
+        return;
+      }
+      const worker = (appState.workers || []).find(w => w.id === workerId && w.status === 'approved');
+      if (!worker) { showToast('This worker is not currently available for hire.', 'error'); return; }
+      const jobs = (appState.jobs || []).filter(j => j.employerId === appState.currentUser.data.id && j.status !== 'completed' && j.status !== 'hidden' && getJobRemainingSlotsCount(j) > 0 && j.date);
+      const summary = document.getElementById('hire-worker-summary');
+      summary.innerHTML = `<div style="display:flex;align-items:center;gap:12px;"><img src="${escapeHtml(worker.photo || '')}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;box-shadow:0 4px 12px rgba(15,23,42,.15);"><div><strong>${escapeHtml(worker.name)}</strong><br><small class="text-muted">${escapeHtml(worker.rate || '')} • ${escapeHtml(worker.locationText || '')}</small></div></div>`;
+      const list = document.getElementById('hire-worker-job-list');
+      if (!jobs.length) {
+        list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);">No active work posts with available slots. Post a work slot first.</div>';
+      } else {
+        list.innerHTML = jobs.map(job => {
+          const existing = (job.applicants || []).find(a => a.workerId === worker.id && ['pending','accepted'].includes(a.status));
+          const label = existing ? (existing.status === 'pending' ? 'Request Already Sent' : 'Already Hired') : 'Send Hire Request';
+          const disabled = !!existing;
+          return `<div class="hire-job-card"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;"><div><strong>${escapeHtml(job.title)}</strong><br><small class="text-muted"><i class="fa-solid fa-calendar"></i> ${escapeHtml(job.date)} • <i class="fa-solid fa-clock"></i> ${escapeHtml(job.time)} • ${getJobRemainingSlotsCount(job)} slot(s) available</small></div><button class="btn ${disabled ? 'btn-disabled' : 'btn-employer-3d'} btn-sm" ${disabled ? 'disabled' : ''} onclick="sendHireRequest('${job.id}','${worker.id}')"><i class="fa-solid fa-paper-plane"></i> ${label}</button></div></div>`;
+        }).join('');
+      }
+      showModal('hire-worker-modal');
+    }
+
+    function sendHireRequest(jobId, workerId) {
+      if (!appState.currentUser || appState.currentUser.role !== 'employer' || appState.currentUser.data.status !== 'approved') return;
+      const job = (appState.jobs || []).find(j => j.id === jobId && j.employerId === appState.currentUser.data.id);
+      const worker = (appState.workers || []).find(w => w.id === workerId && w.status === 'approved');
+      if (!job || !worker) { showToast('Unable to send the hire request.', 'error'); return; }
+      if (getJobRemainingSlotsCount(job) <= 0) { showToast('No available slots remain on this work post.', 'error'); return; }
+      if ((job.applicants || []).some(a => a.workerId === workerId && ['pending','accepted'].includes(a.status))) { showToast('A request already exists for this worker and work post.', 'info'); return; }
+      if (workerHasSchedulingConflict(workerId, jobId)) { showToast('This worker has another reservation that overlaps this event time.', 'error'); return; }
+
+      job.applicants = job.applicants || [];
+      job.applicants.push({ workerId, status:'pending', source:'employer_hire', bookedFor:'self', requestedAt:new Date().toISOString(), friends:[], slotCount:1, requestedByEmployerId:appState.currentUser.data.id });
+      if (!appState.workerNotifications) appState.workerNotifications = {};
+      if (!appState.workerNotifications[workerId]) appState.workerNotifications[workerId] = [];
+      appState.workerNotifications[workerId].unshift(`You have received a hire request from ${appState.currentUser.data.name} for "${job.title}". Please review the request in your dashboard and Accept or Reject it.`);
+      if (!appState.employerNotifications) appState.employerNotifications = {};
+      if (!appState.employerNotifications[appState.currentUser.data.id]) appState.employerNotifications[appState.currentUser.data.id] = [];
+      appState.employerNotifications[appState.currentUser.data.id].unshift(`Hire request sent to ${worker.name} for "${job.title}". Waiting for the worker's response.`);
+      logPlatformActivity('Hire Request Sent', `${appState.currentUser.data.name} (${appState.currentUser.data.id})`, `Invited ${worker.name} to "${job.title}".`);
+      saveState();
+      hideModal('hire-worker-modal');
+      showToast(`Hire request sent to ${worker.name}. Waiting for their Accept / Reject response.`, 'success');
+      renderJobs(); renderDashboard();
+    }
+
+    function acceptHireRequest(jobId) {
+      if (!appState.currentUser || appState.currentUser.role !== 'worker') return;
+      const worker = appState.currentUser.data;
+      const job = (appState.jobs || []).find(j => j.id === jobId);
+      if (!job) return;
+      const request = (job.applicants || []).find(a => a.workerId === worker.id && a.status === 'pending' && a.source === 'employer_hire');
+      if (!request) { showToast('This hire request is no longer available.', 'info'); return; }
+      if (workerHasSchedulingConflict(worker.id, jobId)) { showToast('You already have another reservation that overlaps this event. You cannot accept this hire request.', 'error'); return; }
+      if (getJobRemainingSlotsCount(job) <= 0) { showToast('There is no slot remaining for this hire request.', 'error'); return; }
+      request.status='accepted'; request.respondedAt=new Date().toISOString();
+      if (!Array.isArray(worker.appliedJobs)) worker.appliedJobs=[];
+      if (!worker.appliedJobs.includes(job.id)) worker.appliedJobs.push(job.id);
+      if (getJobFilledSlotsCount(job) >= job.boysNeeded) job.status='filled';
+      if (!appState.employerNotifications) appState.employerNotifications={};
+      if (!appState.employerNotifications[job.employerId]) appState.employerNotifications[job.employerId]=[];
+      appState.employerNotifications[job.employerId].unshift(`${worker.name} accepted your hire request for "${job.title}". You can now count this worker toward the required slots. All the best for your event!`);
+      logPlatformActivity('Hire Request Accepted', `${worker.name} (${worker.id})`, `Accepted employer hire request for ${job.title}.`);
+      saveState(); renderDashboard(); renderJobs(); showToast('Hire request accepted. You are booked for this work. All the best!', 'success');
+    }
+
+    function rejectHireRequest(jobId) {
+      if (!appState.currentUser || appState.currentUser.role !== 'worker') return;
+      const worker = appState.currentUser.data;
+      const job = (appState.jobs || []).find(j => j.id === jobId);
+      if (!job) return;
+      const request = (job.applicants || []).find(a => a.workerId === worker.id && a.status === 'pending' && a.source === 'employer_hire');
+      if (!request) { showToast('This hire request is no longer available.', 'info'); return; }
+      request.status='rejected'; request.respondedAt=new Date().toISOString();
+      if (!appState.employerNotifications) appState.employerNotifications={};
+      if (!appState.employerNotifications[job.employerId]) appState.employerNotifications[job.employerId]=[];
+      appState.employerNotifications[job.employerId].unshift(`${worker.name} declined the hire request for "${job.title}". You can continue selecting other available workers.`);
+      logPlatformActivity('Hire Request Rejected', `${worker.name} (${worker.id})`, `Rejected employer hire request for ${job.title}.`);
+      saveState(); renderDashboard(); renderJobs(); showToast('Hire request declined. You can continue browsing other work.', 'info');
     }
 
     function viewJobApplicants(jobId) {
