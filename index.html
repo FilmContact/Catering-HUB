@@ -670,6 +670,7 @@
     .badge-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
     .badge-rejected { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
     .badge-hidden { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+    .badge-suspended { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
 
     .badge-slots-high { background: #ecfdf5; color: #065f46; border: 1.5px solid #34d399; font-weight: 800; }
     .badge-slots-low { background: #fff7ed; color: #c2410c; border: 1.5px solid #fb923c; font-weight: 800; animation: pulseAlert 2s infinite; }
@@ -1746,11 +1747,17 @@
           <button class="admin-nav-btn" onclick="switchAdminTab('employers-tab')">
             <i class="fa-solid fa-building-user"></i> Employers Queue
           </button>
+          <button class="admin-nav-btn" onclick="switchAdminTab('jobs-tab')">
+            <i class="fa-solid fa-briefcase"></i> Work Posts
+          </button>
           <button class="admin-nav-btn" onclick="switchAdminTab('reports-tab')">
             <i class="fa-solid fa-triangle-exclamation"></i> Reports Queue
           </button>
           <button class="admin-nav-btn" onclick="switchAdminTab('logs-tab')">
             <i class="fa-solid fa-list-check"></i> Platform Audit Log
+          </button>
+          <button class="admin-nav-btn" onclick="switchAdminTab('helpdesk-tab')">
+            <i class="fa-solid fa-headset"></i> Help Desk
           </button>
         </div>
 
@@ -1787,6 +1794,25 @@
                 </tr>
               </thead>
               <tbody id="admin-employers-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="admin-jobs-tab" class="admin-tab-panel">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Work Post</th>
+                  <th>Employer</th>
+                  <th>Date / Shift</th>
+                  <th>Workers</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-jobs-table-body"></tbody>
             </table>
           </div>
         </div>
@@ -2230,6 +2256,9 @@
               <p>Open Google Maps → Long-press the exact location → Two numbers will appear, for example <strong>17.3850, 78.4867</strong> → Copy them → Paste the coordinates here.</p>
             </details>
           </div>
+          <div style="margin:0 22px 16px;padding:13px 15px;border-radius:14px;background:linear-gradient(135deg,#eff6ff,#fef3c7);border:1.5px solid #c7d2fe;color:#1e3a8a;box-shadow:0 5px 14px rgba(30,64,175,.08);font-size:.82rem;line-height:1.45;">
+            <strong><i class="fa-solid fa-shield-heart"></i> Staffing safety note:</strong> CaterMatch helps you reach available event crew, but the exact number of workers you need may not always be available here. Please also keep other staffing options ready for your event.
+          </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline" onclick="closeWorkPostModal()">Cancel</button>
             <button type="submit" class="btn btn-primary" id="work-post-submit-btn">Review & Continue</button>
@@ -2653,6 +2682,14 @@
 
       await loadStateFromFirebase();
       appState.currentUser = resolveFirebaseUserAsAppUser(firebaseUser);
+      if (appState.currentUser && appState.currentUser.role !== 'admin' && appState.currentUser.data.status === 'suspended') {
+        appState.currentUser = null;
+        showToast('This account is suspended. Please contact Help Desk for assistance.', 'error');
+        try { await FIREBASE_AUTH.signOut(); } catch (_) {}
+        updateAuthUI();
+        renderJobs();
+        return;
+      }
       if (appState.currentUser && appState.currentUser.role !== 'admin') {
         ensureSupportChatForProfile(appState.currentUser.data.id);
         scheduleFirebaseSync();
@@ -2892,11 +2929,58 @@
 
     function getWorkerActiveBooking(workerId) {
       if (!workerId) return null;
-      return appState.jobs.find(job => 
-        job.status !== 'completed' &&
-        job.applicants && 
-        job.applicants.some(app => app.workerId === workerId && app.status === 'accepted' && (app.bookedFor || 'self') !== 'friend')
-      );
+      return appState.jobs.find(job =>
+        job.status !== 'completed' && job.status !== 'hidden' &&
+        Array.isArray(job.applicants) &&
+        job.applicants.some(app => app.workerId === workerId && app.status === 'accepted') &&
+        getJobHoursRemaining(job) > 0
+      ) || null;
+    }
+
+    function getJobStartDateTime(job) {
+      if (!job?.date || !job?.startTime) return null;
+      const [y,m,d]=job.date.split('-').map(Number);
+      const [hh,mm]=job.startTime.split(':').map(Number);
+      const dt=new Date(y,m-1,d,hh,mm);
+      return Number.isNaN(dt.getTime()) ? null : dt;
+    }
+
+    function getJobEndDateTime(job) {
+      if (!job?.date || !job?.endTime) return null;
+      const [y,m,d]=job.date.split('-').map(Number);
+      const [hh,mm]=job.endTime.split(':').map(Number);
+      const start=getJobStartDateTime(job);
+      const dt=new Date(y,m-1,d,hh,mm);
+      if (Number.isNaN(dt.getTime())) return null;
+      if (start && dt <= start) dt.setDate(dt.getDate()+1);
+      return dt;
+    }
+
+    function jobsOverlap(jobA, jobB) {
+      const aStart=getJobStartDateTime(jobA), aEnd=getJobEndDateTime(jobA);
+      const bStart=getJobStartDateTime(jobB), bEnd=getJobEndDateTime(jobB);
+      if (!aStart || !aEnd || !bStart || !bEnd) return false;
+      return aStart < bEnd && bStart < aEnd;
+    }
+
+    function workerHasSchedulingConflict(workerId, targetJobId) {
+      if (!workerId || !targetJobId) return false;
+      const target=appState.jobs.find(j=>j.id===targetJobId);
+      if (!target) return false;
+      return (appState.jobs||[]).some(job => {
+        if (job.id===targetJobId || job.status==='completed' || job.status==='hidden') return false;
+        if (!Array.isArray(job.applicants)) return false;
+        const hasReservation=job.applicants.some(app => app.workerId===workerId && ['pending','accepted','cancelled'].includes(app.status));
+        return hasReservation && getJobEndDateTime(job) && getJobEndDateTime(job).getTime() > Date.now() && jobsOverlap(job,target);
+      });
+    }
+
+    function workerHasAnyActiveReservation(workerId) {
+      if (!workerId) return null;
+      return (appState.jobs||[]).find(job => {
+        if (job.status==='completed' || job.status==='hidden' || !Array.isArray(job.applicants)) return false;
+        return job.applicants.some(app => app.workerId===workerId && ['pending','accepted','cancelled'].includes(app.status)) && getJobEndDateTime(job)?.getTime() > Date.now();
+      }) || null;
     }
 
     function getJobHoursRemaining(job) {
@@ -3067,6 +3151,7 @@
     function startEmployerDirectFlow() {
       if (appState.currentUser) {
         if (appState.currentUser.role === 'employer') {
+          if (appState.currentUser.data.status === 'suspended') { showToast('Your account is suspended. Please contact Help Desk.', 'error'); return; }
           if (appState.currentUser.data.status === 'approved') {
             handlePostWorkClick();
           } else {
@@ -3109,26 +3194,36 @@
         }
       }
 
-      if (isWorker && activeBookedJob) {
-        if (noticeContainer) {
-          noticeContainer.innerHTML = `
-            <div class="active-booking-lock-banner">
-              <i class="fa-solid fa-lock"></i>
-              <div>
-                <h4>You Have an Active Shift Booking</h4>
-                <p>You are currently locked into <strong>${activeBookedJob.title}</strong>. Other open work posts are hidden until this shift is completed or cancelled (4-hour policy applies).</p>
-              </div>
+      if (noticeContainer) noticeContainer.innerHTML = '';
+      if (isWorker && activeBookedJob && noticeContainer) {
+        noticeContainer.innerHTML = `
+          <div class="active-booking-lock-banner">
+            <i class="fa-solid fa-lock"></i>
+            <div>
+              <h4>You Have an Active Shift Booking</h4>
+              <p>Your current booking is <strong>${escapeHtml(activeBookedJob.title)}</strong>. Work posts that overlap this shift remain hidden until the event time has passed, even if you cancel the booking.</p>
             </div>
-          `;
-        }
-        if (contextEl) contextEl.style.display = 'none';
-        container.innerHTML = renderJobCardHtml(activeBookedJob, true);
-        return;
+          </div>`;
       }
 
-      if (noticeContainer) noticeContainer.innerHTML = '';
+      let list = appState.jobs.filter(j => {
+        if (j.status === 'completed' || j.status === 'hidden' || j.status === 'deleted') return false;
+        const emp=(appState.employers||[]).find(e=>e.id===j.employerId);
+        if (emp && emp.status !== 'approved') return false;
+        return true;
+      });
 
-      let list = appState.jobs.filter(j => j.status !== 'completed');
+      if (isWorker) {
+        list = list.filter(j => !workerHasSchedulingConflict(appState.currentUser.data.id, j.id));
+        const anyReservation = workerHasAnyActiveReservation(appState.currentUser.data.id);
+        if (anyReservation && !getWorkerActiveBooking(appState.currentUser.data.id)) {
+          if (noticeContainer) noticeContainer.innerHTML = `
+            <div class="active-booking-lock-banner">
+              <i class="fa-solid fa-clock"></i>
+              <div><h4>Your Current Reservation Blocks Overlapping Events</h4><p>Other shifts that overlap your reserved event are hidden until its scheduled end time. This remains true even after you cancel the request.</p></div>
+            </div>`;
+        }
+      }
 
       if (isWorker && appState.currentUser.data.coords) {
         if (contextEl) contextEl.style.display = 'flex';
@@ -3918,6 +4013,22 @@
       if (!appState.reports) appState.reports = [];
       appState.reports.unshift(reportEntry);
 
+      const targetProfile = reportEntry.reportedUserType === 'worker'
+        ? (appState.workers || []).find(w => w.id === reportEntry.reportedUserId)
+        : (appState.employers || []).find(e => e.id === reportEntry.reportedUserId);
+      const targetReportCount = appState.reports.filter(r => r.reportedUserId === reportEntry.reportedUserId).length;
+      if (targetProfile && targetReportCount >= 10 && targetProfile.status !== 'suspended') {
+        targetProfile.status = 'suspended';
+        targetProfile.suspendedAt = new Date().toISOString();
+        targetProfile.suspensionReason = 'Automatic platform suspension after repeated reports.';
+        if (!appState.workerNotifications) appState.workerNotifications = {};
+        if (!appState.employerNotifications) appState.employerNotifications = {};
+        const noteMap = reportEntry.reportedUserType === 'worker' ? appState.workerNotifications : appState.employerNotifications;
+        if (!noteMap[reportEntry.reportedUserId]) noteMap[reportEntry.reportedUserId] = [];
+        noteMap[reportEntry.reportedUserId].unshift('Your CaterMatch account has been suspended following repeated reports. Please contact Help Desk for assistance.');
+        logPlatformActivity('Automatic Account Suspension', `${targetProfile.name} (${targetProfile.id})`, 'Account automatically suspended after reaching the platform report threshold.');
+      }
+
       logPlatformActivity('Profile Reported', `${appState.currentUser.data.name}`, `Reported ${reportEntry.reportedUserType} "${reportEntry.reportedUserName}"`);
       saveState();
 
@@ -4192,6 +4303,10 @@
       }
       const job = appState.jobs.find(j => j.id === jobId);
       if (!job) return;
+      if (workerHasSchedulingConflict(appState.currentUser.data.id, jobId)) {
+        showToast('This shift overlaps another reservation you already have. You can book only one event at a time when shift times overlap.', 'error');
+        return;
+      }
       const existing = getWorkerApplication(job, appState.currentUser.data.id);
       if (existing) {
         showToast(existing.status === 'pending' ? 'You already have a pending request for this shift.' : 'This booking is already accepted.', 'info');
@@ -4324,13 +4439,16 @@
       const worker = appState.currentUser?.data;
       if (!job || !worker) return;
       const before = job.applicants?.length || 0;
-      job.applicants = (job.applicants||[]).filter(a=>!(a.workerId===worker.id && a.status==='pending'));
+      const pending = (job.applicants||[]).find(a=>a.workerId===worker.id && a.status==='pending');
+      if (!pending) { showToast('No pending request found.', 'info'); return; }
+      pending.status='cancelled';
+      pending.cancelledAt=new Date().toISOString();
+      pending.reservationLockUntil=getJobEndDateTime(job)?.toISOString() || null;
       worker.appliedJobs = (worker.appliedJobs||[]).filter(id=>id!==jobId);
-      if (job.applicants.length===before) { showToast('No pending request found.', 'info'); return; }
-      logPlatformActivity('Booking Request Cancelled', `${worker.name} (${worker.id})`, `Cancelled pending request for ${job.title}.`);
+      logPlatformActivity('Booking Request Cancelled', `${worker.name} (${worker.id})`, `Cancelled pending request for ${job.title}. Overlapping shift visibility remains blocked until the reserved event ends.`);
       saveState();
       hideModal('booking-modal');
-      showToast('Booking request cancelled. You can explore other work.', 'info');
+      showToast('Request cancelled. Overlapping work stays hidden until the reserved event time has passed.', 'info');
       renderJobs();
       renderDashboard();
     }
@@ -4352,13 +4470,17 @@
       const job = appState.jobs.find(j => j.id === jobId);
       if (!job || !appState.currentUser) return;
       const worker = appState.currentUser.data;
-      job.applicants = job.applicants.filter(a => a.workerId !== worker.id);
+      const accepted = (job.applicants||[]).find(a=>a.workerId===worker.id && a.status==='accepted');
+      if (!accepted) { showToast('No accepted booking found.', 'info'); return; }
+      accepted.status='cancelled';
+      accepted.cancelledAt=new Date().toISOString();
+      accepted.reservationLockUntil=getJobEndDateTime(job)?.toISOString() || null;
       worker.appliedJobs = (worker.appliedJobs || []).filter(id => id !== jobId);
       if (getJobRemainingSlotsCount(job) > 0 && job.status !== 'completed') job.status = 'open';
-      logPlatformActivity('Slot Cancelled', `${worker.name} (${worker.id})`, `Cancelled booking on ${job.title}`);
+      logPlatformActivity('Slot Cancelled', `${worker.name} (${worker.id})`, `Cancelled booking on ${job.title}. Overlapping shift visibility remains blocked until the event ends.`);
       saveState();
       hideModal('booking-modal');
-      showToast('Booking cancelled successfully.', 'info');
+      showToast('Booking cancelled. Overlapping work remains hidden until the event time has passed.', 'info');
       renderJobs();
     }
 
@@ -4668,21 +4790,25 @@
       document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.remove('active'));
 
+      const btns = document.querySelectorAll('.admin-nav-btn');
       if (tabName === 'workers-tab') {
-        document.querySelectorAll('.admin-nav-btn')[0].classList.add('active');
+        btns[0]?.classList.add('active');
         document.getElementById('admin-workers-tab').classList.add('active');
       } else if (tabName === 'employers-tab') {
-        document.querySelectorAll('.admin-nav-btn')[1].classList.add('active');
+        btns[1]?.classList.add('active');
         document.getElementById('admin-employers-tab').classList.add('active');
+      } else if (tabName === 'jobs-tab') {
+        btns[2]?.classList.add('active');
+        document.getElementById('admin-jobs-tab').classList.add('active');
       } else if (tabName === 'reports-tab') {
-        document.querySelectorAll('.admin-nav-btn')[2].classList.add('active');
+        btns[3]?.classList.add('active');
         document.getElementById('admin-reports-tab').classList.add('active');
       } else if (tabName === 'helpdesk-tab') {
-        document.querySelectorAll('.admin-nav-btn')[4].classList.add('active');
+        btns[5]?.classList.add('active');
         document.getElementById('admin-helpdesk-tab').classList.add('active');
         renderAdminHelpdesk();
       } else {
-        document.querySelectorAll('.admin-nav-btn')[3].classList.add('active');
+        btns[4]?.classList.add('active');
         document.getElementById('admin-logs-tab').classList.add('active');
       }
     }
@@ -4748,6 +4874,27 @@
         </tr>
       `).join('');
 
+      const jBody = document.getElementById('admin-jobs-table-body');
+      if (jBody) {
+        const jobs = (appState.jobs || []).filter(j => j.status !== 'completed');
+        jBody.innerHTML = jobs.length === 0 ? `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:24px;">No work posts available.</td></tr>` : jobs.map(j => {
+          const status = j.status || 'open';
+          const statusClass = status === 'hidden' ? 'badge-hidden' : (status === 'filled' ? 'badge-filled' : 'badge-open');
+          return `<tr>
+            <td><strong>${escapeHtml(j.title)}</strong><br><small>${escapeHtml(j.venueName || '')}</small></td>
+            <td>${escapeHtml(j.employerName || '')}</td>
+            <td>${escapeHtml(j.date || '')}<br><small>${escapeHtml(j.time || '')}</small></td>
+            <td>${getJobFilledSlotsCount(j)} / ${Number(j.boysNeeded || 0)}</td>
+            <td>${escapeHtml(j.locationText || j.venueName || '')}${j.coords ? '<br><small>' + escapeHtml(`${j.coords.lat}, ${j.coords.lng}`) + '</small>' : ''}</td>
+            <td><span class="card-badge ${statusClass}" style="position:static;">${escapeHtml(status)}</span></td>
+            <td><div class="admin-action-btn-group">
+              <button class="btn btn-outline btn-sm" onclick="adminToggleJobHide('${j.id}')"><i class="fa-solid fa-eye-slash"></i> ${status === 'hidden' ? 'Show' : 'Hide'}</button>
+              <button class="btn btn-danger btn-sm" onclick="adminDeleteJob('${j.id}')"><i class="fa-solid fa-trash"></i> Delete</button>
+            </div></td>
+          </tr>`;
+        }).join('');
+      }
+
       const rBody = document.getElementById('admin-reports-table-body');
       const reports = appState.reports || [];
       rBody.innerHTML = reports.length === 0 ? `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No reports submitted.</td></tr>` : reports.map(r => `
@@ -4774,6 +4921,37 @@
           <td>${l.details}</td>
         </tr>
       `).join('');
+    }
+
+    function adminToggleJobHide(jobId) {
+      if (!isCurrentAdmin()) { showToast('Administrator access required.', 'error'); return; }
+      const job = (appState.jobs || []).find(j => j.id === jobId);
+      if (!job) return;
+      job.status = job.status === 'hidden' ? 'open' : 'hidden';
+      logPlatformActivity('Work Post Visibility Changed', `${job.employerName} (${job.employerId})`, `${job.status === 'hidden' ? 'Hidden' : 'Shown'} work post: ${job.title}`);
+      saveState();
+      renderAdminTables();
+      renderJobs();
+      showToast(`Work post ${job.status === 'hidden' ? 'hidden' : 'shown'}.`, 'info');
+    }
+
+    function adminDeleteJob(jobId) {
+      if (!isCurrentAdmin()) { showToast('Administrator access required.', 'error'); return; }
+      const job = (appState.jobs || []).find(j => j.id === jobId);
+      if (!job) return;
+      showInlineActionConfirm(`Permanently delete the work post "${job.title}" and its booking requests?`, () => adminDeleteJobConfirmed(jobId), 'Delete Work Post', true);
+    }
+
+    function adminDeleteJobConfirmed(jobId) {
+      if (!isCurrentAdmin()) { showToast('Administrator access required.', 'error'); return; }
+      const job = (appState.jobs || []).find(j => j.id === jobId);
+      if (!job) return;
+      appState.jobs = appState.jobs.filter(j => j.id !== jobId);
+      logPlatformActivity('Work Post Deleted', `${job.employerName} (${job.employerId})`, `Admin deleted work post: ${job.title}`);
+      saveState();
+      renderAdminTables();
+      renderJobs();
+      showToast('Work post deleted.', 'info');
     }
 
     function adminUpdateWorkerStatus(workerId, status) {
