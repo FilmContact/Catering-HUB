@@ -2402,6 +2402,92 @@
       </div>
     </div>
 
+    <!-- 9. Employer Rating & Review Modal -->
+    <div id="rate-employer-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'rate-employer-modal')">
+      <div class="modal-card" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-building-circle-check"></i> Rate Employer</h3>
+          <button class="close-btn" onclick="hideModal('rate-employer-modal')">&times;</button>
+        </div>
+        <form id="rate-employer-form" onsubmit="handleSubmitEmployerRating(event)">
+          <div class="modal-body" style="text-align:center;">
+            <div id="rate-employer-icon" style="width:70px;height:70px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#38bdf8,#2563eb);color:#fff;font-size:2rem;box-shadow:0 8px 18px rgba(37,99,235,.2);"><i class="fa-solid fa-building"></i></div>
+            <h4 id="rate-employer-name" style="font-size:1.15rem;font-weight:800;color:var(--dark);">Employer</h4>
+            <p id="rate-employer-job-context" style="font-size:.82rem;color:var(--text-muted);"></p>
+            <div class="star-rating-picker" id="employer-star-picker">
+              <i class="fa-solid fa-star selected" data-value="1" onclick="selectEmployerRatingStar(1)"></i>
+              <i class="fa-solid fa-star selected" data-value="2" onclick="selectEmployerRatingStar(2)"></i>
+              <i class="fa-solid fa-star selected" data-value="3" onclick="selectEmployerRatingStar(3)"></i>
+              <i class="fa-solid fa-star selected" data-value="4" onclick="selectEmployerRatingStar(4)"></i>
+              <i class="fa-solid fa-star selected" data-value="5" onclick="selectEmployerRatingStar(5)"></i>
+            </div>
+            <input type="hidden" id="selected-employer-star-value" value="5" />
+            <div class="form-group full-width" style="text-align:left;margin-top:14px;">
+              <label>Short Review / Feedback (Optional)</label>
+              <textarea id="rate-employer-comment" rows="3" placeholder="e.g. Clear instructions, punctual payment arrangement, professional coordination."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="hideModal('rate-employer-modal')">Cancel</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-star"></i> Submit Review</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 10. Personal Work Record / Attendance Note Modal -->
+    <div id="work-record-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'work-record-modal')">
+      <div class="modal-card form-modal-card" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3 id="work-record-modal-title"><i class="fa-solid fa-clipboard-check"></i> Work Record</h3>
+          <button class="close-btn" onclick="hideModal('work-record-modal')">&times;</button>
+        </div>
+        <form id="work-record-form" onsubmit="handleSubmitWorkRecord(event)">
+          <div class="modal-body form-grid">
+            <div class="alert-info full-width">
+              <i class="fa-solid fa-circle-info"></i> This is a private record for your own reference. It is not an official attendance or payroll document.
+            </div>
+            <div class="form-group full-width" id="work-record-person-group">
+              <label id="work-record-person-label">Employer / Company <span class="required">*</span></label>
+              <input type="text" id="work-record-person" required />
+            </div>
+            <div class="form-group full-width" id="work-record-workers-group" style="display:none;">
+              <label>Worker Name(s) <span class="required">*</span></label>
+              <textarea id="work-record-workers" rows="3" placeholder="Enter worker names, one per line"></textarea>
+            </div>
+            <div class="form-group full-width" id="work-record-title-group">
+              <label>Work / Event <span class="required">*</span></label>
+              <input type="text" id="work-record-title" placeholder="e.g. Wedding Reception" required />
+            </div>
+            <div class="form-group">
+              <label>Location <span class="required">*</span></label>
+              <input type="text" id="work-record-location" placeholder="Venue / City" required />
+            </div>
+            <div class="form-group">
+              <label>Date <span class="required">*</span></label>
+              <input type="date" id="work-record-date" required />
+            </div>
+            <div class="form-group">
+              <label>Start Time <span class="required">*</span></label>
+              <input type="time" id="work-record-start-time" required />
+            </div>
+            <div class="form-group">
+              <label>End Time <span class="required">*</span></label>
+              <input type="time" id="work-record-end-time" required />
+            </div>
+            <div class="form-group full-width">
+              <label>Extra Notes <span style="color:var(--text-muted);font-weight:600;">(Optional)</span></label>
+              <textarea id="work-record-extra" rows="3" placeholder="Add any extra details, duties, contacts, travel notes, payment notes, etc."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="hideModal('work-record-modal')">Cancel</button>
+            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Work Record</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- 9. Report / Flag User Modal -->
     <div id="report-user-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'report-user-modal')">
       <div class="modal-card" onclick="event.stopPropagation()">
@@ -2562,7 +2648,8 @@
       'reports',
       'auditLogs',
       'workerNotifications',
-      'employerNotifications'
+      'employerNotifications',
+      'workRecords'
     ];
 
     let firebaseHydrated = false;
@@ -2607,6 +2694,8 @@
         appState.workerNotifications = data || {};
       } else if (section === 'employerNotifications') {
         appState.employerNotifications = data || {};
+      } else if (section === 'workRecords') {
+        appState.workRecords = Array.isArray(data) ? data : [];
       } else if (section === 'workers') {
         appState.workers = Array.isArray(data) ? data : [];
       } else if (section === 'employers') {
@@ -2781,6 +2870,7 @@
       activeReportTarget: null,
       workerNotifications: {},
       employerNotifications: {},
+      workRecords: [],
       workers: [],
       employers: [],
       jobs: [],
@@ -2924,14 +3014,19 @@
       return (R * c).toFixed(1);
     }
 
-    // Ratings summary
+    // Ratings summaries
     function getWorkerRatingSummary(worker) {
-      if (!worker || !worker.ratings || worker.ratings.length === 0) {
-        return null;
-      }
-      const sum = worker.ratings.reduce((acc, r) => acc + r.stars, 0);
+      if (!worker || !worker.ratings || worker.ratings.length === 0) return null;
+      const sum = worker.ratings.reduce((acc, r) => acc + Number(r.stars || 0), 0);
       const avg = (sum / worker.ratings.length).toFixed(1);
       return { avg, count: worker.ratings.length };
+    }
+
+    function getEmployerRatingSummary(employer) {
+      if (!employer || !employer.ratings || employer.ratings.length === 0) return null;
+      const sum = employer.ratings.reduce((acc, r) => acc + Number(r.stars || 0), 0);
+      const avg = (sum / employer.ratings.length).toFixed(1);
+      return { avg, count: employer.ratings.length };
     }
 
     // Grooming badges helper
@@ -3379,6 +3474,11 @@
       const myApplication = isWorker ? getWorkerApplication(job, appState.currentUser.data.id) : null;
       const hasAccepted = !!myApplication && myApplication.status === 'accepted';
       const hasPending = !!myApplication && myApplication.status === 'pending';
+      const jobEmployer = (appState.employers || []).find(e => e.id === job.employerId);
+      const employerRating = getEmployerRatingSummary(jobEmployer);
+      const employerRatingHtml = employerRating
+        ? `<span class="star-badge" style="margin-left:6px;"><i class="fa-solid fa-star"></i> ${employerRating.avg} (${employerRating.count})</span>`
+        : `<span class="star-badge" style="margin-left:6px;color:var(--text-muted);background:#f1f5f9;border-color:#e2e8f0;"><i class="fa-regular fa-star"></i> New Employer</span>`;
 
       let actionSection = '';
       if (!appState.currentUser) {
@@ -3424,8 +3524,9 @@
           <div>
             <h3 class="card-title">${job.title}</h3>
             <p class="card-subtext">
-              Posted by <strong>${job.employerName}</strong> ${distanceBadge}
-              ${appState.currentUser ? `<button class="btn-report-flag" onclick="openReportModal('${job.employerId}', 'employer', '${job.employerName}')" title="Report Employer"><i class="fa-solid fa-flag"></i></button>` : ''}
+              Posted by <strong>${escapeHtml(job.employerName)}</strong> ${distanceBadge}
+              ${employerRatingHtml}
+              ${appState.currentUser ? `<button class="btn-report-flag" onclick="openReportModal('${job.employerId}', 'employer', '${escapeHtml(job.employerName)}')" title="Report Employer"><i class="fa-solid fa-flag"></i></button>` : ''}
             </p>
             <div class="highlight-pay">₹${job.perHeadAmount} / per head</div>
             <ul class="card-details-list">
@@ -3643,9 +3744,16 @@
                     <div class="history-rating-box">
                       ${myRating ? `
                         <div><strong>Employer Feedback:</strong> <span class="star-badge"><i class="fa-solid fa-star"></i> ${myRating.stars}.0 / 5.0</span></div>
-                        ${myRating.comment ? `<p style="margin-top:4px; font-style:italic;">"${myRating.comment}"</p>` : ''}
+                        ${myRating.comment ? `<p style="margin-top:4px; font-style:italic;">"${escapeHtml(myRating.comment)}"</p>` : ''}
                       ` : `<span class="text-muted">No review left by employer yet.</span>`}
                     </div>
+                    ${(() => {
+                      const employer = (appState.employers || []).find(e => e.id === j.employerId);
+                      const myEmployerRating = (employer?.ratings || []).find(r => r.jobId === j.id && r.workerId === u.id);
+                      return myEmployerRating
+                        ? `<div style="margin-top:8px;"><span class="star-badge"><i class="fa-solid fa-star"></i> You rated Employer ${myEmployerRating.stars}.0 / 5.0</span></div>`
+                        : `<div style="margin-top:8px;"><button class="btn btn-primary btn-sm" onclick="openRateEmployerModal('${j.id}','${j.employerId}')"><i class="fa-solid fa-star"></i> Rate Employer</button></div>`;
+                    })()}
                   </div>
                 `;
               }).join('')}
@@ -3721,10 +3829,11 @@
                     <div class="history-card-header">
                       <div>
                         <strong style="font-size:1.05rem;">${j.title}</strong><br>
-                        <small class="text-muted">${j.date} | ${j.venueName} | Rate: ₹${j.perHeadAmount}/head</small>
+                        <small class="text-muted">${j.date} | ${j.time || ''} | ${j.venueName} | Rate: ₹${j.perHeadAmount}/head</small>
                       </div>
                       <span class="card-badge badge-completed">Completed</span>
                     </div>
+                    ${(() => { const er = getEmployerRatingSummary(u); return er ? `<div style="margin:6px 0;"><span class="star-badge"><i class="fa-solid fa-star"></i> Your Employer Rating: ${er.avg} (${er.count})</span></div>` : ''; })()}
                     <div style="margin-top:8px;">
                       <span style="font-size:0.84rem; font-weight:700; color:var(--dark);">Crew on this Event:</span>
                       <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
@@ -3755,6 +3864,8 @@
         `;
       }
 
+      const workRecordsHtml = renderMyWorkRecordsSection();
+
       container.innerHTML = `
         <div class="dashboard-grid">
           <div class="dash-profile-card">
@@ -3762,6 +3873,7 @@
             <h3 style="font-size:1.3rem; font-weight:800;">${u.name}</h3>
             <p class="text-muted">${isWorker ? 'Catering Crew Profile' : 'Event Organizer / Employer'}</p>
             ${isWorker && getWorkerRatingSummary(u) ? `<div style="margin-top:4px;"><span class="star-badge"><i class="fa-solid fa-star"></i> ${getWorkerRatingSummary(u).avg} (${getWorkerRatingSummary(u).count} reviews)</span></div>` : ''}
+            ${!isWorker && getEmployerRatingSummary(u) ? `<div style="margin-top:4px;"><span class="star-badge"><i class="fa-solid fa-star"></i> ${getEmployerRatingSummary(u).avg} (${getEmployerRatingSummary(u).count} reviews)</span></div>` : ''}
             
             <div class="dash-status-banner ${bannerClass}">${bannerText}</div>
             ${rejectionActionBtn}
@@ -3789,6 +3901,7 @@
             ${historySectionHtml}
           </div>
         </div>
+        ${workRecordsHtml}
       `;
     }
 
@@ -4101,6 +4214,179 @@
       renderDashboard();
     }
 
+
+    // ================= 6.5 TWO-WAY RATINGS =================
+    function openRateEmployerModal(jobId, employerId) {
+      if (!appState.currentUser || appState.currentUser.role !== 'worker') return;
+      const job = (appState.jobs || []).find(j => j.id === jobId && j.status === 'completed');
+      const employer = (appState.employers || []).find(e => e.id === employerId);
+      if (!job || !employer) return;
+      const accepted = (job.applicants || []).some(a => a.workerId === appState.currentUser.data.id && a.status === 'accepted');
+      if (!accepted) {
+        showToast('You can rate an employer only after completing an accepted work assignment.', 'error');
+        return;
+      }
+      const existing = (employer.ratings || []).find(r => r.jobId === jobId && r.workerId === appState.currentUser.data.id);
+      if (existing) {
+        showToast('You have already reviewed this employer for this work.', 'info');
+        return;
+      }
+      appState.activeEmployerRatingContext = { jobId, employerId };
+      document.getElementById('rate-employer-name').textContent = employer.name;
+      document.getElementById('rate-employer-job-context').textContent = `Work: ${job.title} • ${job.date} • ${job.time || ''}`;
+      document.getElementById('rate-employer-comment').value = '';
+      selectEmployerRatingStar(5);
+      showModal('rate-employer-modal');
+    }
+
+    function selectEmployerRatingStar(count) {
+      document.getElementById('selected-employer-star-value').value = count;
+      document.querySelectorAll('#employer-star-picker i').forEach((s, idx) => {
+        s.classList.toggle('selected', idx < count);
+      });
+    }
+
+    function handleSubmitEmployerRating(e) {
+      e.preventDefault();
+      if (!appState.activeEmployerRatingContext || !appState.currentUser || appState.currentUser.role !== 'worker') return;
+      const { jobId, employerId } = appState.activeEmployerRatingContext;
+      const stars = parseInt(document.getElementById('selected-employer-star-value').value, 10);
+      const comment = document.getElementById('rate-employer-comment').value.trim();
+      const employer = (appState.employers || []).find(e => e.id === employerId);
+      const job = (appState.jobs || []).find(j => j.id === jobId);
+      if (!employer || !job || stars < 1 || stars > 5) return;
+      if (!(job.applicants || []).some(a => a.workerId === appState.currentUser.data.id && a.status === 'accepted')) {
+        showToast('This rating is not available for this work.', 'error'); return;
+      }
+      if (!Array.isArray(employer.ratings)) employer.ratings = [];
+      employer.ratings = employer.ratings.filter(r => !(r.jobId === jobId && r.workerId === appState.currentUser.data.id));
+      employer.ratings.push({
+        jobId,
+        workerId: appState.currentUser.data.id,
+        workerName: appState.currentUser.data.name,
+        stars,
+        comment,
+        date: new Date().toISOString().split('T')[0],
+        workDate: job.date,
+        workTime: job.time || ''
+      });
+      logPlatformActivity('Employer Rated', `${appState.currentUser.data.name} (${appState.currentUser.data.id})`, `Gave ${stars} stars to ${employer.name}.`);
+      saveState();
+      hideModal('rate-employer-modal');
+      showToast(`Review submitted for ${employer.name}. Thank you.`, 'success');
+      renderDashboard();
+      renderJobs();
+    }
+
+    // ================= 6.6 PERSONAL WORK RECORDS =================
+    function openWorkRecordModal(mode = null) {
+      if (!appState.currentUser || appState.currentUser.role === 'admin') {
+        showToast('Please sign in with a Worker or Employer profile.', 'error');
+        return;
+      }
+      const isWorker = (mode || appState.currentUser.role) === 'worker';
+      document.getElementById('work-record-modal-title').innerHTML = `<i class="fa-solid fa-clipboard-check"></i> ${isWorker ? 'Work Record' : 'Work Attendance Note'}`;
+      document.getElementById('work-record-person-label').textContent = isWorker ? 'Employer / Company *' : 'Primary Worker / Crew *';
+      document.getElementById('work-record-person').placeholder = isWorker ? 'e.g. ABC Caterers' : 'e.g. Rahul Kumar';
+      document.getElementById('work-record-workers-group').style.display = isWorker ? 'none' : 'block';
+      document.getElementById('work-record-workers').required = !isWorker;
+      document.getElementById('work-record-title-group').style.display = 'block';
+      document.getElementById('work-record-title').placeholder = isWorker ? 'e.g. Wedding Catering' : 'e.g. Wedding Reception Crew';
+      document.getElementById('work-record-form').dataset.role = isWorker ? 'worker' : 'employer';
+      document.getElementById('work-record-form').reset();
+      document.getElementById('work-record-form').dataset.role = isWorker ? 'worker' : 'employer';
+      document.getElementById('work-record-workers-group').style.display = isWorker ? 'none' : 'block';
+      document.getElementById('work-record-workers').required = !isWorker;
+      document.getElementById('work-record-date').value = new Date().toISOString().slice(0,10);
+      showModal('work-record-modal');
+    }
+
+    function handleSubmitWorkRecord(e) {
+      e.preventDefault();
+      if (!appState.currentUser || appState.currentUser.role === 'admin') return;
+      const role = e.target.dataset.role || appState.currentUser.role;
+      const person = document.getElementById('work-record-person').value.trim();
+      const title = document.getElementById('work-record-title').value.trim();
+      const location = document.getElementById('work-record-location').value.trim();
+      const date = document.getElementById('work-record-date').value;
+      const startTime = document.getElementById('work-record-start-time').value;
+      const endTime = document.getElementById('work-record-end-time').value;
+      const extra = document.getElementById('work-record-extra').value.trim();
+      if (!person || !title || !location || !date || !startTime || !endTime) {
+        showToast('Please complete all required work record fields.', 'error'); return;
+      }
+      if (endTime <= startTime) {
+        showToast('End time must be later than start time.', 'error'); return;
+      }
+      const workers = role === 'employer'
+        ? document.getElementById('work-record-workers').value.split(/\n|,/).map(x => x.trim()).filter(Boolean)
+        : [];
+      if (role === 'employer' && workers.length === 0) {
+        showToast('Please enter at least one worker name.', 'error'); return;
+      }
+      const record = {
+        id: `wr_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+        ownerId: appState.currentUser.data.id,
+        ownerRole: role,
+        person: role === 'worker' ? person : '',
+        employerName: role === 'worker' ? person : appState.currentUser.data.name,
+        workerNames: role === 'employer' ? workers : [appState.currentUser.data.name],
+        workTitle: title,
+        location,
+        date,
+        startTime,
+        endTime,
+        extra,
+        createdAt: new Date().toISOString()
+      };
+      if (!Array.isArray(appState.workRecords)) appState.workRecords = [];
+      appState.workRecords.unshift(record);
+      saveState();
+      hideModal('work-record-modal');
+      showToast('Work record saved successfully.', 'success');
+      renderDashboard();
+    }
+
+    function getMyWorkRecords() {
+      if (!appState.currentUser) return [];
+      return (appState.workRecords || [])
+        .filter(r => r.ownerId === appState.currentUser.data.id)
+        .sort((a,b) => `${b.date} ${b.startTime}`.localeCompare(`${a.date} ${a.startTime}`));
+    }
+
+    function renderMyWorkRecordsSection() {
+      if (!appState.currentUser || appState.currentUser.role === 'admin') return '';
+      const isWorker = appState.currentUser.role === 'worker';
+      const records = getMyWorkRecords();
+      return `
+        <div class="support-card" style="margin-top:20px;background:linear-gradient(135deg,#fff7ed,#eff6ff);">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div>
+              <h3 style="font-weight:800;"><i class="fa-solid fa-clipboard-list"></i> ${isWorker ? 'My Work Records' : 'My Work Attendance Notes'}</h3>
+              <p class="section-desc">Keep a private record of ${isWorker ? 'where you worked' : 'which workers attended each event'}.</p>
+            </div>
+            <button class="btn btn-3d-blue btn-sm" onclick="openWorkRecordModal('${isWorker ? 'worker' : 'employer'}')"><i class="fa-solid fa-plus"></i> Add Record</button>
+          </div>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:10px;">
+            ${records.length === 0 ? '<p class="text-muted">No personal work records yet.</p>' : records.map(r => `
+              <div class="history-card">
+                <div class="history-card-header">
+                  <div>
+                    <strong>${escapeHtml(r.workTitle)}</strong><br>
+                    <small class="text-muted"><i class="fa-solid fa-calendar"></i> ${escapeHtml(r.date)} • <i class="fa-solid fa-clock"></i> ${escapeHtml(r.startTime)} – ${escapeHtml(r.endTime)} • <i class="fa-solid fa-location-dot"></i> ${escapeHtml(r.location)}</small>
+                  </div>
+                  <span class="card-badge badge-completed">${isWorker ? 'Work Record' : 'Attendance Note'}</span>
+                </div>
+                ${isWorker
+                  ? `<div style="font-size:.84rem;color:#334155;"><strong>Employer:</strong> ${escapeHtml(r.employerName || r.person || '')}</div>`
+                  : `<div style="font-size:.84rem;color:#334155;"><strong>Workers:</strong> ${escapeHtml((r.workerNames || []).join(', '))}</div>`}
+                ${r.extra ? `<div style="font-size:.82rem;color:var(--text-muted);margin-top:4px;"><strong>Extra:</strong> ${escapeHtml(r.extra)}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>`;
+    }
+
     // ================= 6. REPORTING SYSTEM =================
     function openReportModal(targetId, targetType, targetName) {
       if (!appState.currentUser) {
@@ -4258,7 +4544,8 @@
           locationText: document.getElementById('emp-form-location-text').value.trim(),
           mapsLink,
           coords,
-          status: 'pending'
+          status: 'pending',
+          ratings: []
         };
 
         appState.employers.push(newEmployer);
