@@ -10,7 +10,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="CaterMatch" />
-  <link rel="manifest" href='data:application/manifest+json,{"name":"CaterMatch — Catering Platform","short_name":"CaterMatch","start_url":".","display":"standalone","background_color":"%234f46e5","theme_color":"%234f46e5","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3448/3448609.png","sizes":"192x192","type":"image/png"},{"src":"https://cdn-icons-png.flaticon.com/512/3448/3448609.png","sizes":"512x512","type":"image/png"}]}' />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
 
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
@@ -1618,7 +1620,61 @@
     .toast.error { border-left: 6px solid var(--danger); }
     .toast.info { border-left: 6px solid var(--primary); }
     .toast.warning { border-left: 6px solid var(--warning); }
-  </style>
+  
+    /* ================== COLOR + MOBILE INSTALL POLISH ================== */
+    :root {
+      --primary: #6d28d9;
+      --primary-dark: #4c1d95;
+      --primary-gradient: linear-gradient(135deg, #7c3aed 0%, #ec4899 48%, #f97316 100%);
+      --primary-light: #f5f3ff;
+    }
+    body {
+      background: #f8fafc;
+      background-image:
+        radial-gradient(at 0% 0%, rgba(124,58,237,.12) 0px, transparent 42%),
+        radial-gradient(at 100% 15%, rgba(236,72,153,.10) 0px, transparent 38%),
+        radial-gradient(at 100% 100%, rgba(16,185,129,.09) 0px, transparent 40%),
+        radial-gradient(at 12% 100%, rgba(249,115,22,.08) 0px, transparent 38%);
+    }
+    .navbar {
+      background: linear-gradient(135deg, #24104f 0%, #4c1d95 46%, #7c2d12 100%);
+    }
+    .nav-brand .brand-icon { filter: drop-shadow(0 4px 8px rgba(249,115,22,.45)); }
+    .install-pwa-btn {
+      border: 1px solid rgba(255,255,255,.42);
+      color: #fff;
+      background: linear-gradient(135deg,#f59e0b 0%,#ec4899 48%,#7c3aed 100%);
+      padding: 9px 13px;
+      border-radius: 999px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 5px 0 rgba(91,33,182,.55), 0 9px 18px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.30);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: transform .12s ease, box-shadow .12s ease;
+      white-space: nowrap;
+    }
+    .install-pwa-btn:hover { transform: translateY(-2px); box-shadow: 0 7px 0 rgba(91,33,182,.55), 0 12px 22px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.30); }
+    .install-pwa-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(91,33,182,.55), 0 5px 10px rgba(0,0,0,.15); }
+    .hero-entry-banner { background: linear-gradient(135deg,#24104f 0%,#6d28d9 48%,#be185d 100%); }
+    .worker-cta .cta-icon-wrap { background: linear-gradient(135deg,#f59e0b,#f97316); }
+    .employer-cta .cta-icon-wrap { background: linear-gradient(135deg,#06b6d4,#2563eb); }
+    .card { background: linear-gradient(145deg,#ffffff 0%,#faf5ff 40%,#fff7ed 72%,#ecfdf5 100%); }
+    .dash-profile-card { background: linear-gradient(145deg,#ffffff 0%,#f5f3ff 42%,#eff6ff 70%,#ecfdf5 100%); }
+    .filter-card { border-top: 3px solid #8b5cf6; background: linear-gradient(135deg,#ffffff,#f5f3ff,#fff7ed); }
+    .job-live-status.live { background: linear-gradient(135deg,#dcfce7,#bbf7d0,#a7f3d0); }
+    .job-live-status.upcoming { background: linear-gradient(135deg,#f5f3ff,#e0e7ff,#dbeafe); }
+    .section-header h2 { background: linear-gradient(90deg,#4c1d95,#c026d3,#ea580c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    @media (max-width: 640px) {
+      .nav-actions { gap: 7px; }
+      .install-pwa-btn { padding: 9px 10px; font-size: .76rem; }
+      .install-pwa-btn span { display:none; }
+      .install-pwa-btn { width:40px; height:40px; justify-content:center; padding:0; }
+      .content-area { padding: 14px; }
+      .navbar { padding: 10px 12px; }
+    }
+</style>
 </head>
 <body>
   <div id="app-container">
@@ -1638,8 +1694,9 @@
           <i class="fa-solid fa-user-circle"></i>
           <span id="nav-user-label">Sign In</span>
         </div>
-        <button id="pwa-install-btn" class="icon-btn" title="Install App" style="display: none;">
-          <i class="fa-solid fa-download"></i>
+        <button id="pwa-install-btn" class="install-pwa-btn" title="Add CaterMatch to Home Screen" type="button" onclick="installCaterMatch()">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+          <span>Add to Home Screen</span>
         </button>
       </div>
     </header>
@@ -5700,58 +5757,38 @@
       }
     }
 
-    // PWA Service Worker Registration
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        const swCode = `
-          const CACHE_NAME = 'catermatch-v9-cache';
-          self.addEventListener('install', (e) => self.skipWaiting());
-          self.addEventListener('activate', (e) => self.clients.claim());
-          self.addEventListener('push', (event) => {
-            let data = { title: 'CaterMatch Alert', body: 'New catering shift available in your area!' };
-            if (event.data) {
-              try { data = event.data.json(); } catch(e) { data.body = event.data.text(); }
-            }
-            event.waitUntil(
-              self.registration.showNotification(data.title, {
-                body: data.body,
-                icon: 'https://cdn-icons-png.flaticon.com/512/3448/3448609.png'
-              })
-            );
-          });
-          self.addEventListener('notificationclick', (event) => {
-            event.notification.close();
-            event.waitUntil(
-              clients.matchAll({ type: 'window' }).then((clientList) => {
-                for (const client of clientList) {
-                  if ('focus' in client) return client.focus();
-                }
-                if (clients.openWindow) return clients.openWindow('./');
-              })
-            );
-          });
-        `;
-        const blob = new Blob([swCode], { type: 'application/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(blob))
-          .catch(err => console.log('SW registration skipped or unsupported:', err));
-      });
+    // ================== PWA / ADD TO HOME SCREEN ==================
+    let deferredPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredPrompt = event;
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      showToast('CaterMatch was added to your home screen.', 'success');
+    });
+
+    function installCaterMatch() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.finally(() => { deferredPrompt = null; });
+        return;
+      }
+      // Browser did not expose an install prompt; show platform-specific guidance.
+      showModal('install-help-modal');
     }
 
-    // PWA Install Prompt
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const installBtn = document.getElementById('pwa-install-btn');
-      if (installBtn) {
-        installBtn.style.display = 'inline-flex';
-        installBtn.addEventListener('click', () => {
-          deferredPrompt.prompt();
-          deferredPrompt = null;
-          installBtn.style.display = 'none';
-        });
-      }
-    });
+    // Register a real same-origin service worker. Blob/data URL service workers are not
+    // suitable for reliable GitHub Pages PWA installation, so this file is external.
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js', { scope: './' })
+          .then(() => console.info('CaterMatch service worker registered.'))
+          .catch(err => console.warn('Service worker registration failed:', err));
+      });
+    }
 
     // Live event clock: update every second and hide ended work posts automatically.
     setInterval(hideEndedJobsAndRefresh, 1000);
@@ -5763,5 +5800,25 @@
       await initializeCaterMatchFirebase();
     });
   </script>
+
+    <!-- Add to Home Screen Help -->
+    <div id="install-help-modal" class="modal-backdrop" onclick="handleBackdropClick(event, 'install-help-modal')">
+      <div class="modal-card" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3><i class="fa-solid fa-mobile-screen-button"></i> Add CaterMatch to Home Screen</h3>
+          <button class="close-btn" onclick="hideModal('install-help-modal')">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="section-color-band"></div>
+          <p style="font-weight:800;margin-bottom:8px;">Android / Chrome</p>
+          <p class="text-muted" style="font-size:.88rem;line-height:1.55;">Tap <strong>Install App</strong> when Chrome shows the install prompt. You can also open the browser menu <strong>⋮</strong> and choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</p>
+          <p style="font-weight:800;margin:16px 0 8px;">iPhone / iPad</p>
+          <p class="text-muted" style="font-size:.88rem;line-height:1.55;">Open CaterMatch in Safari → tap <strong>Share</strong> → <strong>Add to Home Screen</strong> → <strong>Add</strong>.</p>
+          <div class="inline-action-bar" style="margin-top:16px;background:linear-gradient(135deg,#f5f3ff,#fff7ed,#ecfdf5);">
+            <div class="message"><i class="fa-solid fa-circle-info"></i> Installation availability depends on the browser and whether the site is served over HTTPS.</div>
+          </div>
+        </div>
+      </div>
+    </div>
 </body>
 </html>
