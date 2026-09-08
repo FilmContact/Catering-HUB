@@ -2668,7 +2668,7 @@
 
   <!-- ================= APPLICATION LOGIC (JAVASCRIPT) ================= -->
   <script>
-    // ================= FIREBASE CONNECTION =================
+    // ================= FIREBASE CONNECTION / NORMALIZED CLOUD MODEL =================
     const FIREBASE_CONFIG = {
       apiKey: "AIzaSyDlJflMGsetSJLpDakfM2jvtlrA7rG2CrI",
       authDomain: "catermatch-b97ef.firebaseapp.com",
@@ -2683,8 +2683,6 @@
     const FIREBASE_AUTH = firebase.auth(FIREBASE_APP);
     const FIRESTORE_DB = firebase.firestore(FIREBASE_APP);
 
-    // Authorized administrator account for the CaterMatch Admin Panel.
-    // Mirror this exact restriction in Firestore Security Rules before production release.
     const CATERMATCH_ADMIN_EMAILS = ['kammarivinaykumar981@gmail.com'];
 
     function isExactAdminEmail(email) {
@@ -2695,27 +2693,49 @@
       return !!FIREBASE_AUTH.currentUser && isExactAdminEmail(FIREBASE_AUTH.currentUser.email);
     }
 
-    const CLOUD_STATE_COLLECTION = 'catermatch';
-    const CLOUD_STATE_DOC = 'platform';
-    const CLOUD_SECTIONS = [
-      'workers',
-      'employers',
-      'jobs',
-      'chats',
-      'reports',
-      'auditLogs',
-      'workerNotifications',
-      'employerNotifications',
-      'workRecords'
+    // New normalized Firestore model. The old platform/sections tree is kept
+    // only as a one-time migration source for the administrator.
+    const NORMALIZED_COLLECTIONS = {
+      workers: 'workers',
+      employers: 'employers',
+      jobs: 'jobs',
+      chats: 'chats',
+      reports: 'reports',
+      auditLogs: 'auditLogs',
+      workRecords: 'workRecords',
+      notifications: 'notifications'
+    };
+    const LEGACY_STATE_COLLECTION = 'catermatch';
+    const LEGACY_STATE_DOC = 'platform';
+    const LEGACY_SECTIONS = [
+      'workers', 'employers', 'jobs', 'chats', 'reports',
+      'auditLogs', 'workerNotifications', 'employerNotifications', 'workRecords'
     ];
+    const MIGRATION_DOC = 'migration_v1';
 
     let firebaseHydrated = false;
     let firebaseSyncTimer = null;
     let firebaseUnsubscribers = [];
     let firebaseApplyingSnapshot = false;
+    let firebaseKnownIds = {
+      workers: new Set(), employers: new Set(), jobs: new Set(), chats: new Set(),
+      reports: new Set(), auditLogs: new Set(), workRecords: new Set()
+    };
+    let firebaseKnownJobOwners = new Map();
 
-    function getCloudSectionsRef() {
-      return FIRESTORE_DB.collection(CLOUD_STATE_COLLECTION).doc(CLOUD_STATE_DOC).collection('sections');
+    function normalizedCollection(name) {
+      return FIRESTORE_DB.collection(`catermatch/${NORMALIZED_COLLECTIONS[name]}`);
+    }
+
+    function profileById(id) {
+      if (!id) return null;
+      return (appState.workers || []).find(w => w.id === id)
+        || (appState.employers || []).find(e => e.id === id)
+        || null;
+    }
+
+    function profileFirebaseUid(id) {
+      return profileById(id)?.firebaseUid || null;
     }
 
     function cloneWithoutTransientState(state) {
@@ -2731,8 +2751,6 @@
     }
 
     function sanitizeForFirestore(value) {
-      // Firestore documents have a 1 MiB limit. Keep normal image URLs, but avoid
-      // pushing very large base64 images until Firebase Storage is available.
       if (typeof value === 'string') {
         if (value.startsWith('data:image/') && value.length > 400000) return '';
         return value;
@@ -2746,139 +2764,413 @@
       return value;
     }
 
-    function restoreSectionIntoState(section, data) {
-      if (section === 'workerNotifications') {
-        appState.workerNotifications = data || {};
-      } else if (section === 'employerNotifications') {
-        appState.employerNotifications = data || {};
-      } else if (section === 'workRecords') {
-        appState.workRecords = Array.isArray(data) ? data : [];
-      } else if (section === 'workers') {
-        appState.workers = Array.isArray(data) ? data : [];
-      } else if (section === 'employers') {
-        appState.employers = Array.isArray(data) ? data : [];
-      } else if (section === 'jobs') {
-        appState.jobs = Array.isArray(data) ? data : [];
-      } else if (section === 'chats') {
-        appState.chats = Array.isArray(data) ? data : [];
-      } else if (section === 'reports') {
-        appState.reports = Array.isArray(data) ? data : [];
-      } else if (section === 'auditLogs') {
-        appState.auditLogs = Array.isArray(data) ? data : [];
-      }
-    }
-
-    async function loadStateFromFirebase() {
-      if (!FIREBASE_AUTH.currentUser) return false;
-      try {
-        const refs = getCloudSectionsRef();
-        const snapshots = await Promise.all(CLOUD_SECTIONS.map(section => refs.doc(section).get()));
-        let foundCloudData = false;
-
-        snapshots.forEach((snap, idx) => {
-          if (snap.exists) {
-            foundCloudData = true;
-            restoreSectionIntoState(CLOUD_SECTIONS[idx], snap.data().data);
-          }
-        });
-
-        // First authenticated user initializes the cloud with empty production sections.
-        if (!foundCloudData) {
-          await syncStateToFirebase(true);
-        }
-
-        firebaseHydrated = true;
-        return true;
-      } catch (error) {
-        console.error('Firebase state load failed:', error);
-        showToast('Firebase connected, but cloud data could not be loaded.', 'error');
-        return false;
-      }
-    }
-
-    async function syncStateToFirebase(force = false) {
-      if (!FIREBASE_AUTH.currentUser || (!firebaseHydrated && !force)) return;
-      try {
-        const refs = getCloudSectionsRef();
-        const clean = sanitizeForFirestore(cloneWithoutTransientState(appState));
+    async function commitBatches(operations, chunkSize = 400) {
+      for (let i = 0; i < operations.length; i += chunkSize) {
         const batch = FIRESTORE_DB.batch();
-        CLOUD_SECTIONS.forEach(section => {
-          const ref = refs.doc(section);
-          const data = section === 'workerNotifications' ? (clean.workerNotifications || {}) : (clean[section] || []);
-          batch.set(ref, { data, updatedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedBy: FIREBASE_AUTH.currentUser.uid }, { merge: true });
+        operations.slice(i, i + chunkSize).forEach(op => {
+          if (op.type === 'set') batch.set(op.ref, op.data, op.options || undefined);
+          else if (op.type === 'delete') batch.delete(op.ref);
         });
         await batch.commit();
-      } catch (error) {
-        console.error('Firebase state sync failed:', error);
-        showToast('Could not save changes to Firebase. Check Firestore rules/network.', 'error');
       }
+    }
+
+    function enrichChatForCloud(chat) {
+      const participantFirebaseUids = (chat.participants || [])
+        .map(id => profileFirebaseUid(id))
+        .filter(Boolean);
+      const out = sanitizeForFirestore(JSON.parse(JSON.stringify(chat)));
+      out.participantFirebaseUids = participantFirebaseUids;
+      if (chat.support && chat.userId) {
+        out.supportUserFirebaseUid = profileFirebaseUid(chat.userId) || null;
+      }
+      return out;
+    }
+
+    function enrichWorkRecordForCloud(record) {
+      const out = sanitizeForFirestore(JSON.parse(JSON.stringify(record)));
+      out.ownerFirebaseUid = profileFirebaseUid(record.ownerId) || null;
+      return out;
+    }
+
+    function enrichReportForCloud(report) {
+      const out = sanitizeForFirestore(JSON.parse(JSON.stringify(report)));
+      out.reporterFirebaseUid = profileFirebaseUid(report.reporterId) || FIREBASE_AUTH.currentUser?.uid || null;
+      out.reportedProfileFirebaseUid = profileFirebaseUid(report.reportedUserId) || null;
+      return out;
+    }
+
+    function makeRequestId(jobId, application) {
+      if (application?.id) return application.id;
+      const raw = `${jobId}|${application?.workerId || ''}|${application?.requestedAt || ''}|${application?.source || 'booking'}`;
+      return 'req_' + raw.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 120);
+    }
+
+    function requestDocumentData(job, application) {
+      const worker = profileById(application.workerId);
+      return sanitizeForFirestore({
+        id: makeRequestId(job.id, application),
+        jobId: job.id,
+        employerId: job.employerId,
+        employerFirebaseUid: profileFirebaseUid(job.employerId) || null,
+        workerId: application.workerId,
+        workerFirebaseUid: worker?.firebaseUid || null,
+        status: application.status || 'pending',
+        source: application.source || 'worker_booking',
+        bookedFor: application.bookedFor || 'self',
+        requestedAt: application.requestedAt || new Date().toISOString(),
+        respondedAt: application.respondedAt || null,
+        cancelledAt: application.cancelledAt || null,
+        reservationLockUntil: application.reservationLockUntil || null,
+        friends: application.friends || [],
+        slotCount: application.slotCount || 1,
+        requestedByEmployerId: application.requestedByEmployerId || null
+      });
+    }
+
+    function applyRequestsToJobs(requestDocs) {
+      const byJob = {};
+      requestDocs.forEach(item => {
+        const data = item.data;
+        const jobId = data.jobId || item.jobId;
+        if (!jobId) return;
+        if (!byJob[jobId]) byJob[jobId] = [];
+        byJob[jobId].push({ ...data });
+      });
+      appState.jobs = (appState.jobs || []).map(job => {
+        const applicants = (byJob[job.id] || []).map(x => {
+          const copy = { ...x };
+          delete copy.jobId;
+          delete copy.employerId;
+          delete copy.employerFirebaseUid;
+          delete copy.workerFirebaseUid;
+          delete copy.id;
+          return copy;
+        });
+        const next = { ...job, applicants };
+        if (next.status !== 'completed' && next.status !== 'hidden') {
+          const filled = applicants.reduce((sum, a) => sum + (a.status === 'accepted' ? (a.slotCount || 1) : 0), 0);
+          if (filled >= Number(next.boysNeeded || 0) && Number(next.boysNeeded || 0) > 0) next.status = 'filled';
+          else if (next.status === 'filled') next.status = 'open';
+        }
+        return next;
+      });
+    }
+
+    async function loadNormalizedState(firebaseUser) {
+      const [workerSnap, employerSnap, jobSnap, reportSnap, recordSnap] = await Promise.all([
+        normalizedCollection('workers').get(),
+        normalizedCollection('employers').get(),
+        normalizedCollection('jobs').get(),
+        isExactAdminEmail(firebaseUser.email)
+          ? normalizedCollection('reports').get()
+          : normalizedCollection('reports').where('reporterFirebaseUid', '==', firebaseUser.uid).get(),
+        normalizedCollection('workRecords').where('ownerFirebaseUid', '==', firebaseUser.uid).get()
+      ]);
+
+      appState.workers = workerSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      appState.employers = employerSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      appState.jobs = jobSnap.docs.map(d => ({ id: d.id, ...d.data(), applicants: [] }));
+      appState.reports = reportSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      appState.workRecords = recordSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      appState.auditLogs = [];
+      if (isExactAdminEmail(firebaseUser.email)) {
+        const auditSnap = await normalizedCollection('auditLogs').get();
+        appState.auditLogs = auditSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
+
+      const chatQuery = isExactAdminEmail(firebaseUser.email)
+        ? normalizedCollection('chats').where('support', '==', true)
+        : normalizedCollection('chats').where('participantFirebaseUids', 'array-contains', firebaseUser.uid);
+      const chatSnap = await chatQuery.get();
+      appState.chats = chatSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      let requestsQuery;
+      if (isExactAdminEmail(firebaseUser.email)) {
+        requestsQuery = FIRESTORE_DB.collectionGroup('requests');
+      } else {
+        const profile = [...appState.workers, ...appState.employers].find(p => p.firebaseUid === firebaseUser.uid);
+        if (profile?.id) {
+          const isEmployerProfile = appState.employers.some(e => e.id === profile.id);
+          requestsQuery = isEmployerProfile
+            ? FIRESTORE_DB.collectionGroup('requests')
+                .where('employerId', '==', profile.id)
+                .where('employerFirebaseUid', '==', firebaseUser.uid)
+            : FIRESTORE_DB.collectionGroup('requests')
+                .where('workerId', '==', profile.id)
+                .where('workerFirebaseUid', '==', firebaseUser.uid);
+        }
+      }
+      if (requestsQuery) {
+        const requestSnap = await requestsQuery.get();
+        const requestDocs = requestSnap.docs.map(d => ({ id: d.id, jobId: d.ref.parent.parent?.id, data: d.data() }));
+        applyRequestsToJobs(requestDocs);
+      }
+
+      const notificationsSnap = normalizedCollection('notifications')
+        .where('recipientFirebaseUid', '==', firebaseUser.uid).get();
+      const nSnap = await notificationsSnap;
+      const ownNotifications = nSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a,b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+      const myProfile = [...appState.workers, ...appState.employers].find(p => p.firebaseUid === firebaseUser.uid);
+      if (myProfile) {
+        if (appState.workers.some(w => w.id === myProfile.id)) {
+          appState.workerNotifications = { [myProfile.id]: ownNotifications.map(n => n.message).filter(Boolean) };
+        } else {
+          appState.employerNotifications = { [myProfile.id]: ownNotifications.map(n => n.message).filter(Boolean) };
+        }
+      }
+
+      firebaseKnownIds = {
+        workers: new Set(appState.workers.map(x => x.id)),
+        employers: new Set(appState.employers.map(x => x.id)),
+        jobs: new Set(appState.jobs.map(x => x.id)),
+        chats: new Set(appState.chats.map(x => x.id)),
+        reports: new Set(appState.reports.map(x => x.id)),
+        auditLogs: new Set(appState.auditLogs.map(x => x.id)),
+        workRecords: new Set(appState.workRecords.map(x => x.id))
+      };
+      firebaseKnownJobOwners = new Map(appState.jobs.map(j => [j.id, j.employerFirebaseUid || profileFirebaseUid(j.employerId) || null]));
+      return true;
+    }
+
+    async function loadLegacyStateForMigration() {
+      const refs = FIRESTORE_DB.collection(LEGACY_STATE_COLLECTION).doc(LEGACY_STATE_DOC).collection('sections');
+      const snaps = await Promise.all(LEGACY_SECTIONS.map(section => refs.doc(section).get()));
+      const legacy = {};
+      snaps.forEach((snap, idx) => {
+        legacy[LEGACY_SECTIONS[idx]] = snap.exists ? (snap.data().data || (LEGACY_SECTIONS[idx].includes('Notifications') ? {} : [])) : (LEGACY_SECTIONS[idx].includes('Notifications') ? {} : []);
+      });
+      return legacy;
+    }
+
+    async function migrateLegacyStateToNormalized() {
+      const metaRef = FIRESTORE_DB.collection('catermatch').doc('meta').collection('state').doc(MIGRATION_DOC);
+      const metaSnap = await metaRef.get();
+      if (metaSnap.exists && metaSnap.data()?.completedAt) return false;
+
+      showToast('Preparing CaterMatch data migration…', 'info');
+      const legacy = await loadLegacyStateForMigration();
+      const ops = [];
+      const workerMap = new Map((legacy.workers || []).map(w => [w.id, w]));
+      const employerMap = new Map((legacy.employers || []).map(e => [e.id, e]));
+      const anyProfile = id => workerMap.get(id) || employerMap.get(id) || null;
+      const chatForLegacy = chat => {
+        const out = sanitizeForFirestore(JSON.parse(JSON.stringify(chat)));
+        out.participantFirebaseUids = (chat.participants || []).map(id => anyProfile(id)?.firebaseUid).filter(Boolean);
+        if (chat.support && chat.userId) out.supportUserFirebaseUid = anyProfile(chat.userId)?.firebaseUid || null;
+        return out;
+      };
+      const recordForLegacy = record => {
+        const out = sanitizeForFirestore(JSON.parse(JSON.stringify(record)));
+        out.ownerFirebaseUid = anyProfile(record.ownerId)?.firebaseUid || null;
+        return out;
+      };
+      const reportForLegacy = report => {
+        const out = sanitizeForFirestore(JSON.parse(JSON.stringify(report)));
+        out.reporterFirebaseUid = anyProfile(report.reporterId)?.firebaseUid || null;
+        out.reportedProfileFirebaseUid = anyProfile(report.reportedUserId)?.firebaseUid || null;
+        return out;
+      };
+
+      (legacy.workers || []).forEach(item => ops.push({ type:'set', ref:normalizedCollection('workers').doc(item.id), data:sanitizeForFirestore(item) }));
+      (legacy.employers || []).forEach(item => ops.push({ type:'set', ref:normalizedCollection('employers').doc(item.id), data:sanitizeForFirestore(item) }));
+      (legacy.jobs || []).forEach(item => {
+        const copy = JSON.parse(JSON.stringify(item));
+        delete copy.applicants;
+        copy.employerFirebaseUid = employerMap.get(item.employerId)?.firebaseUid || null;
+        ops.push({ type:'set', ref:normalizedCollection('jobs').doc(item.id), data:sanitizeForFirestore(copy) });
+        (item.applicants || []).forEach(app => {
+          const req = sanitizeForFirestore({
+            id: makeRequestId(item.id, app),
+            jobId: item.id,
+            employerId: item.employerId,
+            employerFirebaseUid: employerMap.get(item.employerId)?.firebaseUid || null,
+            workerId: app.workerId,
+            workerFirebaseUid: workerMap.get(app.workerId)?.firebaseUid || null,
+            status: app.status || 'pending',
+            source: app.source || 'worker_booking',
+            bookedFor: app.bookedFor || 'self',
+            requestedAt: app.requestedAt || new Date().toISOString(),
+            respondedAt: app.respondedAt || null,
+            friends: app.friends || [],
+            slotCount: app.slotCount || 1,
+            requestedByEmployerId: app.requestedByEmployerId || null
+          });
+          ops.push({ type:'set', ref:normalizedCollection('jobs').doc(item.id).collection('requests').doc(req.id), data:req });
+        });
+      });
+      (legacy.chats || []).forEach(item => ops.push({ type:'set', ref:normalizedCollection('chats').doc(item.id), data:chatForLegacy(item) }));
+      (legacy.reports || []).forEach(item => ops.push({ type:'set', ref:normalizedCollection('reports').doc(item.id), data:reportForLegacy(item) }));
+      (legacy.auditLogs || []).forEach(item => ops.push({ type:'set', ref:normalizedCollection('auditLogs').doc(item.id), data:sanitizeForFirestore(item) }));
+      (legacy.workRecords || []).forEach(item => ops.push({ type:'set', ref:normalizedCollection('workRecords').doc(item.id), data:recordForLegacy(item) }));
+
+      // Convert old per-user notification maps into individual notification docs.
+      const pushLegacyNotifications = (map, role) => {
+        Object.entries(map || {}).forEach(([recipientId, messages]) => {
+          const recipientUid = profileFirebaseUid(recipientId) ||
+            ((legacy.workers || []).find(w=>w.id===recipientId)?.firebaseUid) ||
+            ((legacy.employers || []).find(e=>e.id===recipientId)?.firebaseUid);
+          (messages || []).forEach((message, idx) => {
+            if (!recipientUid || !message) return;
+            const id = `legacy_${role}_${recipientId}_${idx}_${Date.now()}`;
+            ops.push({ type:'set', ref:normalizedCollection('notifications').doc(id), data:{
+              recipientId, recipientFirebaseUid:recipientUid,
+              senderFirebaseUid:FIREBASE_AUTH.currentUser.uid,
+              message, createdAt:new Date().toISOString(), source:'legacy_migration'
+            }});
+          });
+        });
+      };
+      pushLegacyNotifications(legacy.workerNotifications, 'worker');
+      pushLegacyNotifications(legacy.employerNotifications, 'employer');
+
+      await commitBatches(ops);
+      await metaRef.set({ completedAt:firebase.firestore.FieldValue.serverTimestamp(), version:1, migratedBy:FIREBASE_AUTH.currentUser.uid });
+      showToast('CaterMatch data migration completed.', 'success');
+      return true;
+    }
+
+    async function syncNormalizedState() {
+      if (!FIREBASE_AUTH.currentUser || !firebaseHydrated) return;
+      const user = FIREBASE_AUTH.currentUser;
+      const admin = isExactAdminEmail(user.email);
+      const role = appState.currentUser?.role;
+      const profileId = appState.currentUser?.data?.id;
+      const operations = [];
+
+      const shouldSyncProfile = (p) => admin || (!!p && p.firebaseUid === user.uid);
+      const workerList = (appState.workers || []).filter(w => shouldSyncProfile(w));
+      const employerList = (appState.employers || []).filter(e => shouldSyncProfile(e));
+      workerList.forEach(item => operations.push({ type:'set', ref:normalizedCollection('workers').doc(item.id), data:sanitizeForFirestore(item) }));
+      employerList.forEach(item => operations.push({ type:'set', ref:normalizedCollection('employers').doc(item.id), data:sanitizeForFirestore(item) }));
+
+      const jobsToSync = admin ? (appState.jobs || []) : role === 'employer' ? (appState.jobs || []).filter(j => j.employerId === profileId) : [];
+      jobsToSync.forEach(job => {
+        const copy = JSON.parse(JSON.stringify(job));
+        delete copy.applicants;
+        copy.employerFirebaseUid = profileFirebaseUid(job.employerId) || user.uid;
+        operations.push({ type:'set', ref:normalizedCollection('jobs').doc(job.id), data:sanitizeForFirestore(copy) });
+        (job.applicants || []).forEach(app => {
+          const req = requestDocumentData(job, app);
+          const canSyncRequest = admin || role === 'employer' || app.workerId === profileId;
+          if (canSyncRequest) {
+            operations.push({ type:'set', ref:normalizedCollection('jobs').doc(job.id).collection('requests').doc(req.id), data:req });
+          }
+        });
+      });
+
+      const chatsToSync = admin ? (appState.chats || []) : (appState.chats || []).filter(c => {
+        const uids = (c.participantFirebaseUids || []).length ? c.participantFirebaseUids : (c.participants || []).map(profileFirebaseUid).filter(Boolean);
+        return uids.includes(user.uid) || (c.support && profileFirebaseUid(c.userId) === user.uid);
+      });
+      chatsToSync.forEach(chat => operations.push({ type:'set', ref:normalizedCollection('chats').doc(chat.id), data:enrichChatForCloud(chat) }));
+
+      const recordsToSync = admin ? (appState.workRecords || []) : (appState.workRecords || []).filter(r => r.ownerId === profileId);
+      recordsToSync.forEach(r => operations.push({ type:'set', ref:normalizedCollection('workRecords').doc(r.id), data:enrichWorkRecordForCloud(r) }));
+
+      const reportsToSync = admin ? (appState.reports || []) : (appState.reports || []).filter(r => r.reporterId === profileId);
+      reportsToSync.forEach(r => operations.push({ type:'set', ref:normalizedCollection('reports').doc(r.id), data:enrichReportForCloud(r) }));
+
+      if (admin) {
+        (appState.auditLogs || []).forEach(l => operations.push({ type:'set', ref:normalizedCollection('auditLogs').doc(l.id), data:sanitizeForFirestore(l) }));
+      }
+
+      // Reconcile deletions that the old shared-state model represented by array removal.
+      if (admin) {
+        const currentIds = {
+          workers:new Set((appState.workers||[]).map(x=>x.id)),
+          employers:new Set((appState.employers||[]).map(x=>x.id)),
+          jobs:new Set((appState.jobs||[]).map(x=>x.id)),
+          chats:new Set((appState.chats||[]).map(x=>x.id)),
+          reports:new Set((appState.reports||[]).map(x=>x.id)),
+          auditLogs:new Set((appState.auditLogs||[]).map(x=>x.id)),
+          workRecords:new Set((appState.workRecords||[]).map(x=>x.id))
+        };
+        Object.keys(currentIds).forEach(name => {
+          firebaseKnownIds[name].forEach(id => {
+            if (!currentIds[name].has(id)) operations.push({ type:'delete', ref:normalizedCollection(name).doc(id) });
+          });
+        });
+      } else if (role === 'employer') {
+        const currentJobIds = new Set((appState.jobs||[]).map(x=>x.id));
+        firebaseKnownJobOwners.forEach((ownerUid, jobId) => {
+          if (ownerUid === user.uid && !currentJobIds.has(jobId)) {
+            operations.push({ type:'delete', ref:normalizedCollection('jobs').doc(jobId) });
+          }
+        });
+      }
+
+      await commitBatches(operations);
+      firebaseKnownIds.workers = new Set((appState.workers || []).map(x=>x.id));
+      firebaseKnownIds.employers = new Set((appState.employers || []).map(x=>x.id));
+      firebaseKnownIds.jobs = new Set((appState.jobs || []).map(x=>x.id));
+      firebaseKnownIds.chats = new Set((appState.chats || []).map(x=>x.id));
+      firebaseKnownIds.reports = new Set((appState.reports || []).map(x=>x.id));
+      firebaseKnownIds.auditLogs = new Set((appState.auditLogs || []).map(x=>x.id));
+      firebaseKnownIds.workRecords = new Set((appState.workRecords || []).map(x=>x.id));
     }
 
     function scheduleFirebaseSync() {
       if (!FIREBASE_AUTH.currentUser || !firebaseHydrated || firebaseApplyingSnapshot) return;
       clearTimeout(firebaseSyncTimer);
-      firebaseSyncTimer = setTimeout(() => syncStateToFirebase(false), 250);
+      firebaseSyncTimer = setTimeout(() => syncNormalizedState().catch(err => {
+        console.error('Normalized Firebase sync failed:', err);
+        showToast('Could not save changes to Firebase. Check Firestore rules/network.', 'error');
+      }), 250);
     }
 
     function clearFirebaseListeners() {
-      firebaseUnsubscribers.forEach(unsub => {
-        try { unsub(); } catch (_) {}
-      });
+      firebaseUnsubscribers.forEach(unsub => { try { unsub(); } catch (_) {} });
       firebaseUnsubscribers = [];
     }
 
     function startFirebaseRealtimeListeners() {
       clearFirebaseListeners();
       if (!FIREBASE_AUTH.currentUser) return;
+      const user = FIREBASE_AUTH.currentUser;
+      const role = appState.currentUser?.role;
+      const profileId = appState.currentUser?.data?.id;
+      const watched = [];
 
-      const refs = getCloudSectionsRef();
-      CLOUD_SECTIONS.forEach(section => {
-        const unsub = refs.doc(section).onSnapshot(snapshot => {
-          if (!snapshot.exists) return;
+      if (role === 'employer' && profileId) watched.push(normalizedCollection('jobs').where('employerId','==',profileId));
+      else if (role === 'worker' || isExactAdminEmail(user.email)) watched.push(normalizedCollection('jobs'));
+
+      if (role === 'worker' && profileId) watched.push(normalizedCollection('workers').where('firebaseUid','==',user.uid));
+      if (role === 'employer' && profileId) watched.push(normalizedCollection('employers').where('firebaseUid','==',user.uid));
+
+      watched.forEach(query => {
+        const unsub = query.onSnapshot(async () => {
+          if (firebaseApplyingSnapshot) return;
           firebaseApplyingSnapshot = true;
           try {
-            restoreSectionIntoState(section, snapshot.data().data);
-            renderJobs();
-            renderWorkersDirectory();
-            renderDashboard();
-            renderChatList();
-            if (appState.currentUser && appState.currentUser.role === 'admin') { renderAdminTables(); renderAdminHelpdesk(); }
+            await loadNormalizedState(user);
+            renderJobs(); renderWorkersDirectory(); renderDashboard(); renderChatList();
+            if (isCurrentAdmin()) renderAdminTables();
+          } catch (err) {
+            console.error('Firebase realtime refresh failed:', err);
           } finally {
             firebaseApplyingSnapshot = false;
           }
-        }, error => {
-          console.error(`Firebase listener failed for ${section}:`, error);
-        });
+        }, err => console.error('Firebase realtime listener failed:', err));
         firebaseUnsubscribers.push(unsub);
       });
     }
 
     function findFirebaseProfile(uid) {
       const worker = (appState.workers || []).find(w => w.firebaseUid === uid);
-      if (worker) return { role: 'worker', data: worker };
+      if (worker) return { role:'worker', data:worker };
       const employer = (appState.employers || []).find(e => e.firebaseUid === uid);
-      if (employer) return { role: 'employer', data: employer };
+      if (employer) return { role:'employer', data:employer };
       return null;
     }
 
     function resolveFirebaseUserAsAppUser(firebaseUser) {
       if (!firebaseUser) return null;
-
       if (isExactAdminEmail(firebaseUser.email)) {
-        return {
-          role: 'admin',
-          data: {
-            id: firebaseUser.uid,
-            firebaseUid: firebaseUser.uid,
-            name: firebaseUser.displayName || 'Administrator',
-            email: firebaseUser.email,
-            status: 'approved'
-          }
-        };
+        return { role:'admin', data:{ id:firebaseUser.uid, firebaseUid:firebaseUser.uid, name:firebaseUser.displayName || 'Administrator', email:firebaseUser.email, status:'approved' } };
       }
-
-      const existingProfile = findFirebaseProfile(firebaseUser.uid);
-      return existingProfile || null;
+      return findFirebaseProfile(firebaseUser.uid);
     }
 
     async function handleFirebaseAuthStateChange(firebaseUser) {
@@ -2891,25 +3183,29 @@
         return;
       }
 
-      await loadStateFromFirebase();
+      // The first admin login performs a one-time migration from the old shared-section model.
+      if (isExactAdminEmail(firebaseUser.email)) {
+        try { await migrateLegacyStateToNormalized(); } catch (migrationError) {
+          console.error('Migration failed:', migrationError);
+          showToast('Data migration needs attention. Your existing data is still preserved.', 'error');
+        }
+      }
+
+      await loadNormalizedState(firebaseUser);
       appState.currentUser = resolveFirebaseUserAsAppUser(firebaseUser);
       if (appState.currentUser && appState.currentUser.role !== 'admin' && appState.currentUser.data.status === 'suspended') {
         appState.currentUser = null;
         showToast('This account is suspended. Please contact Help Desk for assistance.', 'error');
         try { await FIREBASE_AUTH.signOut(); } catch (_) {}
-        updateAuthUI();
-        renderJobs();
-        return;
+        updateAuthUI(); renderJobs(); return;
       }
       if (appState.currentUser && appState.currentUser.role !== 'admin') {
         ensureSupportChatForProfile(appState.currentUser.data.id);
         scheduleFirebaseSync();
       }
-
+      firebaseHydrated = true;
       updateAuthUI();
-      renderJobs();
-      renderWorkersDirectory();
-      renderDashboard();
+      renderJobs(); renderWorkersDirectory(); renderDashboard();
       if (isCurrentAdmin()) renderAdminTables();
       startFirebaseRealtimeListeners();
     }
